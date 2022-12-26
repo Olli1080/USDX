@@ -1,4 +1,4 @@
-{* UltraStar Deluxe - Karaoke Game
+/* UltraStar Deluxe - Karaoke Game
  *
  * UltraStar Deluxe is the legal property of its developers, whose names
  * are too numerous to list here. Please refer to the COPYRIGHT
@@ -21,17 +21,198 @@
  *
  * $URL: svn://basisbit@svn.code.sf.net/p/ultrastardx/svn/trunk/src/base/USong.pas $
  * $Id: USong.pas 3135 2015-09-12 00:48:54Z basisbit $
- *}
+ */
 
-unit USong;
+#include <string>
+#include <vector>
+#include <filesystem>
+#include <chrono>
+#include <array>
 
-interface
-{$IFDEF FPC}
-  {$MODE Delphi}
-{$ENDIF}
+#include "switches.h"
 
-{$I switches.inc}
+typedef std::chrono::duration<double, std::milli> MiliSecDouble;
+typedef std::chrono::duration<double> SecDouble;
+typedef std::chrono::duration<double, std::ratio<60, 1>> MinDouble;
 
+enum TSingMode
+{
+  smNormal, smPartyClassic, smPartyFree, smPartyChallenge, smPartyTournament, smJukebox, smPlaylistRandom , smMedley
+};
+
+enum TSongMode
+{
+  smAll, smCategory, smPlaylist
+};
+
+enum TMedleySource
+{
+  msNone, msCalculated, msTag
+};
+
+struct TMedley 
+{
+    TMedleySource Source;  //source of the information
+    int StartBeat;        //start beat of medley
+    int EndBeat;        //end beat of medley
+    double FadeIn_time;           //FadeIn-Time in seconds
+    double FadeOut_time;           //FadeOut-Time in seconds
+};
+
+struct TBPM
+{
+    double BPM;
+    double StartBeat;
+};
+
+struct TScore
+{
+    std::string Name;
+    int Score;
+    std::string Date;
+};
+
+/*{ used to hold header tags that are not supported by this version of
+  usdx (e.g. some tags from ultrastar 0.7.0) when songs are loaded in
+  songeditor. They will be written the end of the song header }*/
+struct TCustomHeaderTag
+{
+  std::string Tag;
+  std::string Content;
+};
+
+class TSong
+{
+  private:
+    int FileLineNo;  // line, which is read last, for error reporting
+
+    std::filesystem::path DecodeFilename(const std::string& Filename);
+    void ParseNote(int Track, char TypeP, int StartP, int DurationP, int NoteP, std::string LyricS);
+    void NewSentence(int LineNumberP, int Param1, int Param2);
+    void FindRefrain(); // tries to find a refrain for the medley mode and preview start
+
+    std::string ParseLyricStringParam(const std::string Line, int& LinePos);
+    int ParseLyricIntParam(const std::string Line, int& LinePos);
+    float ParseLyricFloatParam(const std::string Line, int& LinePos);
+    char ParseLyricCharParam(const std::string Line, int& LinePos);
+    std::string ParseLyricText(const std::string Line, int& LinePos);
+
+    bool ReadTXTHeader(TTextFileStream SongFile, bool ReadCustomTags);
+    bool ReadXMLHeader(const std::filesystem::path aFileName);
+
+    std::string GetFolderCategory(const std::filesystem::path aFileName);
+    std::filesystem::path FindSongFile(const std::filesystem::path Dir; std::string Mask);
+
+  public:
+    std::filesystem::path Path; // just path component of file (only set if file was found)
+    std::string Folder; // for sorting by folder (only set if file was found)
+    std::filesystem::path FileName; // just name component of file (only set if file was found)
+    std::string MD5; //MD5 Hash of Current Song
+
+    // filenames
+    std::filesystem::path Cover;
+    std::filesystem::path Mp3;
+    std::filesystem::path Background;
+    std::filesystem::path Video;
+
+    // sorting methods
+    std::string Genre;
+    std::string Edition;
+    std::string Language;
+    int Year;
+
+    std::string Title;
+    std::string Artist;
+
+    // use in search
+    std::string TitleNoAccent;
+    std::string ArtistNoAccent;
+    std::string LanguageNoAccent;
+    std::string EditionNoAccent;
+    std::string GenreNoAccent;
+    std::string CreatorNoAccent;
+
+    std::string Creator;
+
+    TTexture CoverTex;
+
+    double VideoGAP;
+    int NotesGAP;
+    SecDouble Start; // in seconds
+    std::chrono::milliseconds Finish; // in miliseconds
+    bool Relative;
+    int Resolution;
+    std::vector<TBPM> BPM;
+    MiliSecDouble GAP; // in miliseconds
+    
+    TEncoding Encoding;
+    SecDouble PreviewStart;   // in seconds
+    bool HasPreview;  // set if a valid PreviewStart was read
+    bool CalcMedley;  // if true => do not calc medley for that song
+    TMedley Medley;  // medley params
+
+    bool isDuet;
+    std::vector<std::string> DuetNames; // duet singers name
+
+    bool hasRap;
+
+    std::vector<TCustomHeaderTag> CustomTags;
+
+    std::array<std::vector<TScore>, 3> Score;
+
+    // these are used when sorting is enabled
+    bool Visible; // false if hidden, true if visible
+    bool Main; // false for songs, true for category buttons
+    int OrderNum; // has a number of category for category buttons and songs
+    int OrderTyp; // type of sorting for this button (0=name)
+    int CatNumber; // Count of Songs in Category for Cats and Number of Song in Category for Songs
+    int VisibleIndex;
+
+    std::array<int, 2> Base;
+    std::array<int, 2> Rel;
+    int Mult;
+    int MultBPM;
+
+    std::string LastError;
+    int GetErrorLineNo();
+    property    ErrorLineNo: integer read GetErrorLineNo;
+
+
+    TSong();
+    TSong(const std::filesystem::path aFileName);
+
+    bool LoadSong(bool DuetChange);
+    bool LoadXMLSong();
+    bool Analyse(const bool ReadCustomTags = false, bool DuetChange = false);
+    bool AnalyseXML();
+    void SetMedleyMode();
+    void Clear();
+    std::string MD5SongFile(TTextFileStream SongFileR);
+};
+
+  TSongOptions = class
+    public
+      VideoRatioAspect:        integer;
+      VideoWidth :             integer;
+      VideoHeight:             integer;
+      LyricPosition:           integer;
+      LyricAlpha:              integer;
+      LyricSingFillColor:      string;
+      LyricActualFillColor:    string;
+      LyricNextFillColor:      string;
+      LyricSingOutlineColor:   string;
+      LyricActualOutlineColor: string;
+      LyricNextOutlineColor:   string;
+
+      constructor Create(RatioAspect, Width, Height, Position, Alpha: integer;
+                SingFillColor, ActualFillColor, NextFillColor, SingOutlineColor, ActualOutlineColor, NextOutlineColor: string);
+  end;
+
+
+class USong
+{
+public:
+/*
 uses
   {$IFDEF MSWINDOWS}
     Windows,
@@ -62,164 +243,10 @@ uses
   UUnicodeStringHelper,
   UUnicodeUtils,
   UXMLSong;
-
+*/
 type
 
-  TSingMode = ( smNormal, smPartyClassic, smPartyFree, smPartyChallenge, smPartyTournament, smJukebox, smPlaylistRandom , smMedley );
-  TSongMode = ( smAll, smCategory, smPlaylist);
-
-  TMedleySource = ( msNone, msCalculated, msTag );
-
-  TMedley = record
-    Source:       TMedleySource;  //source of the information
-    StartBeat:    integer;        //start beat of medley
-    EndBeat:      integer;        //end beat of medley
-    FadeIn_time:  real;           //FadeIn-Time in seconds
-    FadeOut_time: real;           //FadeOut-Time in seconds
-  end;
-
-  TBPM = record
-    BPM:        real;
-    StartBeat:  real;
-  end;
-
-  TScore = record
-    Name:       UTF8String;
-    Score:      integer;
-    Date:       UTF8String;
-  end;
-
-  { used to hold header tags that are not supported by this version of
-    usdx (e.g. some tags from ultrastar 0.7.0) when songs are loaded in
-    songeditor. They will be written the end of the song header }
-  TCustomHeaderTag = record
-    Tag: UTF8String;
-    Content: UTF8String;
-  end;
-
-  TSong = class
-  private
-    FileLineNo  : integer;  // line, which is read last, for error reporting
-
-    function DecodeFilename(Filename: RawByteString): IPath;
-    procedure ParseNote(Track: integer; TypeP: char; StartP, DurationP, NoteP: integer; LyricS: UTF8String);
-    procedure NewSentence(LineNumberP: integer; Param1, Param2: integer);
-    procedure FindRefrain(); // tries to find a refrain for the medley mode and preview start
-
-    function ParseLyricStringParam(const Line: RawByteString; var LinePos: integer): RawByteString;
-    function ParseLyricIntParam(const Line: RawByteString; var LinePos: integer): integer;
-    function ParseLyricFloatParam(const Line: RawByteString; var LinePos: integer): extended;
-    function ParseLyricCharParam(const Line: RawByteString; var LinePos: integer): AnsiChar;
-    function ParseLyricText(const Line: RawByteString; var LinePos: integer): RawByteString;
-
-    function ReadTXTHeader(SongFile: TTextFileStream; ReadCustomTags: Boolean): boolean;
-    function ReadXMLHeader(const aFileName: IPath): boolean;
-
-    function GetFolderCategory(const aFileName: IPath): UTF8String;
-    function FindSongFile(Dir: IPath; Mask: UTF8String): IPath;
-  public
-    Path:         IPath; // kust path component of file (only set if file was found)
-    Folder:       UTF8String; // for sorting by folder (only set if file was found)
-    FileName:     IPath; // just name component of file (only set if file was found)
-    MD5:          string; //MD5 Hash of Current Song
-
-    // filenames
-    Cover:      IPath;
-    Mp3:        IPath;
-    Background: IPath;
-    Video:      IPath;
-
-    // sorting methods
-    Genre:      UTF8String;
-    Edition:    UTF8String;
-    Language:   UTF8String;
-    Year:       Integer;
-
-    Title:      UTF8String;
-    Artist:     UTF8String;
-
-    // use in search
-    TitleNoAccent:    UTF8String;
-    ArtistNoAccent:   UTF8String;
-    LanguageNoAccent: UTF8String;
-    EditionNoAccent:  UTF8String;
-    GenreNoAccent:    UTF8String;
-    CreatorNoAccent:  UTF8String;
-
-    Creator:    UTF8String;
-
-    CoverTex:   TTexture;
-
-    VideoGAP:   real;
-    NotesGAP:   integer;
-    Start:      real; // in seconds
-    Finish:     integer; // in miliseconds
-    Relative:   boolean;
-    Resolution: integer;
-    BPM:        array of TBPM;
-    GAP:        real; // in miliseconds
-    
-    Encoding:   TEncoding;
-    PreviewStart: real;   // in seconds
-    HasPreview: boolean;  // set if a valid PreviewStart was read
-    CalcMedley: boolean;  // if true => do not calc medley for that song
-    Medley:     TMedley;  // medley params
-
-    isDuet: boolean;
-    DuetNames:  array of UTF8String; // duet singers name
-
-    hasRap: boolean;
-
-    CustomTags: array of TCustomHeaderTag;
-
-    Score:      array[0..2] of array of TScore;
-
-    // these are used when sorting is enabled
-    Visible:    boolean; // false if hidden, true if visible
-    Main:       boolean; // false for songs, true for category buttons
-    OrderNum:   integer; // has a number of category for category buttons and songs
-    OrderTyp:   integer; // type of sorting for this button (0=name)
-    CatNumber:  integer; // Count of Songs in Category for Cats and Number of Song in Category for Songs
-    VisibleIndex: integer;
-
-    Base:       array[0..1] of integer;
-    Rel:        array[0..1] of integer;
-    Mult:       integer;
-    MultBPM:    integer;
-
-    LastError:  AnsiString;
-    function    GetErrorLineNo: integer;
-    property    ErrorLineNo: integer read GetErrorLineNo;
-
-
-    constructor Create(); overload;
-    constructor Create(const aFileName : IPath); overload;
-    function    LoadSong(DuetChange: boolean): boolean;
-    function    LoadXMLSong: boolean;
-    function    Analyse(const ReadCustomTags: Boolean = false; DuetChange: boolean = false): boolean;
-    function    AnalyseXML(): boolean;
-    procedure   SetMedleyMode();
-    procedure   Clear();
-    function    MD5SongFile(SongFileR: TTextFileStream): string;
-  end;
-
-  TSongOptions = class
-    public
-      VideoRatioAspect:        integer;
-      VideoWidth :             integer;
-      VideoHeight:             integer;
-      LyricPosition:           integer;
-      LyricAlpha:              integer;
-      LyricSingFillColor:      string;
-      LyricActualFillColor:    string;
-      LyricNextFillColor:      string;
-      LyricSingOutlineColor:   string;
-      LyricActualOutlineColor: string;
-      LyricNextOutlineColor:   string;
-
-      constructor Create(RatioAspect, Width, Height, Position, Alpha: integer;
-                SingFillColor, ActualFillColor, NextFillColor, SingOutlineColor, ActualOutlineColor, NextOutlineColor: string);
-  end;
+  
 
 implementation
 
@@ -1842,6 +1869,4 @@ begin
     Result := 'unknown';
   {$ENDIF}
 end;
-
-end.
-
+};

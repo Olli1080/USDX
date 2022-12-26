@@ -1,4 +1,4 @@
-{* UltraStar Deluxe - Karaoke Game
+/* UltraStar Deluxe - Karaoke Game
  *
  * UltraStar Deluxe is the legal property of its developers, whose names
  * are too numerous to list here. Please refer to the COPYRIGHT
@@ -21,9 +21,12 @@
  *
  * $URL: https://ultrastardx.svn.sourceforge.net/svnroot/ultrastardx/trunk/src/base/UConfig.pas $
  * $Id: UConfig.pas 2656 2010-10-10 18:55:31Z tobigun $
- *}
+ */
 
-unit UConfig;
+#include <string>
+
+namespace UConfig 
+{
 
 // -------------------------------------------------------------------
 // Note on version comparison (for developers only):
@@ -80,19 +83,17 @@ unit UConfig;
 // directives. Otherwise you might break portability.
 // -------------------------------------------------------------------
 
-interface
-
-{$IFDEF FPC}
+/*#ifdef FPC}
   {$MODE Delphi}
   {$MACRO ON} // for evaluation of FPC_VERSION/RELEASE/PATCH
-{$ENDIF}
+#endif
 
 {$I switches.inc}
 
 uses
   SysUtils;
-
-const
+*/
+//const
   // IMPORTANT:
   // If IncludeConstants is defined, the const-sections
   // of the config-file will be included too.
@@ -103,134 +104,81 @@ const
   // So we have to include the config-file in switches.inc
   // with IncludeConstants undefined and in UConfig.pas with
   // IncludeConstants defined (see the note above).
-  {$DEFINE IncludeConstants}
+  #define IncludeConstants
 
   // include config-file (defines + constants)
-  {$IF Defined(MSWindows)}
-    {$I ..\config-win.inc}
-  {$ELSEIF Defined(Linux)}
-    {$I ../config-linux.inc}
-  {$ELSEIF Defined(FreeBSD)}
-    {$I ../config-freebsd.inc}
-  {$ELSEIF Defined(Darwin)}
-    {$I ../config-darwin.inc}
-  {$ELSE}
-    {$MESSAGE Fatal 'Unknown OS'}
-  {$IFEND}
+  #if defined(_WIN32)
+    #include "../config-win.h"
+  #elif defined(__linux__)
+    #include "../config-linux.h"
+  #elif defined(__FreeBSD__)
+    #include "../config-freebsd.h"
+  #elif defined(__APPLE__)
+    #include "../config-darwin.h"
+  #else
+    #error 'Unknown OS'
+  #endif
 
-{* Libraries *}
+//* Libraries *
 
-  VERSION_MAJOR   = 1000000;
-  VERSION_MINOR   = 1000;
-  VERSION_RELEASE = 1;
+  const int VERSION_MAJOR   = 1000000;
+  const int VERSION_MINOR   = 1000;
+  const int VERSION_RELEASE = 1;
 
-  (*
+  /*
    * Current version of UltraStar Deluxe
-   *)
-   USDX_VERSION_MAJOR   = 2020;
-   USDX_VERSION_MINOR   = 04;
-   USDX_VERSION_RELEASE = 1;
-   USDX_VERSION_STATE   = 'dev';
-   USDX_STRING = 'UltraStar Deluxe - www.usdx.eu';
+   */
+  const int USDX_VERSION_MAJOR   = 2020;
+  const int USDX_VERSION_MINOR   = 04;
+  const int USDX_VERSION_RELEASE = 1;
+  const std::string USDX_VERSION_STATE = "dev";
+  const std::string USDX_STRING = "UltraStar Deluxe - www.usdx.eu";
 
-  (*
-   * FPC version numbers are already defined as built-in macros:
-   *   FPC_VERSION (MAJOR)
-   *   FPC_RELEASE (MINOR)
-   *   FPC_PATCH   (RELEASE)
-   * Since FPC_VERSION is already defined, we will use FPC_VERSION_INT as
-   * composed version number.
-   *)
-  {$IFNDEF FPC}
-  // Delphi 7 evaluates every $IF-directive even if it is disabled by a surrounding
-  // $IF or $IFDEF so the follwing will give you an error in delphi:
-  //   {$IFDEF FPC}{$IF (FPC_VERSION > 2)}...{$IFEND}{$ENDIF}
-  // The reason for this error is that FPC_VERSION is not a valid constant.
-  // To avoid this error, we define dummys here.
-  FPC_VERSION = 0;
-  FPC_RELEASE = 0;
-  FPC_PATCH   = 0;
-  {$ENDIF}
+  #ifdef HaveFFmpeg
 
-  FPC_VERSION_INT = (FPC_VERSION * VERSION_MAJOR) +
-                    (FPC_RELEASE * VERSION_MINOR) +
-                    (FPC_PATCH * VERSION_RELEASE);
+    const int LIBAVCODEC_VERSION = (LIBAVCODEC_VERSION_MAJOR * VERSION_MAJOR) +
+                        (LIBAVCODEC_VERSION_MINOR * VERSION_MINOR) +
+                        (LIBAVCODEC_VERSION_RELEASE * VERSION_RELEASE);
 
-  // FPC 3.0.0 or newer is required. FPC 3.0.2 or newer is suggested.
-  {$IF Defined(FPC) and (FPC_VERSION_INT < 3000000)} // < 2.2.2
-    {$MESSAGE FATAL 'FPC >= 3.0.0 required! 3.0.2 or newer suggested.'}
-  {$IFEND}
+    const int LIBAVFORMAT_VERSION = (LIBAVFORMAT_VERSION_MAJOR * VERSION_MAJOR) +
+                          (LIBAVFORMAT_VERSION_MINOR * VERSION_MINOR) +
+                          (LIBAVFORMAT_VERSION_RELEASE * VERSION_RELEASE);
 
-  {$IFDEF HaveFFmpeg}
+    const int LIBAVUTIL_VERSION = (LIBAVUTIL_VERSION_MAJOR * VERSION_MAJOR) +
+                        (LIBAVUTIL_VERSION_MINOR * VERSION_MINOR) +
+                        (LIBAVUTIL_VERSION_RELEASE * VERSION_RELEASE);
 
-  LIBAVCODEC_VERSION = (LIBAVCODEC_VERSION_MAJOR * VERSION_MAJOR) +
-                       (LIBAVCODEC_VERSION_MINOR * VERSION_MINOR) +
-                       (LIBAVCODEC_VERSION_RELEASE * VERSION_RELEASE);
+    #ifdef HaveSWScale
+      const int LIBSWSCALE_VERSION = (LIBSWSCALE_VERSION_MAJOR * VERSION_MAJOR) +
+                          (LIBSWSCALE_VERSION_MINOR * VERSION_MINOR) +
+                          (LIBSWSCALE_VERSION_RELEASE * VERSION_RELEASE);
+    #endif
+    #ifdef HaveSWResample
+      const int LIBSWRESAMPLE_VERSION = (LIBSWRESAMPLE_VERSION_MAJOR * VERSION_MAJOR) +
+                              (LIBSWRESAMPLE_VERSION_MINOR * VERSION_MINOR) +
+                              (LIBSWRESAMPLE_VERSION_RELEASE * VERSION_RELEASE);
+    #endif
+  #endif
 
-  LIBAVFORMAT_VERSION = (LIBAVFORMAT_VERSION_MAJOR * VERSION_MAJOR) +
-                        (LIBAVFORMAT_VERSION_MINOR * VERSION_MINOR) +
-                        (LIBAVFORMAT_VERSION_RELEASE * VERSION_RELEASE);
+  #ifdef HaveProjectM
+    const int PROJECTM_VERSION = (PROJECTM_VERSION_MAJOR * VERSION_MAJOR) +
+                      (PROJECTM_VERSION_MINOR * VERSION_MINOR) +
+                      (PROJECTM_VERSION_RELEASE * VERSION_RELEASE);
+  #endif
 
-  LIBAVUTIL_VERSION = (LIBAVUTIL_VERSION_MAJOR * VERSION_MAJOR) +
-                      (LIBAVUTIL_VERSION_MINOR * VERSION_MINOR) +
-                      (LIBAVUTIL_VERSION_RELEASE * VERSION_RELEASE);
+  #ifdef HavePortaudio
+    const int PORTAUDIO_VERSION = (PORTAUDIO_VERSION_MAJOR * VERSION_MAJOR) +
+                        (PORTAUDIO_VERSION_MINOR * VERSION_MINOR) +
+                        (PORTAUDIO_VERSION_RELEASE * VERSION_RELEASE);
+  #endif
 
-  {$IFDEF HaveSWScale}
-  LIBSWSCALE_VERSION = (LIBSWSCALE_VERSION_MAJOR * VERSION_MAJOR) +
-                       (LIBSWSCALE_VERSION_MINOR * VERSION_MINOR) +
-                       (LIBSWSCALE_VERSION_RELEASE * VERSION_RELEASE);
-  {$ENDIF}
+  #ifdef HaveLibsamplerate
+    const int LIBSAMPLERATE_VERSION = (LIBSAMPLERATE_VERSION_MAJOR * VERSION_MAJOR) +
+                            (LIBSAMPLERATE_VERSION_MINOR * VERSION_MINOR) +
+                            (LIBSAMPLERATE_VERSION_RELEASE * VERSION_RELEASE);
+  #endif
 
-  {$IFDEF HaveSWResample}
-  LIBSWRESAMPLE_VERSION = (LIBSWRESAMPLE_VERSION_MAJOR * VERSION_MAJOR) +
-                          (LIBSWRESAMPLE_VERSION_MINOR * VERSION_MINOR) +
-                          (LIBSWRESAMPLE_VERSION_RELEASE * VERSION_RELEASE);
-  {$ENDIF}
-
-  {$ENDIF}
-
-  {$IFDEF HaveProjectM}
-  PROJECTM_VERSION = (PROJECTM_VERSION_MAJOR * VERSION_MAJOR) +
-                     (PROJECTM_VERSION_MINOR * VERSION_MINOR) +
-                     (PROJECTM_VERSION_RELEASE * VERSION_RELEASE);
-  {$ENDIF}
-
-  {$IFDEF HavePortaudio}
-  PORTAUDIO_VERSION = (PORTAUDIO_VERSION_MAJOR * VERSION_MAJOR) +
-                      (PORTAUDIO_VERSION_MINOR * VERSION_MINOR) +
-                      (PORTAUDIO_VERSION_RELEASE * VERSION_RELEASE);
-  {$ENDIF}
-
-  {$IFDEF HaveLibsamplerate}
-  LIBSAMPLERATE_VERSION = (LIBSAMPLERATE_VERSION_MAJOR * VERSION_MAJOR) +
-                          (LIBSAMPLERATE_VERSION_MINOR * VERSION_MINOR) +
-                          (LIBSAMPLERATE_VERSION_RELEASE * VERSION_RELEASE);
-  {$ENDIF}
-
-function USDXVersionStr(): string;
-function USDXShortVersionStr(): string;
-
-implementation
-
-uses
-  StrUtils, Math;
-
-function USDXShortVersionStr(): string;
-begin
-  Result :=
-    USDX_STRING +
-    IfThen(USDX_VERSION_STATE <> '', ' '+USDX_VERSION_STATE);
-end;
-
-function USDXVersionStr(): string;
-begin
-  Result :=
-    USDX_STRING + ' V ' +
-    IntToStr(USDX_VERSION_MAJOR) + '.' +
-    IntToStr(USDX_VERSION_MINOR) + '.' +
-    IntToStr(USDX_VERSION_RELEASE) +
-    IfThen(USDX_VERSION_STATE <> '', ' '+USDX_VERSION_STATE) +
-    ' Build';
-end;
-
-end.
+  std::string USDXVersionStr();
+  std::string USDXShortVersionStr();
+  std::string USDXStateVersionStr();
+};

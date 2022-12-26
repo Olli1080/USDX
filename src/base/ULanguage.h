@@ -1,4 +1,4 @@
-{* UltraStar Deluxe - Karaoke Game
+/* UltraStar Deluxe - Karaoke Game
  *
  * UltraStar Deluxe is the legal property of its developers, whose names
  * are too numerous to list here. Please refer to the COPYRIGHT
@@ -21,60 +21,58 @@
  *
  * $URL: https://ultrastardx.svn.sourceforge.net/svnroot/ultrastardx/trunk/src/base/ULanguage.pas $
  * $Id: ULanguage.pas 1939 2009-11-09 00:27:55Z s_alexander $
- *}
+ */
+#include <string>
+#include <vector>
+#include <list>
 
-unit ULanguage;
+#include "switches.h"
+#include "UIni.h"
 
-interface
+namespace ULanguage
+{
 
-{$IFDEF FPC}
-  {$MODE Delphi}
-{$ENDIF}
+//uses
+ // UUnicodeUtils;
 
-{$I switches.inc}
+struct TLanguageEntry
+{
+  std::string ID;  //**< identifier (ASCII)
+  std::string Text;  //**< translation (UTF-8)
+};
 
-uses
-  UUnicodeUtils;
+struct TLanguageList
+{
+  std::string Name;  //**< language name (ASCII)
+};
 
-type
-  TLanguageEntry = record
-    ID:     AnsiString;  //**< identifier (ASCII)
-    Text:   UTF8String;  //**< translation (UTF-8)
-  end;
+class TLanguage
+{
+private:
 
-  TLanguageList = record
-    Name:     AnsiString;  //**< language name (ASCII)
-  end;
+  std::vector<TLanguageList> List;
 
-  TLanguageEntryArray = array of TLanguageEntry;
+  std::vector<TLanguageEntry> Entry; //**< Entrys of Chosen Language
+  std::vector<TLanguageEntry> EntryDefault; //**< Entrys of Standard Language
+  std::vector<TLanguageEntry> EntryConst; //**< Constant Entrys e.g. Version
 
-  TLanguage = class
-    private
-      List:   array of TLanguageList;
+  std::string Implode_Glue1, Implode_Glue2;
 
-      Entry:        TLanguageEntryArray; //**< Entrys of Chosen Language
-      EntryDefault: TLanguageEntryArray; //**< Entrys of Standard Language
-      EntryConst:   TLanguageEntryArray; //**< Constant Entrys e.g. Version
+  void LoadList();
+  int FindID(const std::string ID, const std::vector<TLanguageEntry> EntryList);
 
-      Implode_Glue1, Implode_Glue2: UTF8String;
+public:
 
-      procedure LoadList;
-      function FindID(const ID: AnsiString; const EntryList: TLanguageEntryArray): integer;
+  TLanguage();
+  std::string Translate(const std::string Text);
+  void ChangeLanguage(const std::string Language);
+  void AddConst(const std::string ID, const std::string Text);
+  void ChangeConst(const std::string ID, const std::string Text);
+  std::string Implode(const std::vector<std::string> Pieces);
+};
 
-    public
-      constructor Create;
-      function Translate(const Text: RawByteString): UTF8String;
-      procedure ChangeLanguage(const Language: AnsiString);
-      procedure AddConst(const ID: AnsiString; const Text: UTF8String);
-      procedure ChangeConst(const ID: AnsiString; const Text: UTF8String);
-      function Implode(const Pieces: array of UTF8String): UTF8String;
-  end;
-
-var
-  Language:     TLanguage;
-
-implementation
-
+TLanguage Language;
+/*
 uses
   UMain,
   UIni,
@@ -85,87 +83,12 @@ uses
   UPath,
   UFilesystem,
   UPathUtils;
+*/
 
-{**
- * LoadList, set default language, set standard implode glues
- *}
-constructor TLanguage.Create;
-var
-  I, J: Integer;
-  DefaultLanguageFound: Boolean;
-begin
-  inherited;
-  DefaultLanguageFound := False;
-
-  //Load list of available translations (*.ini files in LanguagesPath)
-  LoadList;
-
-  //Set Implode Glues for Backward Compatibility
-  Implode_Glue1 := ', ';
-  Implode_Glue2 := ' and ';
-
-  //If no translations are found, abort loading
-  if (Length(List) = 0) then
-    Log.CriticalError('Could not load any language file');
-
-  SetLength(ILanguageTranslated, Length(ILanguage));
-
-  //Load each translation and store the native language name
-  for I := 0 to high(List) do
-  begin
-    ChangeLanguage(List[I].Name);
-    ILanguageTranslated[I] := Translate('LANGUAGE');
-
-    //If currently loaded translation is English, use this translation as default (for incomplete translation files)
-    if Uppercase(List[I].Name) = 'ENGLISH' then
-    begin
-      SetLength(EntryDefault, Length(Entry));
-      for J := 0 to high(Entry) do
-        EntryDefault[J] := Entry[J];
-
-      SetLength(Entry, 0);
-      DefaultLanguageFound := True;
-    end;
-  end;
-
-  //Log an error if English language file was not found and therefore no default translation is available
-  if (DefaultLanguageFound = True) then
-    Log.LogStatus('Load Default Language English', 'Initialization')
-  else
-    Log.LogError('English language file missing! No default translation loaded');
-end;
-
-{**
- * Parse the Language Dir searching Translations
- *}
-procedure TLanguage.LoadList;
-var
-  Iter: IFileIterator;
-  IniInfo: TFileInfo;
-  LangName: string;
-begin
-  SetLength(List, 0);
-  SetLength(ILanguage, 0);
-
-  Iter := FileSystem.FileFind(LanguagesPath.Append('*.ini'), 0);
-  while(Iter.HasNext) do
-  begin
-    IniInfo := Iter.Next;
-
-    LangName := IniInfo.Name.SetExtension('').ToUTF8;
-
-    SetLength(List, Length(List)+1);
-    List[High(List)].Name := LangName;
-
-    SetLength(ILanguage, Length(ILanguage)+1);
-    ILanguage[High(ILanguage)] := LangName;
-  end;
-end;
-
-{**
+/**
  * Load the specified LanguageFile
- *}
-procedure TLanguage.ChangeLanguage(const Language: AnsiString);
+ */
+void TLanguage.ChangeLanguage(const Language: AnsiString);
 var
   IniFile:    TUnicodeMemIniFile;
   E:          integer; // entry
@@ -192,10 +115,10 @@ begin
   IniFile.Free;
 end;
 
-{**
+/**
  * Find the index of ID an array of language entries.
  * @returns the index on success, -1 otherwise.
- *}
+ */
 function TLanguage.FindID(const ID: AnsiString; const EntryList: TLanguageEntryArray): integer;
 var
   Index: integer;
@@ -211,12 +134,12 @@ begin
   Result := -1;
 end;
 
-{**
+/**
  * Translate the Text.
  * If Text is an ID, text will be translated according to the current language
  * setting. If Text is not a known ID, it will be returned as is. 
  * @param Text either an ID or an UTF-8 encoded string 
- *}
+ */
 function TLanguage.Translate(const Text: RawByteString): UTF8String;
 var
   ID: AnsiString;
@@ -255,20 +178,20 @@ begin
   end;
 end;
 
-{**
+/**
  * Add a Constant ID that will be Translated but not Loaded from the LanguageFile
- *}
-procedure TLanguage.AddConst(const ID: AnsiString; const Text: UTF8String);
+ */
+void TLanguage.AddConst(const ID: AnsiString; const Text: UTF8String);
 begin
   SetLength (EntryConst, Length(EntryConst) + 1);
   EntryConst[high(EntryConst)].ID := ID;
   EntryConst[high(EntryConst)].Text := Text;
 end;
 
-{**
+/**
  * Change a Constant Value by ID
- *}
-procedure TLanguage.ChangeConst(const ID: AnsiString; const Text: UTF8String);
+ */
+void TLanguage.ChangeConst(const ID: AnsiString; const Text: UTF8String);
 var
   I: Integer;
 begin
@@ -282,9 +205,9 @@ begin
   end;
 end;
 
-{**
+/**
  * Connect an array of strings with ' and ' or ', ' to one string
- *}
+ */
 function TLanguage.Implode(const Pieces: array of UTF8String): UTF8String;
 var
   I: Integer;
@@ -305,3 +228,4 @@ begin
 end;
 
 end.
+};

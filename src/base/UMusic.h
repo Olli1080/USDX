@@ -1,4 +1,4 @@
-{* UltraStar Deluxe - Karaoke Game
+/* UltraStar Deluxe - Karaoke Game
  *
  * UltraStar Deluxe is the legal property of its developers, whose names
  * are too numerous to list here. Please refer to the COPYRIGHT
@@ -21,36 +21,21 @@
  *
  * $URL: svn://basisbit@svn.code.sf.net/p/ultrastardx/svn/trunk/src/base/UMusic.pas $
  * $Id: UMusic.pas 3103 2014-11-22 23:21:19Z k-m_schindler $
- *}
+ */
 
-unit UMusic;
+enum TNoteType 
+{
+  ntFreestyle, ntNormal, ntGolden, ntRap, ntRapGolden
+};
 
-interface
+struct TPos // Tracks[track].Lines[line].Notes[note]
+{
+  int track;
+  int line;
+  int note;
+};
 
-{$IFDEF FPC}
-  {$MODE Delphi}
-{$ENDIF}
-
-{$I switches.inc}
-
-uses
-  SysUtils,
-  Classes,
-  UTime,
-  UBeatTimer,
-  UPath,
-  UWebcam;
-
-type
-  TNoteType = (ntFreestyle, ntNormal, ntGolden, ntRap, ntRapGolden);
-
-  TPos = record // Tracks[track].Lines[line].Notes[note]
-    track: integer;
-    line:  integer;
-    note:  integer;
-  end;
-
-  {**
+/**
    * acoStretch: Stretch to screen width and height
    *   - ignores aspect
    *   + no borders
@@ -63,13 +48,33 @@ type
    *   + keeps aspect
    *   - borders at top and bottom
    *   o top/bottom is cropped if width < height (unusual)
-   *}
-  TAspectCorrection = (acoStretch, acoCrop, acoLetterBox);
+   */
 
-  TRectCoords = record
-    Left, Right:  double;
-    Upper, Lower: double;
-  end;
+enum TAspectCorrection 
+{
+  acoStretch, acoCrop, acoLetterBox
+};
+
+struct TRectCoords
+{
+  double Left, Right;
+  double Upper, Lower;
+};
+
+class UMusic
+{
+public:
+
+#include "switches.h"
+/*
+uses
+  SysUtils,
+  Classes,
+  UTime,
+  UBeatTimer,
+  UPath,
+  UWebcam;
+*/
 
 const
   // ScoreFactor defines how a notehit of a specified notetype is
@@ -1434,5 +1439,5 @@ begin
     end;
   end;
 end;
-
-end.
+ 
+};

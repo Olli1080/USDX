@@ -1,4 +1,4 @@
-{* UltraStar Deluxe - Karaoke Game
+/* UltraStar Deluxe - Karaoke Game
  *
  * UltraStar Deluxe is the legal property of its developers, whose names
  * are too numerous to list here. Please refer to the COPYRIGHT
@@ -21,19 +21,81 @@
  *
  * $URL$
  * $Id$
- *}
+ */
 
-unit UNote;
+#include <memory>
+#include <string>
+#include <vector>
+#include <cstdint>
 
-interface
+#include "switches.h"
+#include "UMusic.h"
+#include "USong.h"
+#include "UIni.h"
 
-{$IFDEF FPC}
-  {$MODE Delphi}
-{$ENDIF}
+namespace UNote
+{
+struct TPlayerNote {
+  int Start;
+  int Duration;
+  double Detect;
+  double Tone;
+  bool Perfect;
+  bool Hit;
+  TNoteType NoteType;
+};
 
-{$I switches.inc}
+typedef std::shared_ptr<TPlayerNote> PPLayerNote;
 
-uses
+struct TPlayer
+{
+  std::string Name;
+
+  // Index in Teaminfo record
+  uint8_t TeamID;
+  uint8_t PlayerID;
+
+  // Scores
+  double Score;
+  double ScoreLine;
+  double ScoreGolden;
+
+  int ScoreInt;
+  int ScoreLineInt;
+  int ScoreGoldenInt;
+  int ScoreTotalInt;
+
+  // LineBonus
+  double ScoreLast;    // Last Line Score
+
+  // PerfectLineTwinkle (effect)
+  bool LastSentencePerfect;
+
+  int HighNote; // index of last note (= High(Note)?)
+  int LengthNote; // number of notes (= Length(Note)?).
+  std::vector<TPlayerNote> Note;
+};
+
+typedef std::shared_ptr<TPlayer> PPLayer;
+
+struct TStats
+{
+  std::vector<TPlayer> Player;
+  std::string SongArtist;
+  std::string SongTitle;
+};
+
+struct TMedleyPlaylist
+{
+  std::vector<int> Song;
+  int NumMedleySongs;
+  int CurrentMedleySong;
+  bool ApplausePlayed;
+  std::vector<TStats> Stats;
+  int NumPlayer;
+};
+
+/*uses
   SysUtils,
   Classes,
   sdl2,
@@ -48,101 +110,43 @@ uses
   UScreenJukebox,
   USong,
   UTime;
+*/
 
-type
-  PPLayerNote = ^TPlayerNote;
-  TPlayerNote = record
-    Start:    integer;
-    Duration: integer;
-    Detect:   real;    // accurate place, detected in the note
-    Tone:     real;
-    Perfect:  boolean; // true if the note matches the original one, light the star
-    Hit:      boolean; // true if the note hits the line
-    NoteType: TNoteType;
-  end;
+/* Player and music info */
+  
+/**
+ * Player info and state for each player.
+ * The amount of players is given by PlayersPlay.
+ */
+std::vector<TPlayer> Player;
 
-  PPLayer = ^TPlayer;
-  TPlayer = record
-    Name:           UTF8String;
+/**
+ * Number of players or teams playing.
+ * Possible values: 1 - 6
+ */
+int PlayersPlay;
 
-    // Index in Teaminfo record
-    TeamID:         byte;
-    PlayerID:       byte;
+/**
+ * Selected song for singing.
+ */
+std::shared_ptr<TSong> CurrentSong;
 
-    // Scores
-    Score:          real;
-    ScoreLine:      real;
-    ScoreGolden:    real;
+TMedleyPlaylist PlaylistMedley;  // playlist medley
 
-    ScoreInt:       integer;
-    ScoreLineInt:   integer;
-    ScoreGoldenInt: integer;
-    ScoreTotalInt:  integer;
+const int MAX_SONG_SCORE = 10000;     // max. achievable points per song
+const int MAX_SONG_LINE_BONUS = 1000; // max. achievable line bonus per song
 
-    // LineBonus
-    ScoreLast:      real;    // Last Line Score
+void Sing(TScreenSingController Screen);
+void NewSentence(int CP, TScreenSingController Screen);
+void NewBeatClick(TScreenSingController Screen);  // executed when on then new beat for click
+void NewBeatDetect(TScreenSingController Screen); // executed when on then new beat for detection
+void NewNote(int CP, TScreenSingController Screen);       // detect note
+double GetMidBeat(double Time);
+SecDouble GetTimeFromBeat(int Beat, std::shared_ptr<TSong> SelfSong = {});
 
-    // PerfectLineTwinkle (effect)
-    LastSentencePerfect: boolean;
+void SingJukebox(TScreenJukebox Screen);
 
-    HighNote:       integer; // index of last note (= High(Note)?)
-    LengthNote:     integer; // number of notes (= Length(Note)?).
-    Note:           array of TPlayerNote;
-  end;
-
-  TStats = record
-    Player: array of TPlayer;
-    SongArtist:   String;
-    SongTitle:    String;
-  end;
-
-  TMedleyPlaylist = record
-    Song:               array of integer;
-    NumMedleySongs:     integer;
-    CurrentMedleySong:  integer;
-    ApplausePlayed:     boolean;
-    Stats:              array of TStats;
-    NumPlayer:          integer;
-  end;
-
-{* Player and music info *}
-var
-  {**
-   * Player info and state for each player.
-   * The amount of players is given by PlayersPlay.
-   *}
-  Player: array of TPlayer;
-
-  {**
-   * Number of players or teams playing.
-   * Possible values: 1 - 6
-   *}
-  PlayersPlay: integer;
-
-  {**
-   * Selected song for singing.
-   *}
-  CurrentSong: TSong;
-
-  PlaylistMedley: TMedleyPlaylist;  // playlist medley
-
-const
-  MAX_SONG_SCORE = 10000;     // max. achievable points per song
-  MAX_SONG_LINE_BONUS = 1000; // max. achievable line bonus per song
-
-procedure Sing(Screen: TScreenSingController);
-procedure NewSentence(CP: integer; Screen: TScreenSingController);
-procedure NewBeatClick(Screen: TScreenSingController);  // executed when on then new beat for click
-procedure NewBeatDetect(Screen: TScreenSingController); // executed when on then new beat for detection
-procedure NewNote(CP: integer; Screen: TScreenSingController);       // detect note
-function  GetMidBeat(Time: real): real;
-function  GetTimeFromBeat(Beat: integer; SelfSong: TSong = nil): real;
-
-procedure SingJukebox(Screen: TScreenJukebox);
-
-implementation
-
-uses
+/*uses
   Math,
   StrUtils,
   UCatCovers,
@@ -162,144 +166,18 @@ uses
   USkins,
   USongs,
   UThemes;
+*/
+SecDouble GetTimeForBeats(double BPM, double Beats);
 
-function GetTimeForBeats(BPM, Beats: real): real;
-begin
-  Result := 60 / BPM * Beats;
-end;
+double GetBeats(double BPM, SecDouble Time);
 
-function GetBeats(BPM, msTime: real): real;
-begin
-  Result := BPM * msTime / 60;
-end;
+void GetMidBeatSub(int BPMNum, SecDouble& Time, double& CurBeat);
 
-procedure GetMidBeatSub(BPMNum: integer; var Time: real; var CurBeat: real);
-var
-  NewTime: real;
-begin
-  if High(CurrentSong.BPM) = BPMNum then
-  begin
-    // last BPM
-    CurBeat := CurrentSong.BPM[BPMNum].StartBeat + GetBeats(CurrentSong.BPM[BPMNum].BPM, Time);
-    Time := 0;
-  end
-  else
-  begin
-    // not last BPM
-    // count how much time is it for start of the new BPM and store it in NewTime
-    NewTime := GetTimeForBeats(CurrentSong.BPM[BPMNum].BPM, CurrentSong.BPM[BPMNum+1].StartBeat - CurrentSong.BPM[BPMNum].StartBeat);
 
-    // compare it to remaining time
-    if (Time - NewTime) > 0 then
-    begin
-      // there is still remaining time
-      CurBeat := CurrentSong.BPM[BPMNum].StartBeat;
-      Time := Time - NewTime;
-    end
-    else
-    begin
-      // there is no remaining time
-      CurBeat := CurrentSong.BPM[BPMNum].StartBeat + GetBeats(CurrentSong.BPM[BPMNum].BPM, Time);
-      Time := 0;
-    end; // if
-  end; // if
-end;
+double GetMidBeat(SecDouble Time);
 
-function GetMidBeat(Time: real): real;
-var
-  CurBeat: real;
-  CurBPM:  integer;
-begin
-  try
-  // static BPM
-  if Length(CurrentSong.BPM) = 1 then
-  begin
-    Result := Time * CurrentSong.BPM[0].BPM / 60;
-  end
-  // variable BPM
-  else if Length(CurrentSong.BPM) > 1 then
-  begin
-    CurBeat := 0;
-    CurBPM := 0;
-    while (Time > 0) do
-    begin
-      GetMidBeatSub(CurBPM, Time, CurBeat);
-      Inc(CurBPM);
-    end;
 
-    Result := CurBeat;
-  end
-  // invalid BPM
-  else
-  begin
-    Result := 0;
-  end;
-  except
-    on E : Exception do
-    Result :=0;
-  end;
-end;
-
-function GetTimeFromBeat(Beat: integer; SelfSong: TSong = nil): real;
-var
-  CurBPM: integer;
-  Song: TSong;
-begin
-
-  if (SelfSong <> nil) then
-    Song := SelfSong
-  else
-    Song := CurrentSong;
-
-  Result := 0;
-
-  // static BPM
-  if Length(Song.BPM) = 1 then
-  begin
-    Result := Song.GAP / 1000 + Beat * 60 / Song.BPM[0].BPM;
-  end
-  // variable BPM
-  else if Length(Song.BPM) > 1 then
-  begin
-    Result := Song.GAP / 1000;
-    CurBPM := 0;
-    while (CurBPM <= High(Song.BPM)) and
-          (Beat > Song.BPM[CurBPM].StartBeat) do
-    begin
-      if (CurBPM < High(Song.BPM)) and
-         (Beat >= Song.BPM[CurBPM+1].StartBeat) then
-      begin
-        // full range
-        Result := Result + (60 / Song.BPM[CurBPM].BPM) *
-                           (Song.BPM[CurBPM+1].StartBeat - Song.BPM[CurBPM].StartBeat);
-      end;
-
-      if (CurBPM = High(Song.BPM)) or
-         (Beat < Song.BPM[CurBPM+1].StartBeat) then
-      begin
-        // in the middle
-        Result := Result + (60 / Song.BPM[CurBPM].BPM) *
-                           (Beat - Song.BPM[CurBPM].StartBeat);
-      end;
-      Inc(CurBPM);
-    end;
-
-    {
-    while (Time > 0) do
-    begin
-      GetMidBeatSub(CurBPM, Time, CurBeat);
-      Inc(CurBPM);
-    end;
-    }
-  end
-  // invalid BPM
-  else
-  begin
-    Result := 0;
-  end;
-end;
-
-procedure Sing(Screen: TScreenSingController);
+void Sing(TScreenSingController Screen);
 var
   LineIndex:  integer;
   CountGr:    integer;
@@ -343,7 +221,7 @@ begin
     NewBeatDetect(Screen);
 end;
 
-procedure SingJukebox(Screen: TScreenJukebox);
+void SingJukebox(TScreenJukebox Screen);
 var
   Count:   integer;
   CountGr: integer;
@@ -370,7 +248,7 @@ begin
   Screen.onSentenceChange(Tracks[0].CurrentLine);
 end;
 
-procedure NewSentence(CP: integer; Screen: TScreenSingController);
+void NewSentence(int CP, TScreenSingController Screen);
 var
   I: integer;
 begin
@@ -388,43 +266,9 @@ begin
   Screen.onSentenceChange(CP, Tracks[CP].CurrentLine)
 end;
 
-procedure NewBeatClick;
-var
-  Count: integer;
-begin
-  // beat click
+void NewBeatClick();
 
-  if not (CurrentSong.isDuet) or (PlayersPlay = 1) then
-  begin
-    if ((Ini.BeatClick = 1) and
-        ((LyricsState.CurrentBeatC + Tracks[0].Resolution + Tracks[0].NotesGAP) mod Tracks[0].Resolution = 0)) then
-    begin
-      AudioPlayback.PlaySound(SoundLib.Click);
-    end;
-
-    for Count := 0 to Tracks[0].Lines[Tracks[0].CurrentLine].HighNote do
-    begin
-      //basisbit todo
-      if (Tracks[0].Lines[Tracks[0].CurrentLine].Notes[Count].StartBeat = LyricsState.CurrentBeatC) then
-      begin
-        // click assist
-        if Ini.ClickAssist = 1 then
-          AudioPlayback.PlaySound(SoundLib.Click);
-
-        // drum machine
-        (*
-        TempBeat := LyricsState.CurrentBeat; // + 2;
-        if (TempBeat mod 8 = 0) then Music.PlayDrum;
-        if (TempBeat mod 8 = 4) then Music.PlayClap;
-        //if (TempBeat mod 4 = 2) then Music.PlayHihat;
-        if (TempBeat mod 4 <> 0) then Music.PlayHihat;
-        *)
-      end;
-    end;
-  end;
-end;
-
-procedure NewBeatDetect(Screen: TScreenSingController);
+void NewBeatDetect(Screen: TScreenSingController);
   var
     MaxCP, CP, SentenceEnd: integer;
     I, J: cardinal;
@@ -469,7 +313,7 @@ begin
   end;
 end;
 
-procedure NewNote(CP: integer; Screen: TScreenSingController);
+void NewNote(CP: integer; Screen: TScreenSingController);
 var
   LineFragmentIndex:   integer;
   CurrentLineFragment: PLineFragment;
@@ -713,4 +557,4 @@ begin
   //Log.LogStatus('EndBeat', 'NewBeat');
 end;
 
-end.
+};

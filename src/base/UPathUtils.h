@@ -1,4 +1,4 @@
-{* UltraStar Deluxe - Karaoke Game
+/* UltraStar Deluxe - Karaoke Game
  *
  * UltraStar Deluxe is the legal property of its developers, whose names
  * are too numerous to list here. Please refer to the COPYRIGHT
@@ -21,140 +21,62 @@
  *
  * $URL$
  * $Id$
- *}
+ */
+//#include "UPath.h"
+#include <filesystem>
 
-unit UPathUtils;
+#include "switches.h"
 
-interface
-
-{$IFDEF FPC}
-  {$MODE Delphi}
-{$ENDIF}
-
-{$I switches.inc}
-
+namespace UPathUtils
+{
+/*
 uses
   SysUtils,
   Classes,
   UPath;
+*/
+// Absolute Paths
+std::filesystem::path GamePath;
+std::filesystem::path SoundPath;
+std::vector<std::filesystem::path> SongPaths;
+std::filesystem::path LogPath;
+std::filesystem::path ThemePath;
+std::filesystem::path SkinsPath;
+std::filesystem::path ScreenshotsPath;
+std::vector<std::filesystem::path> CoverPaths;
+std::filesystem::path LanguagesPath;
+std::filesystem::path PluginPath;
+std::filesystem::path FontPath;
+std::filesystem::path ResourcesPath;
+std::filesystem::path PlaylistPath;
+std::filesystem::path WebsitePath;
+std::filesystem::path WebScoresPath;
+std::filesystem::path SoundFontsPath;
+std::filesystem::path AvatarsPath;
 
-var
-  // Absolute Paths
-  GamePath:         IPath;
-  SoundPath:        IPath;
-  SongPaths:        IInterfaceList;
-  LogPath:          IPath;
-  ThemePath:        IPath;
-  SkinsPath:        IPath;
-  ScreenshotsPath:  IPath;
-  CoverPaths:       IInterfaceList;
-  LanguagesPath:    IPath;
-  PluginPath:       IPath;
-  FontPath:         IPath;
-  ResourcesPath:    IPath;
-  PlaylistPath:     IPath;
-  WebsitePath:      IPath;
-  WebScoresPath:    IPath;
-  SoundFontsPath:   IPath;
-  AvatarsPath:      IPath;
+bool FindPath(std::filesystem::path& PathResult, const std::filesystem::path RequestedPath, bool NeedsWritePermission);
+bool IsWritable(const std::filesystem::path& path);
+void InitializePaths();
+void AddSongPath(const std::filesystem::path Path);
 
-function FindPath(out PathResult: IPath; const RequestedPath: IPath; NeedsWritePermission: boolean): boolean;
-procedure InitializePaths;
-procedure AddSongPath(const Path: IPath);
-
-implementation
-
+/*
 uses
   StrUtils,
   UPlatform,
   UCommandLine,
   ULog;
+*/
+void AddSpecialPath(std::vector<std::filesystem::path>& PathList, const std::filesystem::path Path);
 
-procedure AddSpecialPath(var PathList: IInterfaceList; const Path: IPath);
-var
-  Index: integer;
-  PathAbs, PathTmp: IPath;
-  OldPath, OldPathAbs, OldPathTmp: IPath;
-begin
-  if (PathList = nil) then
-    PathList := TInterfaceList.Create;
-
-  if Path.Equals(PATH_NONE) or not Path.CreateDirectory(true) then
-    Exit;
-
-  PathTmp := Path.GetAbsolutePath();
-  PathAbs := PathTmp.AppendPathDelim();
-
-  // check if path or a part of the path was already added
-  for Index := 0 to PathList.Count-1 do
-  begin
-    OldPath := PathList[Index] as IPath;
-    OldPathTmp := OldPath.GetAbsolutePath();
-    OldPathAbs := OldPathTmp.AppendPathDelim();
-
-    // check if the new directory is a sub-directory of a previously added one.
-    // This is also true, if both paths point to the same directories.
-    if (OldPathAbs.IsChildOf(PathAbs, false) or OldPathAbs.Equals(PathAbs)) then
-    begin
-      // ignore the new path
-      Exit;
-    end;
-
-    // check if a previously added directory is a sub-directory of the new one.
-    if (PathAbs.IsChildOf(OldPathAbs, false)) then
-    begin
-      // replace the old with the new one.
-      PathList[Index] := PathAbs;
-      Exit;
-    end;
-  end;
-
-  PathList.Add(PathAbs);
-end;
-
-procedure AddSongPath(const Path: IPath);
-begin
-  AddSpecialPath(SongPaths, Path);
-end;
-
-procedure AddCoverPath(const Path: IPath);
+void AddCoverPath(const Path: IPath);
 begin
   AddSpecialPath(CoverPaths, Path);
 end;
 
-(**
- * Initialize a path variable
- * After setting paths, make sure that paths exist
- *)
-function FindPath(
-  out PathResult: IPath;
-  const RequestedPath: IPath;
-  NeedsWritePermission: boolean): boolean;
-begin
-  Result := false;
-
-  (*if (RequestedPath.Equals(PATH_NONE)) then
-    Exit;*)
-
-  // Make sure the directory exists
-  if (not RequestedPath.CreateDirectory(true)) then
-  begin
-    PathResult := PATH_NONE;
-    Exit;
-  end;
-
-  PathResult := RequestedPath.AppendPathDelim();
-
-  if (NeedsWritePermission) and RequestedPath.IsReadOnly() then
-    Exit;
-
-  Result := true;
-end;
-
-(**
+/**
  * Function sets all absolute paths e.g. song path and makes sure the directorys exist
- *)
-procedure InitializePaths;
+ */
+void InitializePaths;
 var
   SharedPath, UserPath: IPath;
 begin
@@ -204,3 +126,4 @@ begin
 end;
 
 end.
+};
