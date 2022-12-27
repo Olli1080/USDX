@@ -123,8 +123,8 @@ function Equals(A, B: string; CaseSensitive: boolean = false): Boolean; overload
 int GetArrayIndex(const std::vector<std::string> SearchArray, std::string Value, bool CaseInsensitiv = false);
 int GetArrayIndex(const std::vector<int> SearchArray, int Value);
 
-function ParseResolutionString(const ResolutionString: string; out x, y: integer): boolean;
-function BuildResolutionString(x,y: integer): string;
+bool ParseResolutionString(const std::string ResolutionString, int& x, int& y);
+std::string BuildResolutionString(int x, int y);
 
 implementation
 /*
@@ -657,34 +657,6 @@ begin
       Break;
     end;
   end;
-end;
-
-function BuildResolutionString(x,y: integer): string;
-begin
-  Result := Format("%dx%d", [x, y]);
-end;
-
-function ParseResolutionString(const ResolutionString: string; out x,y : integer): boolean;
-  var
-    Pieces: TStringDynArray;
-begin
-  Pieces := SplitString(LowerCase(ResolutionString), 1, ["x"]);
-  Result := false;
-
-  if (Length(Pieces) > 1) and (Length(Pieces[0]) > 0) and (Length(Pieces[1]) > 0) then
-  begin
-    x := StrToInt(Pieces[0]);
-    y := StrToInt(Pieces[1]);
-  end
-  // FIXME: legacy code as long as SplitString is not fixed
-  else if Pos("x", ResolutionString) > 0then
-  begin
-    x := StrToInt(Copy(ResolutionString, 1, Pos("x", ResolutionString)-1));
-    y := StrToInt(Copy(ResolutionString, Pos("x", ResolutionString)+1, 1000));
-  end else Exit;
-
-  // verify if resolution has proper values
-  Result := (x > 0) and (y > 0);
 end;
 
 type

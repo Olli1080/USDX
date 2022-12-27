@@ -41,6 +41,9 @@ public:
     {
 
     };
+
+    bool SectionExists(std::string)
+    {};
 };
 
 class TIniFile : public TCustomIniFile

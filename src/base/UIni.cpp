@@ -122,11 +122,11 @@ void TIni::TranslateOptionValues()
   INoteLinesTranslated[0]             = ULanguage::Language.Translate("OPTION_VALUE_OFF");
   INoteLinesTranslated[1]             = ULanguage::Language.Translate("OPTION_VALUE_ON");
 
-  for (int I = 0; I < 256; ++i)
+  for (int i = 0; i < 256; ++i)
   {
-    IRed[I] = std::to_string(I);
-    IGreen[I] = std::to_string(I);
-    IBlue[I] = std::to_string(I);
+    IRed[i] = std::to_string(i);
+    IGreen[i] = std::to_string(i);
+    IBlue[i] = std::to_string(i);
   }
 
   ILineTranslated[0] = ULanguage::Language.Translate("OPTION_VALUE_TO_SING");
@@ -315,9 +315,7 @@ void TIni::TranslateOptionValues()
   IChannelPlayerTranslated[0]         = ULanguage::Language.Translate("SING_OPTIONS_RECORD_NOONE");
 
   for (int i = 1; i <= IMaxPlayerCount; ++i)
-  {
     IChannelPlayerTranslated[i]       = std::to_string(i);
-  }
 
   IMicBoostTranslated[0]              = ULanguage::Language.Translate("OPTION_VALUE_OFF");
   IMicBoostTranslated[1]              = "+6dB";
@@ -329,10 +327,8 @@ void TIni::TranslateOptionValues()
   IAutoModeTranslated[1]         = ULanguage::Language.Translate("OPTION_VALUE_SEND");
   IAutoModeTranslated[2]         = ULanguage::Language.Translate("OPTION_VALUE_SAVE");
 
-  for (int i = 0;  i < IMaxPlayerCount; ++i)
-  {
-    IAutoPlayerTranslated[I]       = ULanguage::Language.Translate("OPTION_PLAYER_" + std::to_string(I));
-  }
+  for (int i = 0; i < IMaxPlayerCount; ++i)
+    IAutoPlayerTranslated[i]       = ULanguage::Language.Translate("OPTION_PLAYER_" + std::to_string(i));
   IAutoPlayerTranslated[12]         = ULanguage::Language.Translate("OPTION_ALL_PLAYERS");
 
   // Webcam
@@ -355,7 +351,7 @@ void TIni::TranslateOptionValues()
   IAutoScoreMediumTranslated.resize(10000);
   IAutoScoreHardTranslated.resize(10000);
 
-  for (int i = 0; i <= 9999; ++i)
+  for (int i = 0; i < 10000; ++i)
   {
     std::string zeros = "";
     if (i < 10)
@@ -449,7 +445,7 @@ int TIni::GetMaxKeyIndex(std::list<std::string> Keys, const std::string Prefix, 
 /**
  * Reads the property IniSeaction:IniProperty from IniFile &&
  * finds its corresponding index in SearchArray.
- * If SearchArray does!contain the property value, the default value is
+ * If SearchArray does not contain the property value, the default value is
  * returned.
  */
 int TIni::ReadArrayIndex(const std::vector<std::string>& SearchArray, const TCustomIniFile& IniFile,
@@ -462,10 +458,10 @@ int TIni::ReadArrayIndex(const std::vector<std::string>& SearchArray, const TCus
     std::string IniSection, std::string IniProperty, int Default, std::string DefaultValue, bool CaseInsensitive)
     {
       std::string StrValue = IniFile.ReadString(IniSection, IniProperty, "");
-      Result = UCommon::GetArrayIndex(SearchArray, StrValue, CaseInsensitive);
+      int Result = UCommon::GetArrayIndex(SearchArray, StrValue, CaseInsensitive);
       if (Result < 0)
       {
-        if (Default == IGNORE_INDEX && !UCommon.Equals(StrValue, DefaultValue, !CaseInsensitive))
+        if (Default == IGNORE_INDEX && !UCommon::Equals(StrValue, DefaultValue, !CaseInsensitive))
         {
           // prioritize default string value
           Result = UCommon::GetArrayIndex(SearchArray, DefaultValue, CaseInsensitive);
@@ -474,6 +470,7 @@ int TIni::ReadArrayIndex(const std::vector<std::string>& SearchArray, const TCus
         if (Result < 0 || Result > SearchArray.size())
           Result = Default;
       }
+      return Result;
     }
 
 template<std::size_t N>
@@ -488,7 +485,7 @@ template<std::size_t N>
       std::string IniSection, std::string IniProperty, int Default, std::string DefaultValue, bool CaseInsensitive)
       {
         std::string StrValue = IniFile.ReadString(IniSection, IniProperty, "");
-        Result = UCommon::GetArrayIndex(SearchArray, StrValue, CaseInsensitive);
+        int Result = UCommon::GetArrayIndex(SearchArray, StrValue, CaseInsensitive);
         if (Result < 0)
         {
           if (Default == IGNORE_INDEX && !UCommon.Equals(StrValue, DefaultValue, !CaseInsensitive))
@@ -500,6 +497,7 @@ template<std::size_t N>
           if (Result < 0 || Result > SearchArray.size())
             Result = Default;
         }
+        return Result;
       }
 
 
@@ -703,13 +701,13 @@ var
   int DisplayIndex = -1;
   MaxMode.h = 0; MaxMode.w = 0;
   CurrentMode.h = -1; CurrentMode.w = -1;
-  for (I = 0 to SDL_GetNumVideoDisplays() - 1)
+  for (int i = 0; i < to SDL_GetNumVideoDisplays(); ++i)
   {
-    int Success = SDL_GetCurrentDisplayMode(I,  @CurrentMode);
+    int Success = SDL_GetCurrentDisplayMode(i,  @CurrentMode);
     if (Success == 0)
     {
-      DisplayIndex = I;
-      CurrentRes = BuildResolutionString(CurrentMode.w, CurrentMode.h);
+      DisplayIndex = i;
+      CurrentRes = UCommon::BuildResolutionString(CurrentMode.w, CurrentMode.h);
       break;
     }
   }
@@ -719,7 +717,7 @@ var
   {
     for (int i = 0; i < SDL_GetNumDisplayModes(DisplayIndex) - 1; ++i)
     {
-      int Success = SDL_GetDisplayMode(DisplayIndex, I, @ModeIter);
+      int Success = SDL_GetDisplayMode(DisplayIndex, i, @ModeIter);
       if (Success != 0)
         continue;
 
@@ -759,7 +757,7 @@ var
 
   // if resolution cannot be found, check if is larger than max resolution
   if ((Resolution < 0) && (MaxMode.w > 0) && (MaxMode.h > 0) &&
-     (ParseResolutionString(ResString, ModeIter.w, ModeIter.h)) &&
+     (UCommon::ParseResolutionString(ResString, ModeIter.w, ModeIter.h)) &&
      ((ModeIter.w > MaxMode.w) || (ModeIter.h > MaxMode.h)))
   {
     ULog::Log.LogInfo(std::format("Exceeding resoluton found ({}). Reverting to standard resolution.", ResString), "Video");
@@ -1140,10 +1138,23 @@ var
 
   LoadPaths(IniFile);
 
-  TranslateOptionValues;
-
-  IniFile.Free;
+  TranslateOptionValues();
 }
+
+template<std::size_t N>
+void TIni::AssignJukeboxColor(int JukeboxColor, std::array<std::string, N> LineColor, int R, int G, int B, TIniFile IniFile, std::string Key)
+{
+  std::string HexColor;
+  if (JukeboxColor != N - 1) 
+  {
+    UCommon::TRGB C = UThemes::GetLyricColor(JukeboxColor);
+    HexColor = UCommon::RGBToHex(std::round(C.R * 255), std::round(C.G * 255), std::round(C.B * 255));
+  }
+  else
+    HexColor = UCommon::RGBToHex(R, G, B);
+
+  IniFile.WriteString("Jukebox", Key, HexColor);
+};
 
 void TIni::Save()
 /*
@@ -1345,69 +1356,16 @@ var
     IniFile.WriteString("Jukebox", "LyricsEffect", ILyricsEffect[JukeboxEffect]);
     IniFile.WriteString("Jukebox", "LyricsAlpha", ILyricsAlpha[JukeboxAlpha]);
 
-    if (JukeboxSingLineColor != High(ISingLineColor)) 
-    {
-      C = GetLyricColor(JukeboxSingLineColor);
-      HexColor = UCommon::RGBToHex(std::round(C.R * 255), std::round(C.G * 255), std::round(C.B * 255));
-    }
-    else
-      HexColor = UCommon::RGBToHex(JukeboxSingLineOtherColorR, JukeboxSingLineOtherColorG, JukeboxSingLineOtherColorB);
-
-    IniFile.WriteString("Jukebox", "SingLineColor", HexColor);
-
-    if (JukeboxActualLineColor != High(IActualLineColor)) 
-    {
-      C = GetLyricGrayColor(JukeboxActualLineColor);
-      HexColor = UCommon::RGBToHex(std::round(C.R * 255), std::round(C.G * 255), std::round(C.B * 255));
-    }
-    else
-      HexColor = UCommon::RGBToHex(JukeboxActualLineOtherColorR, JukeboxActualLineOtherColorG, JukeboxActualLineOtherColorB);
-
-    IniFile.WriteString("Jukebox", "ActualLineColor", HexColor);
-
-    if (JukeboxNextLineColor != High(INextLineColor)) 
-    {
-      C = GetLyricGrayColor(JukeboxNextLineColor);
-      HexColor = UCommon::RGBToHex(std::round(C.R * 255), std::round(C.G * 255), std::round(C.B * 255));
-    }
-    else
-      HexColor = UCommon::RGBToHex(JukeboxNextLineOtherColorR, JukeboxNextLineOtherColorG, JukeboxNextLineOtherColorB);
-
-    IniFile.WriteString("Jukebox", "NextLineColor", HexColor);
-
-    if (JukeboxSingLineOutlineColor != High(ISingLineOColor)) 
-    {
-      C = GetLyricOutlineColor(JukeboxSingLineOutlineColor);
-      HexColor = UCommon::RGBToHex(std::round(C.R * 255), std::round(C.G * 255), std::round(C.B * 255));
-    }
-    else
-      HexColor = UCommon::RGBToHex(JukeboxSingLineOtherOColorR, JukeboxSingLineOtherOColorG, JukeboxSingLineOtherOColorB);
-
-    IniFile.WriteString("Jukebox", "SingLineOColor", HexColor);
-
-    if (JukeboxActualLineOutlineColor != High(IActualLineOColor)) 
-    {
-      C = GetLyricOutlineColor(JukeboxActualLineOutlineColor);
-      HexColor = UCommon::RGBToHex(std::round(C.R * 255), std::round(C.G * 255), std::round(C.B * 255));
-    }
-    else
-      HexColor = UCommon::RGBToHex(JukeboxActualLineOtherOColorR, JukeboxActualLineOtherOColorG, JukeboxActualLineOtherOColorB);
-
-    IniFile.WriteString("Jukebox", "ActualLineOColor", HexColor);
-
-    if (JukeboxNextLineOutlineColor != High(INextLineOColor)) 
-    {
-      C = GetLyricOutlineColor(JukeboxNextLineOutlineColor);
-      HexColor = UCommon::RGBToHex(std::round(C.R * 255), std::round(C.G * 255), std::round(C.B * 255));
-    }
-    else
-      HexColor = UCommon::RGBToHex(JukeboxNextLineOtherOColorR, JukeboxNextLineOtherOColorG, JukeboxNextLineOtherOColorB);
-
-    IniFile.WriteString("Jukebox", "NextLineOColor", HexColor);
+    AssignJukeboxColor(JukeboxSingLineColor, ISingLineColor, JukeboxSingLineOtherColorR, JukeboxSingLineOtherColorG, JukeboxSingLineOtherColorB, IniFile, "SingLineColor");
+    AssignJukeboxColor(JukeboxActualLineColor, IActualLineColor, JukeboxActualLineOtherColorR, JukeboxActualLineOtherColorG, JukeboxActualLineOtherColorB, IniFile, "ActualLineColor");
+    AssignJukeboxColor(JukeboxNextLineColor, INextLineColor, JukeboxNextLineOtherColorR, JukeboxNextLineOtherColorG, JukeboxNextLineOtherColorB, IniFile, "NextLineColor");
+    AssignJukeboxColor(JukeboxSingLineOutlineColor, ISingLineOColor, JukeboxSingLineOtherOColorR, JukeboxSingLineOtherOColorG, JukeboxSingLineOtherOColorB, IniFile, "SingLineOColor");
+    AssignJukeboxColor(JukeboxActualLineOutlineColor, IActualLineOColor, JukeboxActualLineOtherOColorR, JukeboxActualLineOtherOColorG, JukeboxActualLineOtherOColorB, IniFile, "ActualLineOColor");
+    AssignJukeboxColor(JukeboxNextLineOutlineColor, INextLineOColor, JukeboxNextLineOtherOColorR, JukeboxNextLineOtherOColorG, JukeboxNextLineOtherOColorB, IniFile, "NextLineOColor");
   }
   catch (const std::exception& e)
   {
-    ULog::Log.LogWarn("Saving InputDeviceConfig failed: " + e.what(), "UIni.Save");
+    ULog::Log.LogWarn("Saving InputDeviceConfig failed: " + std::string(e.what()), "UIni.Save");
   }
 }
 
@@ -1422,14 +1380,12 @@ var
     auto IniFile = TIniFile(Filename);
 
     //Name Templates for Names Mod
-    for I = 0 to High(Name) do
-      IniFile.WriteString("Name", "P" + std::to_string(I+1), Name[I]);
-    for I = 0 to High(NameTeam) do
-      IniFile.WriteString("NameTeam", "T" + std::to_string(I+1), NameTeam[I]);
-    for I = 0 to High(NameTemplate) do
-      IniFile.WriteString("NameTemplate", "Name" + std::to_string(I+1), NameTemplate[I]);
-
-    IniFile.Free;
+    for (int i = 0; i < Name.size(); ++i)
+      IniFile.WriteString("Name", "P" + std::to_string(i+1), Name[i]);
+    for (int i = 0; i < NameTeam.size(); ++i)
+      IniFile.WriteString("NameTeam", "T" + std::to_string(i+1), NameTeam[i]);
+    for (int i = 0; i < NameTemplate.size(); ++i)
+      IniFile.WriteString("NameTemplate", "Name" + std::to_string(i+1), NameTemplate[i]);
   }
 }
 
@@ -1484,8 +1440,8 @@ var
     auto IniFile = TIniFile(Filename);
 
     //Colors for Names Mod
-    for I = 1 to IMaxPlayerCount do
-      IniFile.WriteString("PlayerColor", "P" + std::to_string(I), std::to_string(PlayerColor[I-1]));
+    for (int i = 1; i <= IMaxPlayerCount; ++i)
+      IniFile.WriteString("PlayerColor", "P" + std::to_string(i), std::to_string(PlayerColor[i-1]));
   }
 }
 
@@ -1499,8 +1455,8 @@ void TIni::SavePlayerAvatars()
     auto IniFile = TIniFile(Filename);
 
     //Colors for Names Mod
-    for I = 1 to IMaxPlayerCount do
-      IniFile.WriteString("PlayerAvatar", "P" + std::to_string(I), PlayerAvatar[I-1]);
+    for (int i = 1; i <= IMaxPlayerCount; ++i)
+      IniFile.WriteString("PlayerAvatar", "P" + std::to_string(i), PlayerAvatar[i-1]);
   }
 }
 
@@ -1513,8 +1469,8 @@ void TIni::SavePlayerLevels()
   {
     auto IniFile = TIniFile(Filename);
 
-    for I = 1 to IMaxPlayerCount do
-      IniFile.WriteInteger("PlayerLevel", "P" + std::to_string(I), PlayerLevel[I-1]);
+    for (int i = 1; i <= IMaxPlayerCount; ++i)
+      IniFile.WriteInteger("PlayerLevel", "P" + std::to_string(i), PlayerLevel[i-1]);
   }
 }
 
@@ -1528,8 +1484,8 @@ void TIni::SaveTeamColors()
     auto IniFile = TIniFile(Filename);
 
     //Colors for Names Mod
-    for I = 1 to 3 do
-      IniFile.WriteString("TeamColor", "T" + std::to_string(I), std::to_string(TeamColor[I-1]));
+    for (int i = 1; i <= 3; ++i)
+      IniFile.WriteString("TeamColor", "T" + std::to_string(i), std::to_string(TeamColor[i-1]));
   }
 }
 
@@ -1555,9 +1511,9 @@ void TIni::SaveWebcamSettings()
     auto IniFile = TIniFile(Filename);
 
     // WebCam
-    IniFile.WriteInteger("Webcam", "ID", WebCamID);
+    IniFile.WriteInteger("Webcam", "ID", WebcamID);
     IniFile.WriteString("Webcam", "Resolution", IWebcamResolution[WebcamResolution]);
-    IniFile.WriteInteger("Webcam", "FPS", std::stoi(IWebcamFPS[WebCamFPS]));
+    IniFile.WriteInteger("Webcam", "FPS", std::stoi(IWebcamFPS[WebcamFPS]));
 
     IniFile.WriteString("Webcam", "Flip", IWebcamFlip[WebcamFlip]);
     IniFile.WriteString("Webcam", "Brightness", IWebcamBrightness[WebcamBrightness]);
@@ -1669,7 +1625,7 @@ bool TIni::SetResolution(int w, int h, bool RemoveCurrent = false, bool NoSave =
 bool TIni::SetResolution(int index)
 {
   bool Result = false;
-  if ((index >= 0) && (index < Length(IResolution)))
+  if ((index >= 0) && (index < IResolution.size()))
   {
       Resolution = index;
       Result = true;
@@ -1677,77 +1633,89 @@ bool TIni::SetResolution(int index)
   return Result;
 }
 
-function TIni.GetResolution(): string;
+std::string TIni::GetResolution()
 {
-  if Resolution >= 0  Result = IResolution[Resolution]
-  else if Length(IResolution) = 0  Result = DEFAULT_RESOLUTION
-  else Result = IResolution[0];
+  if (Resolution >= 0)  
+    return IResolution[Resolution];
+  else if (IResolution.empty())
+    return DEFAULT_RESOLUTION;
+  else 
+    return IResolution[0];
 }
 
-function TIni.GetResolution(out w,h: integer): string;
+std::string TIni::GetResolution(int& w, int& h)
 {
-  Result = GetResolution();
-  ParseResolutionString(Result, w, h);
+  auto Result = GetResolution();
+  UCommon::ParseResolutionString(Result, w, h);
 
   // hacky fix to support multiplied resolution (in width) in multiple screen setup (Screens=2 && more)
   // TODO: RattleSN4K3: Improve the way multiplied screen resolution is applied && stored (see UGraphics::InitializeScreen; W = W * Screens)
-  if (Screens > 0) &&!((Params.Split = spmSplit ) || (Split > 0))  w = w * (Screens+1)
-  else if (Params.Screens > 0) &&!((Params.Split = spmSplit ) || (Split > 0))  w = w * (Params.Screens+1);
+  if ((Screens > 0) &&!((Params.Split = spmSplit ) || (Split > 0)))  
+    w = w * (Screens+1);
+  else if ((Params.Screens > 0) &&!((Params.Split = spmSplit ) || (Split > 0)))  
+    w = w * (Params.Screens+1);
+
+  return Result;
 }
 
-function TIni.GetResolution(index: integer; out ResolutionString: string): boolean;
+bool TIni::GetResolution(int index, std::string& ResolutionString)
 {
-  Result = false;
-  if (index >= 0) && (index < Length(IResolution)) 
+  bool Result = false;
+  if ((index >= 0) && (index < IResolution.size()))
   {
       ResolutionString = IResolution[index];
       Result = true;
   }
+  return Result;
 }
 
-function TIni.GetResolutionFullscreen(): string;
+std::string TIni::GetResolutionFullscreen()
 {
-  if ResolutionFullscreen >= 0  Result = IResolutionFullScreen[ResolutionFullscreen]
-  else if Length(IResolutionFullScreen) = 0  Result = DEFAULT_RESOLUTION
-  else Result = IResolutionFullScreen[0];
+  if (ResolutionFullscreen >= 0)  
+    return IResolutionFullScreen[ResolutionFullscreen];
+  else if (IResolutionFullScreen.empty())  
+    return DEFAULT_RESOLUTION;
+  else 
+    return IResolutionFullScreen[0];
 }
 
-function TIni.GetResolutionFullscreen(out w,h: integer): string;
+std::string TIni::GetResolutionFullscreen(int& w, int& h)
 {
-  Result = GetResolutionFullscreen();
-  ParseResolutionString(Result, w, h);
+  auto Result = GetResolutionFullscreen();
+  UCommon::ParseResolutionString(Result, w, h);
+
+  return Result;
 }
 
-function TIni.GetResolutionFullscreen(index: integer; out ResolutionString: string): boolean;
+bool TIni::GetResolutionFullscreen(int index, std::string& ResolutionString)
 {
-  Result = false;
-  if (index >= 0) && (index < Length(IResolutionFullScreen)) 
+  bool Result = false;
+  if ((index >= 0) && (index < IResolutionFullScreen.size()))
   {
       ResolutionString = IResolutionFullScreen[index];
       Result = true;
   }
+  return Result;
 }
 
-void TIni.ClearCustomResolutions();
-  var
-    Index, i, custom: integer;
-    ResString: string;
+void TIni::ClearCustomResolutions()
 {
-  if Resolution < 0  Exit;
+  if (Resolution < 0)  
+    return;
 
   // check if current resolution is a custom one
-  ResString = IResolution[Resolution];
-  Index = UCommon::GetArrayIndex(IResolutionCustom, ResString);
-  for i = High(IResolutionCustom) downto 0 do
-  {
-    custom = UCommon::GetArrayIndex(IResolution, IResolutionCustom[i]);
-    if (custom >= 0) && (Index != i) 
-    {
-      StringDeleteFromArray(IResolution, custom);
-      StringDeleteFromArray(IResolutionCustom, i);
-    }
-  }
+  std::string ResString = IResolution[Resolution];
+  int Index = UCommon::GetArrayIndex(IResolutionCustom, ResString);
 
+  for (int i = IResolutionCustom.size() - 1; i >= 0; --i)
+  {
+    int custom = UCommon::GetArrayIndex(IResolution, IResolutionCustom[i]);
+    if ((custom >= 0) && (Index != i))
+    {
+      IResolution.erase(IResolution.begin() + custom);
+      IResolutionCustom.erase(IResolutionCustom.begin() + i);
+    }
+  }  
   // update index
   Resolution = UCommon::GetArrayIndex(IResolution, ResString);
 }

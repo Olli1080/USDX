@@ -109,6 +109,9 @@ private:
   void LoadScreenModes(TCustomIniFile IniFile);
   void LoadWebcamSettings(TCustomIniFile IniFile);
 
+  template<std::size_t N>
+  void AssignJukeboxColor(int JukeboxColor, std::array<std::string, N> LineColor, int R, int G, int B, TIniFile IniFile, std::string Key);
+
 public:
   // Players or Teams colors
   std::array<int, IMaxPlayerCount> SingColor;
@@ -212,14 +215,14 @@ public:
   int Mouse;
 
   // WebCam
-  int WebCamID;
+  int WebcamID;
   int WebcamResolution;
-  int WebCamFPS;
-  int WebCamFlip;
-  int WebCamBrightness;
-  int WebCamSaturation;
-  int WebCamHue;
-  int WebCamEffect;
+  int WebcamFPS;
+  int WebcamFlip;
+  int WebcamBrightness;
+  int WebcamSaturation;
+  int WebcamHue;
+  int WebcamEffect;
 
   // Jukebox
   int JukeboxSongMenu;
