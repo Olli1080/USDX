@@ -2,10 +2,15 @@
 
 #include <format>
 
+#include <SDL2/SDL.h>
+#include <boost/algorithm/string/case_conv.hpp>
+
 #include "ULanguage.h"
 #include "UCommon.h"
 #include "ULog.h"
 #include "UPathUtils.h"
+#include "UDLLManager.h"
+#include "UCommandLine.h"
 
 namespace UIni
 {
@@ -15,8 +20,8 @@ namespace UIni
 void TIni::TranslateOptionValues()
 {
   // Load language file, fallback to config language if param is invalid
-  if ((Params.Language > -1) && (Params.Language < ILanguage.size()))
-    ULanguage::Language.ChangeLanguage(ILanguage[Params.Language]);
+  if ((UCommandLine::Params.Language > -1) && (UCommandLine::Params.Language < ILanguage.size()))
+    ULanguage::Language.ChangeLanguage(ILanguage[UCommandLine::Params.Language]);
   else
     ULanguage::Language.ChangeLanguage(ILanguage[Language]);
 
@@ -615,8 +620,8 @@ var
   // Load song-paths
   for (const auto& pStr : PathStrings)
   {
-    if (Pos("SONGDIR", UpperCase(pStr)) = 1)
-      AddSongPath(Path(IniFile.ReadString("Directories", pStr, "")));
+    if (boost::algorithm::to_upper_copy(pStr).find("SONGDIR") == 0)
+      UPathUtils::AddSongPath(std::filesystem::path(IniFile.ReadString("Directories", pStr, "")));
   }
 }
 
@@ -699,11 +704,15 @@ var
 
   // retrieve currently used Video Display
   int DisplayIndex = -1;
+  SDL_DisplayMode CurrentMode;
+  SDL_DisplayMode MaxMode;
+  SDL_DisplayMode ModeIter;
+
   MaxMode.h = 0; MaxMode.w = 0;
   CurrentMode.h = -1; CurrentMode.w = -1;
-  for (int i = 0; i < to SDL_GetNumVideoDisplays(); ++i)
+  for (int i = 0; i < SDL_GetNumVideoDisplays(); ++i)
   {
-    int Success = SDL_GetCurrentDisplayMode(i,  @CurrentMode);
+    int Success = SDL_GetCurrentDisplayMode(i, &CurrentMode);
     if (Success == 0)
     {
       DisplayIndex = i;
@@ -715,13 +724,13 @@ var
   // retrieve available display modes, store into separate array
   if (DisplayIndex >= 0)
   {
-    for (int i = 0; i < SDL_GetNumDisplayModes(DisplayIndex) - 1; ++i)
+    for (int i = 0; i < SDL_GetNumDisplayModes(DisplayIndex); ++i)
     {
-      int Success = SDL_GetDisplayMode(DisplayIndex, i, @ModeIter);
+      int Success = SDL_GetDisplayMode(DisplayIndex, i, &ModeIter);
       if (Success != 0)
         continue;
 
-      std::string ResString = BuildResolutionString(ModeIter.w, ModeIter.h);
+      std::string ResString = UCommon::BuildResolutionString(ModeIter.w, ModeIter.h);
       if (UCommon::GetArrayIndex(IResolutionFullScreen, ResString) < 0)
       {
         ULog::Log.LogStatus("Found Video Mode: " + ResString, "Video");
@@ -804,19 +813,19 @@ var
   HexColor: string;
   Col: TRGB;
   */
-  LoadFontFamilyNames;
+  LoadFontFamilyNames();
   ILyricsFont = FontFamilyNames;
-  GamePath = Platform.GetGameUserPath;
+  UPathUtils::GamePath = Platform.GetGameUserPath;
 
-  ULog::Log.LogStatus( "GamePath : " + GamePath.ToNative , "" );
+  ULog::Log.LogStatus( "GamePath : " + UPathUtils::GamePath.string() , "");
 
-  if (Params.ConfigFile.IsSet)
-    FileName = Params.ConfigFile;
+  if (UCommandLine::Params.ConfigFile.has_value())
+    Filename = UCommandLine::Params.ConfigFile.value();
   else
-    FileName = GamePath.Append("config.ini");
+    Filename = UPathUtils::GamePath / "config.ini";
 
-  ULog::Log.LogStatus("Using config : " + FileName.ToNative, "Ini");
-  auto IniFile = TMemIniFile(FileName.ToNative);
+  ULog::Log.LogStatus("Using config : " + Filename.string(), "Ini");
+  auto IniFile = TMemIniFile(Filename);
 
   for (int i = 0; i < IMaxPlayerCount; ++i)
   {
@@ -877,16 +886,18 @@ var
   DataBase.AddWebsite;
 
   // Webs Scores Path
-  WebScoresPath = Path(IniFile.ReadString("Directories", "WebScoresDir", WebsitePath.ToNative));
-  if (!DirectoryExists(WebScoresPath.ToNative))
-    WebScoresPath =  WebsitePath;
+  UPathUtils::WebScoresPath = std::filesystem::path(IniFile.ReadString("Directories", "WebScoresDir", UPathUtils::WebsitePath.string()));
+  if (!std::filesystem::exists(UPathUtils::WebScoresPath.string()))
+    UPathUtils::WebScoresPath = UPathUtils::WebsitePath;
 
+  
   // ShowWebScore
-  if (!DllMan.Websites.empty())
+  if (!UDLLManager::DLLMan.Websites.empty())
   {
-    SetLength(IShowWebScore, Length(DLLMan.Websites));
-    for I= 0 to High(DllMan.Websites)
-      IShowWebScore[I] = DllMan.Websites[I].Name;
+    std::vector<std::string> IShowWebScore;
+    IShowWebScore.reserve(UDLLManager::DLLMan.Websites.size());
+    for (const auto& website : UDLLManager::DLLMan.Websites)
+      IShowWebScore.emplace_back(website.Name);
     ShowWebScore = ReadArrayIndex(IShowWebScore, IniFile, "Game", "ShowWebScore", 0);
     if (ShowWebScore = -1) 
       ShowWebScore = 0;
@@ -1030,16 +1041,16 @@ var
   JukeboxTimebarMode = ReadArrayIndex(IJukeboxTimebarMode, IniFile, "Advanced", "JukeboxTimebarMode", IGNORE_INDEX, "Current");
 
   // WebCam
-  WebCamID = IniFile.ReadInteger("Webcam", "ID", 0);
-  WebCamResolution = ReadArrayIndex(IWebcamResolution, IniFile, "Webcam", "Resolution", IGNORE_INDEX, "320x240");
-  if (WebCamResolution = -1)
+  WebcamID = IniFile.ReadInteger("Webcam", "ID", 0);
+  WebcamResolution = ReadArrayIndex(IWebcamResolution, IniFile, "Webcam", "Resolution", IGNORE_INDEX, "320x240");
+  if (WebcamResolution = -1)
     WebcamResolution = 2;
-  WebCamFPS = ReadArrayIndex(IWebcamFPS, IniFile, "Webcam", "FPS", 4);
-  WebCamFlip = ReadArrayIndex(IWebcamFlipTranslated, IniFile, "Webcam", "Flip", IGNORE_INDEX, "On");
-  WebCamBrightness = ReadArrayIndex(IWebcamBrightness, IniFile, "Webcam", "Brightness", IGNORE_INDEX, "0");
-  WebCamSaturation = ReadArrayIndex(IWebcamSaturation, IniFile, "Webcam", "Saturation", IGNORE_INDEX, "0");
-  WebCamHue = ReadArrayIndex(IWebcamHue, IniFile, "Webcam", "Hue", IGNORE_INDEX, "0");
-  WebCamEffect = IniFile.ReadInteger("Webcam", "Effect", 0);
+  WebcamFPS = ReadArrayIndex(IWebcamFPS, IniFile, "Webcam", "FPS", 4);
+  WebcamFlip = ReadArrayIndex(IWebcamFlipTranslated, IniFile, "Webcam", "Flip", IGNORE_INDEX, "On");
+  WebcamBrightness = ReadArrayIndex(IWebcamBrightness, IniFile, "Webcam", "Brightness", IGNORE_INDEX, "0");
+  WebcamSaturation = ReadArrayIndex(IWebcamSaturation, IniFile, "Webcam", "Saturation", IGNORE_INDEX, "0");
+  WebcamHue = ReadArrayIndex(IWebcamHue, IniFile, "Webcam", "Hue", IGNORE_INDEX, "0");
+  WebcamEffect = IniFile.ReadInteger("Webcam", "Effect", 0);
 
   // Jukebox
   JukeboxFont = ReadArrayIndex(ILyricsFont, IniFile, "Jukebox", "LyricsFont", 0);
@@ -1050,12 +1061,12 @@ var
   JukeboxSongMenu = ReadArrayIndex(IJukeboxSongMenu, IniFile, "Jukebox", "SongMenu", IGNORE_INDEX, "On");
 
 
-  JukeboxSingLineColor = ReadArrayIndex(IHexSingColor, IniFile, "Jukebox", "SingLineColor", High(IHexSingColor));
+  JukeboxSingLineColor = ReadArrayIndex(IHexSingColor, IniFile, "Jukebox", "SingLineColor", IHexSingColor.size() - 1);
 
   // other color
-  if ((JukeboxSingLineColor = -1) || (JukeboxSingLineColor = High(IHexSingColor)))
+  if ((JukeboxSingLineColor == -1) || (JukeboxSingLineColor == IHexSingColor.size() - 1))
   {
-    JukeboxSingLineColor = High(IHexSingColor);
+    JukeboxSingLineColor = IHexSingColor.size() - 1;
 
     std::string HexColor = IniFile.ReadString("Jukebox", "SingLineColor", IHexSingColor[0]);
     auto Col = UCommon::HexToRGB(HexColor);
@@ -1065,12 +1076,12 @@ var
     Ini.JukeboxSingLineOtherColorB = std::round(Col.B);
   }
 
-  JukeboxActualLineColor = ReadArrayIndex(IHexGrayColor, IniFile, "Jukebox", "ActualLineColor", High(IHexGrayColor));
+  JukeboxActualLineColor = ReadArrayIndex(IHexGrayColor, IniFile, "Jukebox", "ActualLineColor", IHexGrayColor.size() - 1);
 
   // other color
-  if ((JukeboxActualLineColor = -1) || (JukeboxActualLineColor = High(IHexGrayColor)))
+  if ((JukeboxActualLineColor == -1) || (JukeboxActualLineColor == IHexGrayColor.size() - 1))
   {
-    JukeboxActualLineColor = High(IHexGrayColor);
+    JukeboxActualLineColor = IHexGrayColor.size() - 1;
 
     auto HexColor = IniFile.ReadString("Jukebox", "ActualLineColor", IHexGrayColor[8]);
     auto Col = UCommon::HexToRGB(HexColor);
@@ -1080,11 +1091,11 @@ var
     Ini.JukeboxActualLineOtherColorB = std::round(Col.B);
   }
 
-  JukeboxNextLineColor = ReadArrayIndex(IHexGrayColor, IniFile, "Jukebox", "NextLineColor", High(IHexGrayColor));
+  JukeboxNextLineColor = ReadArrayIndex(IHexGrayColor, IniFile, "Jukebox", "NextLineColor", IHexGrayColor.size() - 1);
   // other color
-  if ((JukeboxNextLineColor = -1) || (JukeboxNextLineColor = High(IHexGrayColor)))
+  if ((JukeboxNextLineColor == -1) || (JukeboxNextLineColor == IHexGrayColor.size() - 1))
   {
-    JukeboxNextLineColor = High(IHexGrayColor);
+    JukeboxNextLineColor = IHexGrayColor.size() - 1;
 
     auto HexColor = IniFile.ReadString("Jukebox", "NextLineColor", IHexGrayColor[6]);
     auto Col = UCommon::HexToRGB(HexColor);
@@ -1096,9 +1107,9 @@ var
 
   JukeboxSingLineOutlineColor = ReadArrayIndex(IHexOColor, IniFile, "Jukebox", "SingLineOColor", 0);
   // other color
-  if (JukeboxSingLineOutlineColor = -1)
+  if (JukeboxSingLineOutlineColor == -1)
   {
-    JukeboxSingLineOutlineColor = High(IHexOColor);
+    JukeboxSingLineOutlineColor = IHexOColor.size() - 1;
 
     auto HexColor = IniFile.ReadString("Jukebox", "SingLineOColor", IHexOColor[0]);
     auto Col = UCommon::HexToRGB(HexColor);
@@ -1110,9 +1121,9 @@ var
 
   JukeboxActualLineOutlineColor = ReadArrayIndex(IHexOColor, IniFile, "Jukebox", "ActualLineOColor", 0);
   // other color
-  if (JukeboxActualLineOutlineColor = -1)
+  if (JukeboxActualLineOutlineColor == -1)
   {
-    JukeboxActualLineOutlineColor = High(IHexOColor);
+    JukeboxActualLineOutlineColor = IHexOColor.size() - 1;
 
     auto HexColor = IniFile.ReadString("Jukebox", "ActualLineOColor", IHexOColor[0]);
     auto Col = UCommon::HexToRGB(HexColor);
@@ -1124,9 +1135,9 @@ var
 
   JukeboxNextLineOutlineColor = ReadArrayIndex(IHexOColor, IniFile, "Jukebox", "NextLineOColor", 0);
   // other color
-  if (JukeboxNextLineOutlineColor = -1)
+  if (JukeboxNextLineOutlineColor == -1)
   {
-    JukeboxNextLineOutlineColor = High(IHexOColor);
+    JukeboxNextLineOutlineColor = IHexOColor.size() - 1;
 
     auto HexColor = IniFile.ReadString("Jukebox", "NextLineOColor", IHexOColor[0]);
     auto Col = UCommon::HexToRGB(HexColor);
@@ -1217,8 +1228,8 @@ var
     IniFile.WriteString("Graphics", "Visualization", IVisualizer[VisualizerOption]);
 
     // Resolution
-    IniFile.WriteString("Graphics", "Resolution", GetResolution);
-    IniFile.WriteString("Graphics", "ResolutionFullscreen", GetResolutionFullscreen);
+    IniFile.WriteString("Graphics", "Resolution", GetResolution());
+    IniFile.WriteString("Graphics", "ResolutionFullscreen", GetResolutionFullscreen());
 
     // Depth
     IniFile.WriteString("Graphics", "Depth", IDepth[Depth]);
@@ -1424,7 +1435,7 @@ void TIni::SaveShowWebScore()
     auto IniFile = TIniFile(Filename);
 
     // ShowWebScore
-    IniFile.WriteString("Game", "ShowWebScore", DllMan.Websites[ShowWebScore].Name);
+    IniFile.WriteString("Game", "ShowWebScore", UDLLManager::DLLMan.Websites[ShowWebScore].Name);
   }
 }
 
@@ -1612,14 +1623,14 @@ bool TIni::SetResolution(int w, int h, bool RemoveCurrent = false, bool NoSave =
 {
   // hacky fix to support multiplied resolution (in width) in multiple screen setup (Screens=2 && more)
   // TODO: RattleSN4K3: Improve the way multiplied screen resolution is applied && stored (see UGraphics::InitializeScreen; W = W * Screens)
-  if (Screens > 0 && !((Params.Split = spmSplit ) || (Split > 0)))
+  if (Screens > 0 && !((UCommandLine::Params.Split = UCommandLine::spmSplit ) || (Split > 0)))
   {
-    w = w / (Screens+1); // integral div
+    w = w / (Screens + 1); // integral div
   }
-  else if (Params.Screens > 0 && !((Params.Split = spmSplit ) || (Split > 0))) 
-    w = w / (Params.Screens+1);
+  else if (UCommandLine::Params.Screens > 0 && !((UCommandLine::Params.Split = UCommandLine::spmSplit ) || (Split > 0))) 
+    w = w / (UCommandLine::Params.Screens+1);
 
-  return SetResolution(BuildResolutionString(w, h), RemoveCurrent, NoSave);
+  return SetResolution(UCommon::BuildResolutionString(w, h), RemoveCurrent, NoSave);
 }
 
 bool TIni::SetResolution(int index)
@@ -1650,10 +1661,10 @@ std::string TIni::GetResolution(int& w, int& h)
 
   // hacky fix to support multiplied resolution (in width) in multiple screen setup (Screens=2 && more)
   // TODO: RattleSN4K3: Improve the way multiplied screen resolution is applied && stored (see UGraphics::InitializeScreen; W = W * Screens)
-  if ((Screens > 0) &&!((Params.Split = spmSplit ) || (Split > 0)))  
+  if ((Screens > 0) &&!((UCommandLine::Params.Split = UCommandLine::spmSplit ) || (Split > 0)))  
     w = w * (Screens+1);
-  else if ((Params.Screens > 0) &&!((Params.Split = spmSplit ) || (Split > 0)))  
-    w = w * (Params.Screens+1);
+  else if ((UCommandLine::Params.Screens > 0) &&!((UCommandLine::Params.Split = UCommandLine::spmSplit ) || (Split > 0)))  
+    w = w * (UCommandLine::Params.Screens+1);
 
   return Result;
 }

@@ -52,9 +52,6 @@ namespace UPathUtils
     }
 
 
-
-
-
     /**
      * Initialize a path variable
      * After setting paths, make sure that paths exist
