@@ -1,4 +1,4 @@
-﻿{* UltraStar Deluxe - Karaoke Game
+﻿/* UltraStar Deluxe - Karaoke Game
  *
  * UltraStar Deluxe is the legal property of its developers, whose names
  * are too numerous to list here. Please refer to the COPYRIGHT
@@ -21,19 +21,16 @@
  *
  * $URL: https://ultrastardx.svn.sourceforge.net/svnroot/ultrastardx/trunk/src/base/UCommon.pas $
  * $Id: UCommon.pas 2241 2010-04-15 17:57:15Z whiteshark0 $
- *}
+ */
 
-unit UCommon;
+#include "switches.h"
 
-interface
+#include <vector>
+#include <string>
 
-{$IFDEF FPC}
-{$codepage UTF8}
-  {$MODE Delphi}
-{$ENDIF}
-
-{$I switches.inc}
-
+namespace UCommon
+{
+/*
 uses
   SysUtils,
   Classes,
@@ -44,88 +41,93 @@ uses
   UConfig,
   ULog,
   UPath;
+*/
+  typedef std::vector<int> TIntegerDynArray;
+  typedef std::vector<std::string> TStringDynArray;
+  typedef std::vector<std::string> TUTF8StringDynArray;
 
-type
-  TIntegerDynArray = array of integer;
-  TStringDynArray = array of string;
-  TUTF8StringDynArray = array of UTF8String;
+  const char SepWhitespace[4] = {'\t', 'n', '\r', ' '}; // tab, lf, cr, space
 
-const
-  SepWhitespace = [#9, #10, #13, ' ']; // tab, lf, cr, space
+  const int SDL_BUTTON_WHEELUP = 1001; // emulated MouseButton ID for mouse wheel up. @Note some high number to prevent conflict. @see sdl_mouse.inc
+  const int SDL_BUTTON_WHEELDOWN = 1002; // emulated MouseButton ID for mouse wheel down. @Note some high number to prevent conflict. @see sdl_mouse.inc
 
-  SDL_BUTTON_WHEELUP = 1001; // emulated MouseButton ID for mouse wheel up. @Note some high number to prevent conflict. @see sdl_mouse.inc
-  SDL_BUTTON_WHEELDOWN = 1002; // emulated MouseButton ID for mouse wheel down. @Note some high number to prevent conflict. @see sdl_mouse.inc
-
-{**
+/**
  * Splits a string into pieces separated by Separators.
  * MaxCount specifies the max. number of pieces. If it is <= 0 the number is
  * not limited. If > 0 the last array element will hold the rest of the string
  * (with leading separators removed).
  *
  * Examples:
- *   SplitString(' split  me now ', 0) -> ['split', 'me', 'now']
- *   SplitString(' split  me now ', 1) -> ['split', 'me now']
- *}
-function SplitString(const Str: string; MaxCount: integer = 0; Separators: TSysCharSet = SepWhitespace; RemoveEmpty: boolean = true): TStringDynArray;
+ *   SplitString(" split  me now ", 0) -> ["split", "me", "now"]
+ *   SplitString(" split  me now ", 1) -> ["split", "me now"]
+ */
+TStringDynArray SplitString(const std::string Str, int MaxCount = 0, TSysCharSet Separators = SepWhitespace, bool RemoveEmpty = true): ;
 
-function StringInArray(const Value: string; Strings: array of string): Boolean;
+bool StringInArray(const std::string Value, std::vector<std::string> Strings);
 
-function StringDeleteFromArray(var InArray: TIntegerDynArray; const InIndex: integer): Boolean; overload;
-function StringDeleteFromArray(var InStrings: TStringDynArray; const InIndex: integer): Boolean; overload;
-function StringDeleteFromArray(var InStrings: TUTF8StringDynArray; const InIndex: integer): Boolean; overload;
+bool StringDeleteFromArray(TIntegerDynArray& InArray, const int InIndex);
+bool StringDeleteFromArray(TStringDynArray& InStrings, const InIndex);
+bool StringDeleteFromArray(TUTF8StringDynArray& InStrings, const InIndex);
 
-function GetStringWithNoAccents(str: String):String;
+std::string GetStringWithNoAccents(std::string str);
 
-type
-  TRGB = record
-    R: single;
-    G: single;
-    B: single;
-  end;
+struct TRGB
+{
+  double R;
+  double G;
+  double B;
+};
 
-  TRGBA = record
-    R, G, B, A: double;
-  end;
+struct TRGBA
+{
+  double R;
+  double G;
+  double B;
+  double A;
+};
 
-function RGBToHex(R, G, B: integer):string;
-function HexToRGB(Hex: string): TRGB;
+int HexToInt(std::string Hex);
+std::string RGBToHex(int R, int G, int B);
+TRGB HexToRGB(std::string Hex);
 
-type
-  TMessageType = (mtInfo, mtError);
+enum TMessageType 
+{
+  mtInfo, mtError
+};
 
-procedure ShowMessage(const msg: string; msgType: TMessageType = mtInfo);
+void ShowMessage(const msg: string; msgType: TMessageType = mtInfo);
 
-procedure ConsoleWriteLn(const msg: string);
+void ConsoleWriteLn(const msg: string);
 
 {$IFDEF FPC}
 function RandomRange(aMin: integer; aMax: integer): integer;
 {$ENDIF}
 
-procedure DisableFloatingPointExceptions();
-procedure SetDefaultNumericLocale();
-procedure RestoreNumericLocale();
+void DisableFloatingPointExceptions();
+void SetDefaultNumericLocale();
+void RestoreNumericLocale();
 
 {$IFNDEF MSWINDOWS}
-procedure ZeroMemory(Destination: pointer; Length: dword);
+void ZeroMemory(Destination: pointer; Length: dword);
 function MakeLong(a, b: word): longint;
 {$ENDIF}
 
 // A stable alternative to TList.Sort() (use TList.Sort() if applicable, see below)
-procedure MergeSort(List: TList; CompareFunc: TListSortCompare);
+void MergeSort(List: TList; CompareFunc: TListSortCompare);
 
 function GetAlignedMem(Size: cardinal; Alignment: integer): pointer;
-procedure FreeAlignedMem(P: pointer);
+void FreeAlignedMem(P: pointer);
 
 function Equals(A, B: string; CaseSensitive: boolean = false): Boolean; overload;
 
-function GetArrayIndex(const SearchArray: array of UTF8String; Value: string; CaseInsensitiv: boolean = false): integer; overload;
-function GetArrayIndex(const SearchArray: array of integer; Value: integer): integer; overload;
+int GetArrayIndex(const std::vector<std::string> SearchArray, std::string Value, bool CaseInsensitiv = false);
+int GetArrayIndex(const std::vector<int> SearchArray, int Value);
 
 function ParseResolutionString(const ResolutionString: string; out x, y: integer): boolean;
 function BuildResolutionString(x,y: integer): string;
 
 implementation
-
+/*
 uses
   Math,
   {$IFDEF Delphi}
@@ -135,7 +137,7 @@ uses
   UFilesystem,
   UMain,
   UUnicodeUtils;
-
+*/
 function StringInArray(const Value: string; Strings: array of string): Boolean;
 var I: Integer;
 begin
@@ -191,7 +193,7 @@ end;
 function SplitString(const Str: string; MaxCount: integer; Separators: TSysCharSet; RemoveEmpty: boolean): TStringDynArray;
 
   // Adds Str[StartPos..Endpos-1] to the result array.
-  procedure AddSplit(StartPos, EndPos: integer);
+  void AddSplit(StartPos, EndPos: integer);
   begin
     if (not RemoveEmpty) or (EndPos > StartPos) then
     begin
@@ -225,8 +227,8 @@ begin
 end;
 
 const
-  Accents: array [0..42] of String = ('ç', 'á', 'é', 'í', 'ó', 'ú', 'ý', 'à', 'è', 'ì', 'ò', 'ù', 'ã', 'õ', 'ñ', 'ä', 'ë', 'ï', 'ö', 'ü', 'ÿ', 'â', 'ê', 'î', 'ô', 'û', 'ą', 'ć', 'ł', 'ś', 'ź', '!', '¡', '"', '&', '(', ')', '?', '¿', ',', '.', ':', ';');
-  NoAccents: array [0..42] of String = ('c', 'a', 'e', 'i', 'o', 'u', 'y', 'a', 'e', 'i', 'o', 'u', 'a', 'o', 'n', 'a', 'e', 'i', 'o', 'u', 'y', 'a', 'e', 'i', 'o', 'u', 'a', 'c', 'l', 's', 'z', '', '', '', '', '', '', '', '', '', '', '', '');
+  Accents: array [0..42] of String = ("ç", "á", "é", "í", "ó", "ú", "ý", "à", "è", "ì", "ò", "ù", "ã", "õ", "ñ", "ä", "ë", "ï", "ö", "ü", "ÿ", "â", "ê", "î", "ô", "û", "ą", "ć", "ł", "ś", "ź", "!", "¡", """, "&", "(", ")", "?", "¿", ",", ".", ":", ";");
+  NoAccents: array [0..42] of String = ("c", "a", "e", "i", "o", "u", "y", "a", "e", "i", "o", "u", "a", "o", "n", "a", "e", "i", "o", "u", "y", "a", "e", "i", "o", "u", "a", "c", "l", "s", "z", "", "", "", "", "", "", "", "", "", "", "", "");
 
 function GetStringWithNoAccents(str: String):String;
 var
@@ -243,21 +245,7 @@ begin
   Result := str;
 end;
 
-function RGBToHex(R, G, B: integer): string;
-begin
-  Result := IntToHex(R, 2) + IntToHex(G, 2) + IntToHex(B, 2);
-end;
 
-function HexToRGB(Hex: string): TRGB;
-var
-  Col: TRGB;
-begin
-  Col.R := StrToInt('$'+Copy(Hex, 1, 2));
-  Col.G := StrToInt('$'+Copy(Hex, 3, 2));
-  Col.B := StrToInt('$'+Copy(Hex, 5, 2));
-
-  Result := Col;
-end;
 
 // data used by the ...Locale() functions
 {$IF Defined(Linux) or Defined(FreeBSD)}
@@ -268,11 +256,11 @@ var
 const
   LC_NUMERIC  = 1;
 
-function setlocale(category: integer; locale: pchar): pchar; cdecl; external 'c' name 'setlocale';
+function setlocale(category: integer; locale: pchar): pchar; cdecl; external "c" name "setlocale";
 
 {$IFEND}
 
-// In Linux and maybe MacOSX some units (like cwstring) call setlocale(LC_ALL, '')
+// In Linux and maybe MacOSX some units (like cwstring) call setlocale(LC_ALL, "")
 // to set the language/country specific locale (e.g. charset) for this application.
 // Unfortunately, LC_NUMERIC is set by this call too.
 // It defines the decimal-separator and other country-specific numeric settings.
@@ -280,33 +268,33 @@ function setlocale(category: integer; locale: pchar): pchar; cdecl; external 'c'
 // After changing LC_NUMERIC some external C-based libs (like projectM) are not
 // able to parse strings correctly
 // (e.g. in Germany "0.9" is not recognized as a valid number anymore but "0,9" is).
-// So we reset the numeric settings to the default ('C').
+// So we reset the numeric settings to the default ("C").
 // Note: The behaviour of Pascal parsing functions (e.g. strtofloat()) is not
-//   changed by this because it doesn't use the locale-settings.
+//   changed by this because it doesn"t use the locale-settings.
 // TODO:
 // - Check if this is needed in MacOSX (at least the locale is set in cwstring)
 // - Find out which libs are concerned by this problem.
 //   If only projectM is concerned by this problem set and restore the numeric locale
 //   for each call to projectM instead of changing it globally.
-procedure SetDefaultNumericLocale();
+void SetDefaultNumericLocale();
 begin
   {$IF Defined(LINUX) or Defined(FreeBSD)}
   PrevNumLocale := setlocale(LC_NUMERIC, nil);
-  setlocale(LC_NUMERIC, 'C');
+  setlocale(LC_NUMERIC, "C");
   {$IFEND}
 end;
 
-procedure RestoreNumericLocale();
+void RestoreNumericLocale();
 begin
   {$IF Defined(LINUX) or Defined(FreeBSD)}
   setlocale(LC_NUMERIC, PChar(PrevNumLocale));
   {$IFEND}
 end;
 
-(*
+/*
  * If an invalid floating point operation was performed the Floating-point unit (FPU)
  * generates a Floating-point exception (FPE). Dependending on the settings in
- * the FPU's control-register (interrupt mask) the FPE is handled by the FPU itself
+ * the FPU"s control-register (interrupt mask) the FPE is handled by the FPU itself
  * (we will call this as "FPE disabled" later on) or is passed to the application
  * (FPE enabled).
  * If FPEs are enabled a floating-point division by zero (e.g. 10.0 / 0.0) is
@@ -334,7 +322,7 @@ end;
  * Those exception-types must all be masked (=1) to get the default C behaviour.
  * The control-registers can be set with the asm-ops FLDCW (x87) and LDMXCSR (SSE).
  * Instead of using assembler code, we can use Set8087CW() provided by delphi and
- * FPC to set the x87 control-word. FPC also provides SetSSECSR() for SSE's MXCSR.
+ * FPC to set the x87 control-word. FPC also provides SetSSECSR() for SSE"s MXCSR.
  * Note that both Delphi and FPC enable FPEs (e.g. for div-by-zero) on program
  * startup but only FPC enables FPEs (especially div-by-zero) for SSE too.
  * So we have to mask FPEs for x87  in Delphi and FPC and for SSE in FPC only.
@@ -351,16 +339,16 @@ end;
  * FPEs with SSE are a big problem with some libs because many linux distributions
  * optimize code for SSE or Pentium3 (for example: int(INF) which convert the
  * double value "infinity" to an integer might be automatically optimized by
- * using SSE's CVTSD2SI instruction). So SSE FPEs must be turned off in any case
+ * using SSE"s CVTSD2SI instruction). So SSE FPEs must be turned off in any case
  * to make USDX portable.
  *
  * Summary:
  * Call this function on initialization to make sure FPEs are turned off.
  * It will solve a lot of errors with FPEs in external libs.
- *)
-procedure DisableFloatingPointExceptions();
+ */
+void DisableFloatingPointExceptions();
 begin
-  (*
+  /*
   // We will use SetExceptionMask() instead of Set8087CW()/SetSSECSR().
   // Note: Leave these lines for documentation purposes just in case
   //       SetExceptionMask() does not work anymore (due to bugs in FPC etc.).
@@ -371,7 +359,7 @@ begin
   if (has_sse_support) then
     SetSSECSR($1F80);
   {$IFEND}
-  *)
+  */
 
   // disable all of the six FPEs (x87 and SSE) to be compatible with C/C++ and
   // other libs which rely on the standard FPU behaviour (no div-by-zero FPE anymore).
@@ -380,7 +368,7 @@ begin
 end;
 
 {$IFNDEF MSWINDOWS}
-procedure ZeroMemory(Destination: pointer; Length: dword);
+void ZeroMemory(Destination: pointer; Length: dword);
 begin
   FillChar(Destination^, Length, 0);
 end;
@@ -410,16 +398,16 @@ var
   ConsoleQuit: boolean;
 {$ENDIF}
 
-(*
+/*
  * Write to console if one is available.
  * It checks if a console is available before output so it will not
  * crash on windows if none is available.
  * Do not use this function directly because it is not thread-safe,
  * use ConsoleWriteLn() instead.
- *)
-procedure _ConsoleWriteLn(const aString: string); {$IFDEF HasInline}inline;{$ENDIF}
+ */
+void _ConsoleWriteLn(const aString: string); {$IFDEF HasInline}inline;{$ENDIF}
 begin
-  if Log <> nil then
+  if Log != nil then
     Log.LogConsole(aString);
   {$IFDEF MSWINDOWS}
   // sanity check to avoid crashes with writeln()
@@ -433,10 +421,10 @@ begin
 end;
 
 {$IFDEF FPC}
-{*
+/*
  * The console-handlers main-function.
  * TODO: create a quit-event on closing.
- *}
+ */
 function ConsoleHandlerFunc(param: pointer): PtrInt;
 var
   i: integer;
@@ -468,7 +456,7 @@ begin
 end;
 {$ENDIF}
 
-procedure InitConsoleOutput();
+void InitConsoleOutput();
 begin
   Log := TLog.Create;
   {$IFDEF FPC}
@@ -483,7 +471,7 @@ begin
   {$ENDIF}
 end;
 
-procedure FinalizeConsoleOutput();
+void FinalizeConsoleOutput();
 begin
   {$IFDEF FPC}
   // terminate console-handler
@@ -500,14 +488,14 @@ begin
   Log.Free;
 end;
 
-{*
+/*
  * FPC uses threadvars (TLS) managed by FPC for console output locking.
  * Using WriteLn() from external threads (like in SDL callbacks)
  * will crash the program as those threadvars have never been initialized.
  * The solution is to create an FPC-managed thread which has the TLS data
  * and use it to handle the console-output (hence it is called Console-Handler)
- *}
-procedure ConsoleWriteLn(const msg: string);
+ */
+void ConsoleWriteLn(const msg: string);
 begin
 {$IFDEF CONSOLE}
   {$IFDEF FPC}
@@ -523,7 +511,7 @@ begin
 {$ENDIF}
 end;
 
-procedure ShowMessage(const msg: String; msgType: TMessageType);
+void ShowMessage(const msg: String; msgType: TMessageType);
 {$IFDEF MSWINDOWS}
 var Flags: cardinal;
 {$ENDIF}
@@ -540,14 +528,14 @@ begin
 {$IFEND}
 end;
 
-(*
+/*
  * Recursive part of the MergeSort algorithm.
  * OutList will be either InList or TempList and will be swapped in each
  * depth-level of recursion. By doing this it we can directly merge into the
  * output-list. If we only had In- and OutList parameters we had to merge into
  * InList after the recursive calls and copy the data to the OutList afterwards.
- *)
-procedure _MergeSort(InList, TempList, OutList: TList; StartPos, BlockSize: integer;
+ */
+void _MergeSort(InList, TempList, OutList: TList; StartPos, BlockSize: integer;
                     CompareFunc: TListSortCompare);
 var
   LeftSize, RightSize: integer; // number of elements in left/right block
@@ -603,7 +591,7 @@ begin
   end;
 end;
 
-(*
+/*
  * Stable alternative to the instable TList.Sort() (uses QuickSort) implementation.
  * A stable sorting algorithm preserves preordered items. E.g. if sorting by
  * songs by title first and artist afterwards, the songs of each artist will
@@ -611,8 +599,8 @@ end;
  * may destroy an existing order, so the songs of an artist will not be ordered
  * by title anymore after sorting by artist in the previous example.
  * If you do not need a stable algorithm, use TList.Sort() instead.
- *)
-procedure MergeSort(List: TList; CompareFunc: TListSortCompare);
+ */
+void MergeSort(List: TList; CompareFunc: TListSortCompare);
 var
   TempList: TList;
 begin
@@ -629,10 +617,10 @@ begin
   else Result := (CompareText(A, B) = 0);
 end;
 
-(**
+/**
  * Returns the index of Value in SearchArray
  * or -1 if Value is not in SearchArray.
- *)
+ */
 function GetArrayIndex(const SearchArray: array of UTF8String; Value: string;
     CaseInsensitiv: boolean = false): integer;
 var
@@ -651,10 +639,10 @@ begin
   end;
 end;
 
-(**
+/**
  * Returns the index of Value in SearchArray
  * or -1 if Value is not in SearchArray.
- *)
+ */
 function GetArrayIndex(const SearchArray: array of integer; Value: integer): integer;
 var
   i: integer;
@@ -673,14 +661,14 @@ end;
 
 function BuildResolutionString(x,y: integer): string;
 begin
-  Result := Format('%dx%d', [x, y]);
+  Result := Format("%dx%d", [x, y]);
 end;
 
 function ParseResolutionString(const ResolutionString: string; out x,y : integer): boolean;
   var
     Pieces: TStringDynArray;
 begin
-  Pieces := SplitString(LowerCase(ResolutionString), 1, ['x']);
+  Pieces := SplitString(LowerCase(ResolutionString), 1, ["x"]);
   Result := false;
 
   if (Length(Pieces) > 1) and (Length(Pieces[0]) > 0) and (Length(Pieces[1]) > 0) then
@@ -689,10 +677,10 @@ begin
     y := StrToInt(Pieces[1]);
   end
   // FIXME: legacy code as long as SplitString is not fixed
-  else if Pos('x', ResolutionString) > 0then
+  else if Pos("x", ResolutionString) > 0then
   begin
-    x := StrToInt(Copy(ResolutionString, 1, Pos('x', ResolutionString)-1));
-    y := StrToInt(Copy(ResolutionString, Pos('x', ResolutionString)+1, 1000));
+    x := StrToInt(Copy(ResolutionString, 1, Pos("x", ResolutionString)-1));
+    y := StrToInt(Copy(ResolutionString, Pos("x", ResolutionString)+1, 1000));
   end else Exit;
 
   // verify if resolution has proper values
@@ -704,7 +692,7 @@ type
   PMemAlignHeader = ^TMemAlignHeader;
   TMemAlignHeader = pointer;
 
-(**
+/**
  * Use this function to assure that allocated memory is aligned on a specific
  * byte boundary.
  * Alignment must be a power of 2.
@@ -716,7 +704,7 @@ type
  * statically and use the {$ALIGN x} compiler directive. Note that delphi
  * supports an alignment "x" of up to 8 bytes only whereas FPC supports
  * alignments on 16 and 32 byte boundaries too.
- *)
+ */
 {$WARNINGS OFF}
 function GetAlignedMem(Size: cardinal; Alignment: integer): pointer;
 var
@@ -751,9 +739,9 @@ end;
 {$WARNINGS ON}
 
 {$WARNINGS OFF}
-procedure FreeAlignedMem(P: pointer);
+void FreeAlignedMem(P: pointer);
 begin
-  if (P <> nil) then
+  if (P != nil) then
     FreeMem(PMemAlignHeader(PtrUInt(P) - SizeOf(TMemAlignHeader))^);
 end;
 {$WARNINGS ON}
@@ -766,3 +754,4 @@ finalization
   FinalizeConsoleOutput();
 
 end.
+};

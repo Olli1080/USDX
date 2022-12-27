@@ -76,4 +76,127 @@ void TLanguage::LoadList()
   }
 }
 
+/**
+ * Load the specified LanguageFile
+ */
+void TLanguage::ChangeLanguage(const std::string Language)
+{
+  /*
+  var
+  IniFile:    TUnicodeMemIniFile;
+  E:          integer; // entry
+  S:          TStringList;
+  */
+  Entry.resize(0);
+  IniFile = TUnicodeMemIniFile.Create(LanguagesPath.Append(Language + ".ini"));
+  S = TStringList.Create;
+
+  IniFile.ReadSectionValues("Text", S);
+  SetLength(Entry, S.Count);
+
+  for (int E = 0; E < Entry.size(); ++E)
+  {
+    if (S.Names[E] = "IMPLODE_GLUE1")
+      Implode_Glue1 = S.ValueFromIndex[E]+ " ";
+    else if (S.Names[E] = "IMPLODE_GLUE2")
+      Implode_Glue2 = " " + S.ValueFromIndex[E] + " ";
+
+    Entry[E].ID = S.Names[E];
+    Entry[E].Text = S.ValueFromIndex[E];
+  }
+
+  S.Free;
+  IniFile.Free;
+}
+
+/**
+ * Find the index of ID an array of language entries.
+ * @returns the index on success, -1 otherwise.
+ */
+int TLanguage::FindID(const std::string ID, const std::vector<TLanguageEntry> EntryList)
+{
+  for (int i = 0; i < EntryList.size(); ++i)
+  {
+    if (ID == EntryList[i].ID)
+    {
+      return i;
+    }
+  }
+  return -1;
+}
+
+/**
+ * Translate the Text.
+ * If Text is an ID, text will be translated according to the current language
+ * setting. If Text is not a known ID, it will be returned as is. 
+ * @param Text either an ID or an UTF-8 encoded string 
+ */
+std::string TLanguage::Translate(const std::string Text)
+{
+  // normalize ID case
+  std::string ID = UpperCase(Text);
+
+  // Check if ID exists
+
+  //Const Mod
+  int EntryIndex = FindID(ID, EntryConst);
+  if (EntryIndex >= 0)
+    return EntryConst[EntryIndex].Text;
+
+  EntryIndex = FindID(ID, Entry);
+  if (EntryIndex >= 0)
+    return Entry[EntryIndex].Text;
+
+  //Standard Language (If a Language File is Incomplete)
+  //Then use Standard Language
+  EntryIndex = FindID(ID, EntryDefault);
+  if (EntryIndex >= 0)
+    return EntryDefault[EntryIndex].Text;
+
+  // fallback result in case Text is not a known ID
+  return Text;
+}
+
+/**
+ * Add a Constant ID that will be Translated but not Loaded from the LanguageFile
+ */
+void TLanguage::AddConst(const std::string ID, const std::string Text)
+{
+  EntryConst.emplace_back(TLanguageEntry{ ID, Text });
+}
+
+/**
+ * Change a Constant Value by ID
+ */
+void TLanguage::ChangeConst(const std::string ID, const std::string Text)
+{
+  for (int i = 0; i < EntryConst.size(); ++i)
+  {
+    if (EntryConst[I].ID = ID)
+    {
+      EntryConst[I].Text = Text;
+      return;
+    }
+  }
+}
+
+/**
+ * Connect an array of strings with ' and ' or ', ' to one string
+ */
+std::string TLanguage::Implode(const std::vector<std::string> Pieces)
+{
+  std::string Result = "";
+  //Go through Pieces
+
+  for (int i = 0; i < Pieces.size(); ++i)
+  {
+    Result += Pieces[i];
+
+    //Add Glue
+    if (i < Pieces.size() - 1)
+      Result += Implode_Glue1;
+    else if (i < Pieces.size())
+      Result += Implode_Glue2;
+  }
+}
 }
