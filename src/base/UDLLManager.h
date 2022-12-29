@@ -34,7 +34,7 @@
 
 #include <boost/dll.hpp>
 
-#include "UWebSDK.h"
+#include "../webSDK/UWebSDK.h"
 
 namespace UDLLManager
 {
@@ -75,7 +75,7 @@ public:
   std::wstring WebsiteVerifySong(std::wstring MD5Song);
 };
 
-TDLLMan DLLMan;
+inline TDLLMan DLLMan;
 
 const std::string DLLExt =
 #if defined(_WIN32)

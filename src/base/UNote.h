@@ -129,7 +129,7 @@ int PlayersPlay;
 /**
  * Selected song for singing.
  */
-std::shared_ptr<TSong> CurrentSong;
+std::shared_ptr<USong::TSong> CurrentSong;
 
 TMedleyPlaylist PlaylistMedley;  // playlist medley
 
@@ -142,7 +142,7 @@ void NewBeatClick(TScreenSingController Screen);  // executed when on then new b
 void NewBeatDetect(TScreenSingController Screen); // executed when on then new beat for detection
 void NewNote(int CP, TScreenSingController Screen);       // detect note
 double GetMidBeat(double Time);
-SecDouble GetTimeFromBeat(int Beat, std::shared_ptr<TSong> SelfSong = {});
+SecDouble GetTimeFromBeat(int Beat, std::shared_ptr<USong::TSong> SelfSong = {});
 
 void SingJukebox(TScreenJukebox Screen);
 

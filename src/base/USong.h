@@ -31,6 +31,9 @@
 
 #include "switches.h"
 
+namespace USong
+{
+
 typedef std::chrono::duration<double, std::milli> MiliSecDouble;
 typedef std::chrono::duration<double> SecDouble;
 typedef std::chrono::duration<double, std::ratio<60, 1>> MinDouble;
@@ -190,23 +193,24 @@ class TSong
     std::string MD5SongFile(TTextFileStream SongFileR);
 };
 
-  TSongOptions = class
-    public
-      VideoRatioAspect:        integer;
-      VideoWidth :             integer;
-      VideoHeight:             integer;
-      LyricPosition:           integer;
-      LyricAlpha:              integer;
-      LyricSingFillColor:      string;
-      LyricActualFillColor:    string;
-      LyricNextFillColor:      string;
-      LyricSingOutlineColor:   string;
-      LyricActualOutlineColor: string;
-      LyricNextOutlineColor:   string;
+class TSongOptions
+{
+public:
+  VideoRatioAspect:        integer;
+  VideoWidth :             integer;
+  VideoHeight:             integer;
+  LyricPosition:           integer;
+  LyricAlpha:              integer;
+  LyricSingFillColor:      string;
+  LyricActualFillColor:    string;
+  LyricNextFillColor:      string;
+  LyricSingOutlineColor:   string;
+  LyricActualOutlineColor: string;
+  LyricNextOutlineColor:   string;
 
-      constructor Create(RatioAspect, Width, Height, Position, Alpha: integer;
-                SingFillColor, ActualFillColor, NextFillColor, SingOutlineColor, ActualOutlineColor, NextOutlineColor: string);
-  end;
+  constructor Create(RatioAspect, Width, Height, Position, Alpha: integer;
+            SingFillColor, ActualFillColor, NextFillColor, SingOutlineColor, ActualOutlineColor, NextOutlineColor: string);
+}
 
 
 class USong
@@ -1870,3 +1874,4 @@ begin
   {$ENDIF}
 end;
 };
+}

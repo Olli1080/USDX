@@ -347,7 +347,7 @@ const std::vector<std::string> IPlayers = { "1", "2", "3", "4", "6", "8", "12" }
 const std::vector<int> IPlayersVals = { 1, 2, 3, 4, 6, 8, 12 };
 
 /* Variables */
-TIni Ini;
+inline TIni Ini;
 std::vector<std::string> IResolution;
 std::vector<std::string> IResolutionFullScreen;
 std::vector<std::string> IResolutionCustom;
