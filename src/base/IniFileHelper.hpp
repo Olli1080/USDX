@@ -42,8 +42,14 @@ public:
 
     };
 
+    void ReadSections(std::list<std::string>&)
+    {};
+
     bool SectionExists(std::string)
     {};
+
+    float ReadFloat(std::string, std::string, float def)
+    {}
 };
 
 class TIniFile : public TCustomIniFile

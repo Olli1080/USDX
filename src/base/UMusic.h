@@ -429,10 +429,10 @@ type
       procedure  SetHeight(Height: double);
        function GetHeight(): double;
 
-      {**
+      /**
        * Sub-image of the video frame to draw.
        * This can be used for zooming or similar purposes.
-       *}
+       */
       procedure SetFrameRange(Range: TRectCoords);
       function GetFrameRange(): TRectCoords;
 

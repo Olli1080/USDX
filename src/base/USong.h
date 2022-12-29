@@ -388,7 +388,7 @@ end;
 type
   EUSDXParseException = class(Exception);
 
-{**
+/**
  * Parses the Line string starting from LinePos for a parameter.
  * Leading whitespace is trimmed, same applies to the first trailing whitespace.
  * After the call LinePos will point to the position after the first trailing
@@ -399,7 +399,7 @@ type
  * Example:
  *   ParseLyricParam(Line:'Param0  Param1 Param2', LinePos:8, ...)
  *   -> Param:'Param1', LinePos:16 (= start of 'Param2')
- *}
+ */
 function TSong.ParseLyricStringParam(const Line: RawByteString; var LinePos: integer): RawByteString;
 var
   Start: integer;
@@ -498,10 +498,10 @@ begin
   Result := Str[1];
 end;
 
-{**
+/**
  * Returns the rest of the line from LinePos as lyric text.
  * Leading and trailing whitespace is not trimmed.
- *}
+ */
 function TSong.ParseLyricText(const Line: RawByteString; var LinePos: integer): RawByteString;
 begin
   if (LinePos > Length(Line)) then
@@ -1031,10 +1031,10 @@ begin
 
 end;
 
-{**
+/**
  * "International" StrToFloat variant. Uses either ',' or '.' as decimal
  * separator.
- *}
+ */
 function StrToFloatI18n(const Value: string): extended;
 var
   TempValue : string;
@@ -1522,9 +1522,9 @@ begin
   Tracks[LineNumberP].Lines[Tracks[LineNumberP].High].LastLine := false;
 end;
 
-{* new procedure for preview
+/* new procedure for preview
    tries find out the beginning of a refrain
-   and the end... *}
+   and the end... */
 procedure TSong.FindRefrain();
 Const
   MEDLEY_MIN_DURATION = 40;   //minimum duration of a medley-song in seconds
