@@ -64,6 +64,11 @@ std::filesystem::path TFont::Filename() const
     return fFilename;
 }
 
+bool TFont::ReflectionPass() const
+{
+    return fReflectionPass;
+}
+
 void TFont::Print(const TUCS4StringArray Text)
     /*var
       LineIndex: int;*/
@@ -407,6 +412,8 @@ std::shared_ptr<TFont> TScalableFont::ChooseMipmapFont()
     // we have to scale to get its size right.
     const float MipmapScale = fMipmapFonts[0]->Height() / Result->Height();
     glScalef(MipmapScale, MipmapScale, 0);
+
+    return Result;
 }
 
 void TScalableFont::Print(const TUCS4StringArray Text)
@@ -550,9 +557,7 @@ void TScalableFont::UseKerning(bool Enable)
  */
 
 TCachedFont::TCachedFont(const std::filesystem::path Filename) : TFont(Filename)
-{
-    fCache = TGlyphCache.Create();
-}
+{}
 
 TCachedFont::~TCachedFont()
 {}
@@ -597,9 +602,9 @@ TFTFontFace::TFTFontFace(const std::filesystem::path Filename, int Size)
             std::istreambuf_iterator(SourceFile),
             std::istreambuf_iterator()
             );
-        b1 = FT_New_Memory_Face(TFreeType::GetLibrary(), byarr1.data(), static_cast<FT_Long>(byarr1.size()), 0, &fFace);
+        b1 = FT_New_Memory_Face(FreeTypeLib.GetLibrary(), byarr1.data(), static_cast<FT_Long>(byarr1.size()), 0, &fFace);
 #else
-        b1 = FT_New_Face(TFreeType::GetLibrary(), Filename.string().c_str(), 0, &fFace);
+        b1 = FT_New_Face(FreeTypeLib.GetLibrary(), Filename.string().c_str(), 0, &fFace);
 #endif
     }
     catch (...)
@@ -992,7 +997,7 @@ void TFTOutlineFont::ResetIntern()
 
     fLineSpacing = fOutlineFont->LineSpacing();
     fReflectionSpacing = fOutlineFont->ReflectionSpacing();
-    fOutlineColor = NewGLColor(0, 0, 0, -1);
+    fOutlineColor = TGLColor(0, 0, 0, -1);
 }
 
 void TFTOutlineFont::Reset()
@@ -1052,7 +1057,7 @@ void TFTOutlineFont::Render(const std::u32string Text)
 
 void TFTOutlineFont::SetOutlineColor(GLfloat r, GLfloat g, GLfloat b, GLfloat a)
 {
-    fOutlineColor = NewGLColor(r, g, b, a);
+    fOutlineColor = TGLColor(r, g, b, a);
 }
 
 void TFTOutlineFont::FlushCache(bool KeepBaseSet)
@@ -1133,15 +1138,15 @@ float TFTOutlineFont::UnderlineThickness() const
 void TFTOutlineFont::UseKerning(bool Enable)
 {
     TFont::UseKerning(Enable);
-    fInnerFont->fUseKerning = Enable;
-    fOutlineFont->fUseKerning = Enable;
+    fInnerFont->UseKerning(Enable);
+    fOutlineFont->UseKerning(Enable);
 }
 
 void TFTOutlineFont::ReflectionPass(bool Enable)
 {
     TFont::ReflectionPass(Enable);
-    fInnerFont->fReflectionPass = Enable;
-    fOutlineFont->fReflectionPass = Enable;
+    fInnerFont->ReflectionPass(Enable);
+    fOutlineFont->ReflectionPass(Enable);
 }
 
 /**
@@ -1152,12 +1157,10 @@ TFTScalableOutlineFont::TFTScalableOutlineFont(
     int Size, float OutsetAmount,
 	bool UseMipmaps,
 	bool PreCache)
-:
-TFTScalableOutlineFont(
+	:
+    TScalableFont(
         std::make_shared<TFTOutlineFont>(Filename, Size, Size * OutsetAmount, PreCache, FT_LOAD_DEFAULT | (UseMipmaps ? FT_LOAD_NO_HINTING : 0)),
         UseMipmaps)
-/*var
-  LoadFlags : FT_Int32;*/
 {
     // Disable hinting && grid-fitting (see TFTScalableFont::Create)
 }
@@ -1169,7 +1172,7 @@ std::shared_ptr<TFont> TFTScalableOutlineFont::CreateMipmap(int Level, float Sca
     // do not create mipmap fonts < 8 pixels
     if (ScaledSize < 8)
         return nullptr;
-    return std::make_shared < TFTOutlineFont < (BaseFont->Filename(),
+    return std::make_shared<TFTOutlineFont>(BaseFont->Filename(),
         ScaledSize, BaseFont->Outset()* Scale,
         BaseFont->fPreCache,
         FT_LOAD_DEFAULT | FT_LOAD_NO_HINTING);
@@ -1276,7 +1279,7 @@ UseStencil: bool;*/
     //{ extrude outer border }
 
     FT_Stroker OuterStroker;
-    if (FT_Stroker_New(TFreeType::GetLibrary(), &OuterStroker) != 0)
+    if (FT_Stroker_New(FreeTypeLib.GetLibrary(), &OuterStroker) != 0)
         throw EFontError("FT_Stroker_New failed!");
     FT_Stroker_Set(
         OuterStroker,
@@ -1299,7 +1302,7 @@ UseStencil: bool;*/
     FT_Stroker InnerStroker;
     if (UseStencil)
     {
-      if (FT_Stroker_New(TFreeType::GetLibrary(), &InnerStroker) != 0)
+      if (FT_Stroker_New(FreeTypeLib.GetLibrary(), &InnerStroker) != 0)
         throw EFontError("FT_Stroker_New failed!");
       FT_Stroker_Set(
           InnerStroker,
@@ -1327,8 +1330,8 @@ UseStencil: bool;*/
     FT_Int OutlineFlags = Outline.flags;
 
     // resize glyph outline to hold inner && outer border
-    FT_Outline_Done(TFreeType::GetLibrary(), &Outline);
-    if (FT_Outline_New(TFreeType::GetLibrary(), GlyphNumPoints, GlyphNumContours, &Outline) != 0)
+    FT_Outline_Done(FreeTypeLib.GetLibrary(), &Outline);
+    if (FT_Outline_New(FreeTypeLib.GetLibrary(), GlyphNumPoints, GlyphNumContours, &Outline) != 0)
         throw EFontError("FT_Outline_New failed!");
 
     Outline.n_points = 0;
@@ -1425,11 +1428,12 @@ void TFTGlyph::CreateTexture(FT_Int32 LoadFlags)
     // Freetype stores the bitmap with either upper (pitch is > 0) or lower
     // (pitch < 0) glyphs line first. Set the buffer to the upper line.
     // See http://freetype.sourceforge.net/freetype2/docs/glyphs/glyphs-7.html
-    PByteArray BitmapBuffer;
+
+    unsigned char* BitmapBuffer;
     if (Bitmap.pitch > 0)
-        BitmapBuffer = @Bitmap.buffer[0];
+        BitmapBuffer = &Bitmap.buffer[0];
     else
-        BitmapBuffer = @Bitmap.buffer[(Bitmap.rows - 1) * std::abs(Bitmap.pitch)];
+        BitmapBuffer = &Bitmap.buffer[(Bitmap.rows - 1) * std::abs(Bitmap.pitch)];
 
     // copy data to texture bitmap (upper line first).
     for (size_t Y = 0; Y < Bitmap.rows; ++Y)
@@ -1437,11 +1441,11 @@ void TFTGlyph::CreateTexture(FT_Int32 LoadFlags)
         // set pointer to first pixel in line that holds bitmap data.
         // Each line starts with a cTexSmoothBorder pixel && multiple outset pixels
         // that are added by Extrude() later.
-        unsigned char TexLine = @TexBuffer[(Y + cTexSmoothBorder + std::ceil(fOutset)) * fTexSize.Width +
+        GLubyte* TexLine = &TexBuffer[(Y + cTexSmoothBorder + std::ceil(fOutset)) * fTexSize.Width +
             cTexSmoothBorder + std::ceil(fOutset)];
         // get next lower line offset, use pitch instead of width as it tells
         // us the storage direction of the lines. In addition a line might be padded.
-        auto BitmapLine = @BitmapBuffer[Y * Bitmap.pitch];
+        auto BitmapLine = &BitmapBuffer[Y * Bitmap.pitch];
 
         // check for pixel mode && copy pixels
         // Should be 8 bit gray, but even with FT_RENDER_MODE_NORMAL, freetype
@@ -1450,14 +1454,14 @@ void TFTGlyph::CreateTexture(FT_Int32 LoadFlags)
         {
         case FT_PIXEL_MODE_GRAY:
         {  // 8 bit gray
-            for (X = 0 to Bitmap.width - 1)
+            for (int X = 0; X < Bitmap.width; ++X)
                 TexLine[X] = BitmapLine[X];
             break;
         }
         case FT_PIXEL_MODE_MONO:
         {  // 1 bit mono
-            for (X = 0 to Bitmap.width - 1)
-                TexLine[X] = High(GLubyte) * ((BitmapLine[X div 8] shr(7 - (X mod 8))) && $1);
+            for (int X = 0; X < Bitmap.width; ++X)
+                TexLine[X] = std::numeric_limits<GLubyte>::max() * ((BitmapLine[X / 8] >> (7 - (X % 8))) & 0x1);
             break;
         }
         default:
@@ -1508,14 +1512,14 @@ TFTGlyph::TFTGlyph(std::shared_ptr<TFTFont> Font, char32_t ch, float Outset,
     auto fFace = Font->DefaultFace();
 
     // search the Freetype char-index (use default UNICODE charmap) in the default face
-    fCharIndex = FT_Get_Char_Index(fFace->Data(), FT_ULong(ch));
+    fCharIndex = FT_Get_Char_Index(fFace->Data(), ch);
     if (fCharIndex == 0)
     {
         // glyph not in default font, search in fallback font faces
         for (auto& fbFace : Font->FallbackFaces())
         {
             auto strong = fbFace.lock();
-            fCharIndex = FT_Get_Char_Index(strong->Data(), FT_ULong(ch));
+            fCharIndex = FT_Get_Char_Index(strong->Data(), ch);
             if (fCharIndex != 0)
             {
                 fFace = strong;
@@ -1572,13 +1576,6 @@ void TFTGlyph::Render(bool UseDisplayLists)
 }
 
 void TFTGlyph::RenderReflection()
-/*var
-Color : TGLColor;
-TexUpperPos: float;
-TexLowerPos: float;
-UpperPos: float;
-const
-CutOff == 0.6;*/
 {
     constexpr double CutOff = 0.6;
     glPushMatrix();
@@ -1653,417 +1650,272 @@ TBoundsDbl TFTGlyph::Bounds() const
 /*
  * TGlyphCache
  */
-	TGlyphCache::TGlyphCache()
-{}
-
-TGlyphCache::~TGlyphCache()
+bool TGlyphCache::AddGlyph(char32_t ch, const std::shared_ptr<TGlyph> Glyph)
 {
-    // free cached glyphs
-    FlushCache(false);
+    const auto it = fGlyphs.try_emplace(ch, Glyph);
+    return it.second;
 }
 
-PGlyphTable TGlyphCache::FindGlyphTable(uint32_t BaseCode, int& InsertPos)
-/*var
-  I: int;
-  Entry: TGlyphCacheHashEntry;*/
+void TGlyphCache::DeleteGlyph(char32_t ch)
 {
-    Result = nil;
+    fGlyphs.erase(ch);
+}
 
-    for I = 0 to fHash.Count - 1 do
+std::shared_ptr<TGlyph> TGlyphCache::GetGlyph(char32_t ch)
+{
+    auto it = fGlyphs.find(ch);
+    return (it != fGlyphs.end()) ? it->second : nullptr;
+}
+
+bool TGlyphCache::HasGlyph(char32_t ch) const
+{
+    return fGlyphs.contains(ch);
+}
+
+void TGlyphCache::FlushCache(bool KeepBaseSet)
+{
+    if (!KeepBaseSet)
     {
-        Entry = TGlyphCacheHashEntry(fHash[I]);
-
-        if (Entry.BaseCode > BaseCode) then
+        fGlyphs = {};
+        return;
+    }
+    std::erase_if(fGlyphs, [](const auto& item)
         {
-          InsertPos = I;
-          Exit;
-        }
-
-            if (Entry.BaseCode == BaseCode) then
-            {
-              InsertPos = I;
-              Result = @Entry.GlyphTable;
-              Exit;
-            }
-    }
-
-    InsertPos = fHash.Count;
+    		auto const& [key, value] = item;
+			return key >= 256;
+        });
 }
-
-function TGlyphCache.AddGlyph(ch: UCS4Char; const Glyph : TGlyph) : bool;
-var
-BaseCode : uint32_t;
-GlyphCode: int;
-InsertPos: int;
-GlyphTable: PGlyphTable;
-Entry: TGlyphCacheHashEntry;
-{
-    Result = false;
-
-    BaseCode = Ord(ch) shr 8;
-    GlyphTable = FindGlyphTable(BaseCode, InsertPos);
-    if (GlyphTable == nil) then
-    {
-      Entry = TGlyphCacheHashEntry::Create(BaseCode);
-      GlyphTable = @Entry.GlyphTable;
-      fHash.Insert(InsertPos, Entry);
-    }
-
-        // get glyph table offset
-    GlyphCode = Ord(ch) && $FF;
-    // insert glyph into table if not present
-    if (GlyphTable[GlyphCode] == nil) then
-    {
-      GlyphTable[GlyphCode] = Glyph;
-      Result = true;
-    }
-}
-
-void TGlyphCache.DeleteGlyph(ch: UCS4Char);
-var
-Table : PGlyphTable;
-TableIndex, GlyphIndex: int;
-TableEmpty: bool;
-{
-    // find table
-    Table = FindGlyphTable(Ord(ch) shr 8, TableIndex);
-    if (Table == nil) then
-        Exit;
-
-    // find glyph    
-    GlyphIndex = Ord(ch) && $FF;
-    if (Table[GlyphIndex] != nil) then
-    {
-        // destroy glyph
-        FreeAndNil(Table[GlyphIndex]);
-
-    // check if table is empty
-    TableEmpty = true;
-    for GlyphIndex = 0 to High(Table^) do
-    {
-      if (Table[GlyphIndex] != nil) then
-      {
-        TableEmpty = false;
-        break;
-      }
-    }
-
-    // free empty table
-    if (TableEmpty) then
-    {
-      fHash.Delete(TableIndex);
-    }
-    }
-}
-
-function TGlyphCache.GetGlyph(ch: UCS4Char) : TGlyph;
-var
-InsertPos : int;
-Table: PGlyphTable;
-{
-    Table = FindGlyphTable(Ord(ch) shr 8, InsertPos);
-    if (Table == nil) then
-        Result = nil
-    else
-        Result = Table[Ord(ch) && $FF];
-}
-
-function TGlyphCache.HasGlyph(ch: UCS4Char) : bool;
-{
-    Result = (GetGlyph(ch) != nil);
-}
-
-void TGlyphCache.FlushCache(KeepBaseSet: bool);
-var
-EntryIndex, TableIndex: int;
-Entry: TGlyphCacheHashEntry;
-{
-    // destroy cached glyphs
-    for EntryIndex = 0 to fHash.Count - 1 do
-    {
-        Entry = TGlyphCacheHashEntry(fHash[EntryIndex]);
-
-        // the base set (0-255) has BaseCode 0 as the upper bytes are 0.
-        if KeepBaseSet && (Entry.fBaseCode == 0) then
-            Continue;
-
-        for TableIndex = 0 to High(Entry.GlyphTable) do
-        {
-            if (Entry.GlyphTable[TableIndex] != nil) then
-                FreeAndNil(Entry.GlyphTable[TableIndex]);
-        }
-        FreeAndNil(Entry);
-    }
-}
-
-
-/*
- * TGlyphCacheEntry
- */
-
-TGlyphCacheHashEntry::TGlyphCacheHashEntry(uint32_t BaseCode) : fBaseCode(BaseCode)
-{}
-
 
 /*
  * TFreeType
  */
 
-FT_Library TFreeType::GetLibrary()
+FT_Library TFreeType::GetLibrary() const
 {
-    if (LibraryInst == nil) then
-    {
-        // initialize freetype
-        if (FT_Init_FreeType(LibraryInst) != 0)
-          raise EFontError.Create('FT_Init_FreeType failed');
-    }
-    Result = LibraryInst;
+    return LibraryInst;
 }
 
 void TFreeType::FreeLibrary()
 {
-    if (LibraryInst != nil) then
+    if (LibraryInst)
         FT_Done_FreeType(LibraryInst);
-    LibraryInst = nil;
+    LibraryInst = nullptr;
 }
 
 
-{$IFDEF BITMAP_FONT}
+#ifdef BITMAP_FONT
 /*
  * TBitmapFont
  */
 
-constructor TBitmapFont.Create(const Filename : std::filesystem::path; Outline: int;
-Baseline, Ascender, Descender: int);
+TBitmapFont::TBitmapFont(const std::filesystem::path Filename, int Outline,
+ int Baseline, int Ascender, int Descender)
+	:
+	TFont(Filename),
+    fTex(Texture.LoadTexture(Filename, TEXTURE_TYPE_TRANSPARENT, 0)),
+    fTexSize(1024),
+fOutline(Outline),
+fBaseline(Baseline),
+fAscender(Ascender),
+fDescender(Descender)
 {
-    inherited Create(Filename);
-
-    fTex = Texture.LoadTexture(Filename, TEXTURE_TYPE_TRANSPARENT, 0);
-    fTexSize = 1024;
-    fOutline = Outline;
-    fBaseline = Baseline;
-    fAscender = Ascender;
-    fDescender = Descender;
-
-    LoadFontInfo(Filename.SetExtension('.dat'));
+    LoadFontInfo(Filename.replace_extension(".dat"));
 
     ResetIntern();
 }
 
-destructor TBitmapFont.Destroy();
+TBitmapFont::~TBitmapFont()
 {
-    glDeleteTextures(1, @fTex.TexNum);
-    inherited;
+    glDeleteTextures(1, &fTex.TexNum);
 }
 
-void TBitmapFont.ResetIntern();
+void TBitmapFont::ResetIntern()
 {
-    fLineSpacing = Height;
+    fLineSpacing = Height();
 }
 
-void TBitmapFont.Reset();
+void TBitmapFont::Reset()
 {
-    inherited;
+    TFont::Reset();
     ResetIntern();
 }
 
-void TBitmapFont.AddFallback(const Filename : std::filesystem::path);
+void TBitmapFont::AddFallback(const std::filesystem::path Filename)
 {
     // no support for fallbacks
 }
 
-void TBitmapFont.CorrectWidths(WidthMult: real; WidthAdd: int);
-var
-Count : int;
+void TBitmapFont::CorrectWidths(double WidthMult, int WidthAdd)
 {
-    for Count = 0 to 255 do
-        fWidths[Count] = Round(fWidths[Count] * WidthMult) + WidthAdd;
+    for (auto& width : fWidths)
+        width = std::round(width * WidthMult) + WidthAdd;
 }
 
-void TBitmapFont.LoadFontInfo(const InfoFile : std::filesystem::path);
-var
-Stream : TStream;
+void TBitmapFont::LoadFontInfo(const std::filesystem::path InfoFile)
+/*var
+Stream : TStream;*/
 {
     FillChar(fWidths[0], Length(fWidths), 0);
 
     Stream = nil;
     try
-        Stream = TBinaryFileStream.Create(InfoFile, fmOpenRead);
-    Stream.Read(fWidths, 256);
-    except
-        raise EFontError.Create('Could not read font info file ''' + InfoFile.ToNative + '''');
-}
-Stream.Free;
-}
-
-function TBitmapFont.BBox(const Text : TUCS4StringArray; Advance: bool) : TBoundsDbl;
-var
-LineIndex, CharIndex: int;
-CharCode: uint32_t;
-Line: std::u32string;
-LineWidth: double;
-{
-    Result.Left = 0;
-    Result.Right = 0;
-    Result.Top = Height;
-    Result.Bottom = 0;
-
-    for LineIndex = 0 to High(Text) do
     {
-        Line = Text[LineIndex];
-        LineWidth = 0;
-        for CharIndex = 0 to LengthUCS4(Line) - 1 do
-        {
-            CharCode = Ord(Line[CharIndex]);
-            if (CharCode < Length(fWidths)) then
-                LineWidth = LineWidth + fWidths[CharCode];
-        }
-        if (LineWidth > Result.Right) then
-            Result.Right = LineWidth;
+	    Stream = TBinaryFileStream(InfoFile, fmOpenRead);
+    	Stream.Read(fWidths, 256);
+    }
+    catch (...)
+    {
+        const std::string msg = "Could not read font info file \"" + InfoFile.string() + "\"";
+    	throw EFontError(msg.c_str());
     }
 }
 
-void TBitmapFont.RenderChar(ch: UCS4Char; var AdvanceX : real);
-var
-TexX, TexY:        real;
-TexR, TexB:        real;
-GlyphWidth:        real;
-PL, PT:            real;
-PR, PB:            real;
-CharCode:          uint32_t;
+TBoundsDbl TBitmapFont::BBox(const TUCS4StringArray Text, bool Advance)
 {
-    CharCode = Ord(ch);
-    if (CharCode > High(fWidths)) then
+    TBoundsDbl res = {
+			0, 0, 0, Height()
+    };
+
+    for (const auto& Line : Text)
+    {
+        double LineWidth = 0;
+        for (const auto& c : Line)
+        {
+            const auto CharCode = static_cast<uint32_t>(c);
+            if (CharCode < fWidths.size())
+                LineWidth += fWidths[CharCode];
+        }
+        res.Right = std::max(LineWidth, res.Right);
+    }
+    return res;
+}
+
+void TBitmapFont::RenderChar(char32_t ch, double& AdvanceX)
+{
+    auto CharCode = static_cast<uint32_t>(ch);
+    if (CharCode >= fWidths.size())
         CharCode = 0;
 
-    GlyphWidth = fWidths[CharCode];
+    const double GlyphWidth = fWidths[CharCode];
 
     // set texture positions
-    TexX = (CharCode mod 16) * 1 / 16 + 1 / 32 - (GlyphWidth / 2 - fOutline) / fTexSize;
-    TexY = (CharCode div 16) * 1 / 16 + {2 texels} 2 / fTexSize;
-    TexR = (CharCode mod 16) * 1 / 16 + 1 / 32 + (GlyphWidth / 2 + fOutline) / fTexSize;
-    TexB = (1 + CharCode div 16) * 1 / 16 - {2 texels} 2 / fTexSize;
+    const double TexX = (CharCode % 16) * 1.0 / 16.0 + 1.0 / 32.0 - (GlyphWidth / 2.0 - fOutline) / fTexSize;
+    const double TexY = (CharCode / 16) * 1.0 / 16.0 + /*{2 texels}*/ 2.0 / fTexSize;
+    const double TexR = (CharCode % 16) * 1.0 / 16.0 + 1.0 / 32.0 + (GlyphWidth / 2.0 + fOutline) / fTexSize;
+    const double TexB = (1 + CharCode / 16) * 1.0 / 16.0 - /*{2 texels}*/ 2.0 / fTexSize;
 
     // set vector positions
-    PL = AdvanceX - fOutline;
-    PR = PL + GlyphWidth + fOutline * 2;
-    PB = -fBaseline;
-    PT = PB + fTexSize div 16;
+    const double PL = AdvanceX - fOutline;
+    const double PR = PL + GlyphWidth + fOutline * 2;
+    const double PB = -fBaseline;
+    const double PT = PB + fTexSize / 16;
 
-    (*
+    /*
         if (Font.Blend) then
         {
           glEnable(GL_BLEND);
           glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         }
-            *)
+    */
 
-        glEnable(GL_TEXTURE_2D);
-        glBindTexture(GL_TEXTURE_2D, fTex.TexNum);
+    glEnable(GL_TEXTURE_2D);
+    glBindTexture(GL_TEXTURE_2D, fTex.TexNum);
 
-        if (not ReflectionPass) then
-        {
-          glBegin(GL_QUADS);
-            glTexCoord2f(TexX, TexY); glVertex2f(PL, PT);
-            glTexCoord2f(TexX, TexB); glVertex2f(PL, PB);
-            glTexCoord2f(TexR, TexB); glVertex2f(PR, PB);
-            glTexCoord2f(TexR, TexY); glVertex2f(PR, PT);
-          glEnd;
-        }
-        else
-        {
-            glDepthRange(0, 10);
-            glDepthFunc(GL_LEQUAL);
-            glEnable(GL_DEPTH_TEST);
+    if (!ReflectionPass)
+    {
+        glBegin(GL_QUADS);
+        glTexCoord2f(TexX, TexY); glVertex2f(PL, PT);
+        glTexCoord2f(TexX, TexB); glVertex2f(PL, PB);
+        glTexCoord2f(TexR, TexB); glVertex2f(PR, PB);
+        glTexCoord2f(TexR, TexY); glVertex2f(PR, PT);
+        glEnd();
+    }
+    else
+    {
+        glDepthRange(0, 10);
+        glDepthFunc(GL_LEQUAL);
+        glEnable(GL_DEPTH_TEST);
 
-            glBegin(GL_QUADS);
-            glTexCoord2f(TexX, TexY); glVertex2f(PL, PT);
-            glTexCoord2f(TexX, TexB); glVertex2f(PL, PB);
-            glTexCoord2f(TexR, TexB); glVertex2f(PR, PB);
-            glTexCoord2f(TexR, TexY); glVertex2f(PR, PT);
-            glEnd;
+        glBegin(GL_QUADS);
+        glTexCoord2f(TexX, TexY); glVertex2f(PL, PT);
+        glTexCoord2f(TexX, TexB); glVertex2f(PL, PB);
+        glTexCoord2f(TexR, TexB); glVertex2f(PR, PB);
+        glTexCoord2f(TexR, TexY); glVertex2f(PR, PT);
+        glEnd();
 
-            glBegin(GL_QUADS);
-            glTexCoord2f(TexX, TexY); glVertex2f(PL, PT);
-            glTexCoord2f(TexX, TexB); glVertex2f(PL, PB);
-            glTexCoord2f(TexR, TexB); glVertex2f(PR, PB);
-            glTexCoord2f(TexR, TexY); glVertex2f(PR, PT);
+        glBegin(GL_QUADS);
+        glTexCoord2f(TexX, TexY); glVertex2f(PL, PT);
+        glTexCoord2f(TexX, TexB); glVertex2f(PL, PB);
+        glTexCoord2f(TexR, TexB); glVertex2f(PR, PB);
+        glTexCoord2f(TexR, TexY); glVertex2f(PR, PT);
 
-            (*
-                glColor4f(fTempColor.r, fTempColor.g, fTempColor.b, 0.7);
-            glTexCoord2f(TexX, TexB); glVertex3f(PL, PB, 0);
-            glTexCoord2f(TexR, TexB); glVertex3f(PR, PB, 0);
+        /*
+            glColor4f(fTempColor.r(), fTempColor.g(), fTempColor.b(), 0.7);
+        glTexCoord2f(TexX, TexB); glVertex3f(PL, PB, 0);
+        glTexCoord2f(TexR, TexB); glVertex3f(PR, PB, 0);
 
-            glColor4f(fTempColor.r, fTempColor.g, fTempColor.b, 0);
-            glTexCoord2f(TexR, (TexY + TexB) / 2); glVertex3f(PR, (PT + PB) / 2, 0);
-            glTexCoord2f(TexX, (TexY + TexB) / 2); glVertex3f(PL, (PT + PB) / 2, 0);
-            *)
-                glEnd;
+        glColor4f(fTempColor.r, fTempColor.g, fTempColor.b, 0);
+        glTexCoord2f(TexR, (TexY + TexB) / 2); glVertex3f(PR, (PT + PB) / 2, 0);
+        glTexCoord2f(TexX, (TexY + TexB) / 2); glVertex3f(PL, (PT + PB) / 2, 0);
+        */
+        glEnd();
 
-            //write the colour back
-            glColor4fv(@fTempColor);
+        //write the colour back
+        glColor4fv(fTempColor.vals);
 
-            glDisable(GL_DEPTH_TEST);
-        } // reflection
+        glDisable(GL_DEPTH_TEST);
+    } // reflection
 
-        glDisable(GL_TEXTURE_2D);
-        (*
-            if (Font.Blend) then
-                glDisable(GL_BLEND);
-        *)
+    glDisable(GL_TEXTURE_2D);
+    /*
+        if (Font.Blend) then
+            glDisable(GL_BLEND);
+    */
 
-            AdvanceX = AdvanceX + GlyphWidth;
+    AdvanceX += GlyphWidth;
 }
 
-void TBitmapFont.Render(const Text : std::u32string);
-var
-CharIndex : int;
-AdvanceX: real;
+void TBitmapFont::Render(const std::u32string Text)
 {
     // if there is no text do nothing
-    if (Text == nil) or (Text[0] == 0) then
-        Exit;
+    //if (Text == nil) or (Text[0] == 0)
+    //  Exit;
+
+    if (Text.empty())
+        return;
 
     //Save the current color && alpha (for reflection)
-    glGetFloatv(GL_CURRENT_COLOR, @fTempColor);
+    glGetFloatv(GL_CURRENT_COLOR, fTempColor.vals);
 
-    AdvanceX = 0;
-    for CharIndex = 0 to LengthUCS4(Text) - 1 do
-    {
-        RenderChar(Text[CharIndex], AdvanceX);
-    }
+    double AdvanceX = 0;
+    for (const auto& c : Text)
+        RenderChar(c, AdvanceX);
 }
 
-function TBitmapFont.Height() : float;
+float TBitmapFont::Height() const
+	{
+    return static_cast<float>(fAscender - fDescender);
+}
+
+float TBitmapFont::Ascender() const
 {
-    Result = fAscender - fDescender;
+    return static_cast<float>(fAscender);
 }
 
-function TBitmapFont.Ascender() : float;
+float TBitmapFont::Descender() const
 {
-    Result = fAscender;
+    return static_cast<float>(fDescender);
 }
 
-function TBitmapFont.Descender() : float;
+float TBitmapFont::UnderlinePosition() const
 {
-    Result = fDescender;
+    return -2.0;
 }
 
-function TBitmapFont.UnderlinePosition() : float;
+float TBitmapFont::UnderlineThickness() const
 {
-    Result = -2.0;
+    return 1.0;
 }
 
-function TBitmapFont.UnderlineThickness() : float;
-{
-    Result = 1.0;
-}
-
-{$ENDIF BITMAP_FONT}
-
-
-initialization
-
-finalization
-TFreeType::FreeLibrary();
+#endif BITMAP_FONT
 };

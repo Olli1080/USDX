@@ -25,6 +25,8 @@
  * $Id: UFont.pas 2675 2010-10-17 17:00:23Z tobigun $
  */
 
+#define NOMINMAX
+
 #include <array>
 #include <string>
 #include <vector>
@@ -36,6 +38,8 @@
 #include <locale>
 #include <optional>
 #include <fstream>
+#include <map>
+#include <set>
 
 #include <gl/GL.h>
 #include <glm/glm.hpp>
@@ -79,8 +83,14 @@ typedef std::shared_ptr<TGLubyteArray> PGLubyteArray;
 typedef std::vector<GLubyte> TGLubyteDynArray;
 typedef std::vector<std::u32string> TUCS4StringArray;
 
-union TGLColor
+struct TGLColor
 {
+    TGLColor() : vals{0, 0, 0, 0}
+    {}
+
+    TGLColor(GLfloat r, GLfloat g, GLfloat b, GLfloat a) : vals{ r, g, b, a}
+    {}
+
     GLfloat vals[4];
 
     GLfloat& r()
@@ -285,6 +295,8 @@ public:
     
     /** Filename */
     [[nodiscard]] std::filesystem::path Filename() const;
+
+    virtual bool ReflectionPass() const;
 };
 
 //** Max. number of mipmap levels that a TScalableFont can contain
@@ -411,7 +423,7 @@ typedef std::shared_ptr<TGlyphTable> PGlyphTable;
 class TGlyphCache
 {
 private:
-    TList fHash;
+    std::map<char32_t, std::shared_ptr<TGlyph>> fGlyphs;
 
     /**
      * Finds a glyph-table storing cached glyphs with base-code BaseCode
@@ -420,12 +432,12 @@ private:
      * @param(InsertPos  the position of the tyble in the list if it was found,
      *                   otherwise the position the table should be inserted)
      */
-    PGlyphTable FindGlyphTable(uint32_t BaseCode, int& InsertPos);
+    //PGlyphTable FindGlyphTable(uint32_t BaseCode, int& InsertPos);
 
 public:
 
-    TGlyphCache();
-    virtual ~TGlyphCache();
+    TGlyphCache() = default;
+    virtual ~TGlyphCache() = default;
 
     /**
      * Add glyph Glyph with char-code ch to the cache.
@@ -446,32 +458,13 @@ public:
     /**
      * Checks if a glyph with char-code ch is cached.
      */
-    bool HasGlyph(char32_t ch);
+    [[nodiscard]] bool HasGlyph(char32_t ch) const;
 
     /**
-     * Remove && free all cached glyphs. If KeepBaseSet is set to
+     * Remove and free all cached glyphs. If KeepBaseSet is set to
      * true, cached characters in the range 0..255 will not be flushed.
      */
     void FlushCache(bool KeepBaseSet);
-};
-
-/**
-* Entry of a glyph-cache's (TGlyphCache) hash.
-* Stores a BaseCode (upper-bytes of a glyph's char-code) && a table
-* with all glyphs cached at the moment with that BaseCode.
-*/
-class TGlyphCacheHashEntry
-{
-private:
-    uint32_t fBaseCode;
-public:
-    TGlyphTable GlyphTable;
-
-    TGlyphCacheHashEntry(uint32_t BaseCode);
-
-    /** Base-code (upper-bytes) of the glyphs stored in this entry's table */
-    //property BaseCode: uint32_t read fBaseCode;
-    [[nodiscard]] uint32_t BaseCode() const { return fBaseCode; };
 };
 
 class TCachedFont : public TFont
@@ -515,7 +508,8 @@ typedef std::vector<std::weak_ptr<TFTFontFace>> TFTFontFaceArray;
 class TFTFont : public TCachedFont
 {
 private:
-    void ResetIntern();
+	// ReSharper disable once CppHidingFunction
+	void ResetIntern();
     static std::shared_ptr<TFTFontFaceCache> GetFaceCache();
 
 protected:
@@ -755,16 +749,11 @@ protected:
     void Render(const std::u32string Text) override;
     TBoundsDbl BBox(const TUCS4StringArray Text, bool Advance) override;
 
-    [[nodiscard]] float Height() const override;
-    [[nodiscard]] float Ascender() const override;
-    [[nodiscard]] float Descender() const override;
+    
     void LineSpacing(float Spacing) override;
     void GlyphSpacing(float Spacing) override;
     void ReflectionSpacing(float Spacing) override;
     void Style(TFontStyle Style) override;
-    [[nodiscard]] TFontStyle Style() const override;
-    [[nodiscard]] float UnderlinePosition() const override;
-    [[nodiscard]] float UnderlineThickness() const override;
     void UseKerning(bool Enable) override;
     void ReflectionPass(bool Enable) override;
 
@@ -794,6 +783,13 @@ public:
     [[nodiscard]] int Size() const { return fSize; }
     /** Outset size */
     [[nodiscard]] float Outset() const { return fOutset; }
+
+    [[nodiscard]] float Height() const override;
+    [[nodiscard]] float Ascender() const override;
+    [[nodiscard]] float Descender() const override;
+    [[nodiscard]] TFontStyle Style() const override;
+    [[nodiscard]] float UnderlinePosition() const override;
+    [[nodiscard]] float UnderlineThickness() const override;
 };
 
   /**
@@ -803,7 +799,7 @@ public:
 class TFTScalableOutlineFont : public TScalableFont
 {
 protected:
-    virtual float GetOutset() const;
+    
     std::shared_ptr<TFont> CreateMipmap(int Level, float Scale) override;
 
 public:
@@ -813,7 +809,7 @@ public:
 		bool PreCache = true);
 
     /** @seealso TFTOutlineFont::SetOutlineColor */
-    void SetOutlineColor(GLfloat r, GLfloat g, GLfloat b, GLfloat a = -1.f);
+    void OutlineColor(GLfloat r, GLfloat g, GLfloat b, GLfloat a = -1.f);
 
     /** @seealso TGlyphCache.FlushCache */
     void FlushCache(bool KeepBaseSet);
@@ -821,7 +817,7 @@ public:
     void AddFallback(const std::filesystem::path Filename) override;
 
     /** Outset size */
-    [[nodiscard]] float Outset() const { return GetOutset(); }
+    [[nodiscard]] virtual float Outset() const;
 };
 
 #ifdef BITMAP_FONT
@@ -843,6 +839,7 @@ private:
     int fOutline;
     TGLColor fTempColor; //**< colours for the reflection
 
+    // ReSharper disable once CppHidingFunction
     void ResetIntern();
 
     void RenderChar(char32_t ch, double& AdvanceX);
@@ -868,9 +865,9 @@ public:
     /**
      * Creates a bitmapped font from image Filename && font width info
      * loaded from the corresponding file with ending .dat.
-     * @param(Baseline  y-coord of the baseline given in cartesian coords
-     *        (y-axis up) && from the lower edge of the glyphs bounding box)
-     * @param(Ascender  pixels from baseline to top of highest glyph)
+     * @param Baseline  y-coord of the baseline given in cartesian coords
+     *        (y-axis up) && from the lower edge of the glyphs bounding box
+     * @param Ascender  pixels from baseline to top of highest glyph
      */
     TBitmapFont(const std::filesystem::path Filename, int Outline,
         int Baseline, int Ascender, int Descender);
@@ -890,24 +887,53 @@ public:
 
 #endif
 
-inline FT_Library LibraryInst;
-
 class TFreeType
 {
 public:
+
+    /**
+     * Creates a wrapper for the freetype library singleton
+     * If non exists, freetype will be initialized.
+     * @raises EFontError if initialization failed
+     */
+    TFreeType()
+    {
+		if (!LibraryInst)
+		{
+            // initialize freetype
+            if (FT_Init_FreeType(&LibraryInst) != 0)
+                throw EFontError("FT_Init_FreeType failed");
+		}
+        ++instances;
+    }
+
+    ~TFreeType()
+    {
+        --instances;
+        if (instances == 0)
+            FreeLibrary();
+    }
+
     /**
      * Returns a pointer to the freetype library singleton.
      * If non exists, freetype will be initialized.
      * @raises EFontError if initialization failed
      */
-    static FT_Library GetLibrary();
+    FT_Library GetLibrary() const;
+
+private:
+
+    inline static int instances = 0;
+    static FT_Library LibraryInst;
     static void FreeLibrary();
 };
+
+inline TFreeType FreeTypeLib;
 
 //uses Types;
 
 //** shear factor used for the italic effect (bigger value -> more bending)
-inline const GLfloat cShearFactor = 0.25;
+inline constexpr GLfloat cShearFactor = 0.25;
 inline const std::array<GLfloat, 16> cShearMatrix =
 {
   1,            0, 0, 0,
@@ -923,12 +949,6 @@ inline const std::array<GLfloat, 16> cShearMatrixInv =
   0,             0, 0, 1
 };
 
-
-TGLColor NewGLColor(GLfloat r, GLfloat g, GLfloat b, GLfloat a)
-{
-    return { r, g, b, a };
-}
-
 /**
  * Returns the first power of 2 >= Value.
  */
@@ -937,5 +957,6 @@ inline int NextPowerOf2(int Value)
   int res = 1;
   while (res < Value)
     res <<= 1;
+  return res;
 }
 }
