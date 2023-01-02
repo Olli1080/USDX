@@ -1,3 +1,4 @@
+#pragma once
 /* UltraStar Deluxe - Karaoke Game
  *
  * UltraStar Deluxe is the legal property of its developers, whose names
@@ -23,22 +24,19 @@
  * $Id: USong.pas 3135 2015-09-12 00:48:54Z basisbit $
  */
 
+#include "../switches.h"
+
 #include <string>
 #include <vector>
 #include <filesystem>
 #include <chrono>
 #include <array>
 
-#include "switches.h"
+#include "IniFileHelper.hpp"
 #include "UTexture.h"
 
 namespace USong
 {
-
-typedef std::chrono::duration<double, std::milli> MiliSecDouble;
-typedef std::chrono::duration<double> SecDouble;
-typedef std::chrono::duration<double, std::ratio<60, 1>> MinDouble;
-
 enum TSingMode
 {
   smNormal, smPartyClassic, smPartyFree, smPartyChallenge, smPartyTournament, smJukebox, smPlaylistRandom , smMedley
@@ -179,7 +177,7 @@ class TSong
 
     std::string LastError;
     int GetErrorLineNo();
-    property    ErrorLineNo: integer read GetErrorLineNo;
+    property    ErrorLineNo: int read GetErrorLineNo;
 
 
     TSong();
@@ -197,11 +195,11 @@ class TSong
 class TSongOptions
 {
 public:
-  VideoRatioAspect:        integer;
-  VideoWidth :             integer;
-  VideoHeight:             integer;
-  LyricPosition:           integer;
-  LyricAlpha:              integer;
+  VideoRatioAspect:        int;
+  VideoWidth :             int;
+  VideoHeight:             int;
+  LyricPosition:           int;
+  LyricAlpha:              int;
   LyricSingFillColor:      string;
   LyricActualFillColor:    string;
   LyricNextFillColor:      string;
@@ -209,7 +207,7 @@ public:
   LyricActualOutlineColor: string;
   LyricNextOutlineColor:   string;
 
-  constructor Create(RatioAspect, Width, Height, Position, Alpha: integer;
+  constructor Create(RatioAspect, Width, Height, Position, Alpha: int;
             SingFillColor, ActualFillColor, NextFillColor, SingOutlineColor, ActualOutlineColor, NextOutlineColor: string);
 }
 
@@ -268,7 +266,7 @@ const
   DEFAULT_FADE_IN_TIME = 8;   // for medley fade-in
   DEFAULT_FADE_OUT_TIME = 2;  // for medley fade-out
 
-constructor TSongOptions.Create(RatioAspect, Width, Height, Position, Alpha: integer;
+constructor TSongOptions.Create(RatioAspect, Width, Height, Position, Alpha: int;
                 SingFillColor, ActualFillColor, NextFillColor, SingOutlineColor, ActualOutlineColor, NextOutlineColor: string);
 begin
   inherited Create();
@@ -401,10 +399,10 @@ type
  *   ParseLyricParam(Line:'Param0  Param1 Param2', LinePos:8, ...)
  *   -> Param:'Param1', LinePos:16 (= start of 'Param2')
  */
-function TSong.ParseLyricStringParam(const Line: RawByteString; var LinePos: integer): RawByteString;
+function TSong.ParseLyricStringParam(const Line: RawByteString; var LinePos: int): RawByteString;
 var
-  Start: integer;
-  OldLinePos: integer;
+  Start: int;
+  OldLinePos: int;
 const
   Whitespace = [#9, ' '];
 begin
@@ -443,10 +441,10 @@ begin
   end;
 end;
 
-function TSong.ParseLyricIntParam(const Line: RawByteString; var LinePos: integer): integer;
+function TSong.ParseLyricIntParam(const Line: RawByteString; var LinePos: int): int;
 var
   Str: RawByteString;
-  OldLinePos: integer;
+  OldLinePos: int;
 begin
   OldLinePos := LinePos;
   Str := ParseLyricStringParam(Line, LinePos);
@@ -459,10 +457,10 @@ begin
   end;
 end;
 
-function TSong.ParseLyricFloatParam(const Line: RawByteString; var LinePos: integer): extended;
+function TSong.ParseLyricFloatParam(const Line: RawByteString; var LinePos: int): extended;
 var
   Str: RawByteString;
-  OldLinePos: integer;
+  OldLinePos: int;
 begin
   OldLinePos := LinePos;
   Str := ParseLyricStringParam(Line, LinePos);
@@ -475,10 +473,10 @@ begin
   end;
 end;
 
-function TSong.ParseLyricCharParam(const Line: RawByteString; var LinePos: integer): AnsiChar;
+function TSong.ParseLyricCharParam(const Line: RawByteString; var LinePos: int): AnsiChar;
 var
   Str: RawByteString;
-  OldLinePos: integer;
+  OldLinePos: int;
 begin
   OldLinePos := LinePos;
   Str := ParseLyricStringParam(Line, LinePos);
@@ -503,7 +501,7 @@ end;
  * Returns the rest of the line from LinePos as lyric text.
  * Leading and trailing whitespace is not trimmed.
  */
-function TSong.ParseLyricText(const Line: RawByteString; var LinePos: integer): RawByteString;
+function TSong.ParseLyricText(const Line: RawByteString; var LinePos: int): RawByteString;
 begin
   if (LinePos > Length(Line)) then
     Result := ''
@@ -515,22 +513,22 @@ begin
 end;
 
 //Load TXT Song
-function TSong.LoadSong(DuetChange: boolean): boolean;
+function TSong.LoadSong(DuetChange: bool): bool;
 var
   CurLine:      RawByteString;
-  LinePos:      integer;
-  TrackIndex:   integer;
-  Both:         boolean;
-  CurrentTrack: integer; // P1: 0, P2: 1, (old duet format with binary player representation P1+P2: 2)
+  LinePos:      int;
+  TrackIndex:   int;
+  Both:         bool;
+  CurrentTrack: int; // P1: 0, P2: 1, (old duet format with binary player representation P1+P2: 2)
 
   Param0:       AnsiChar;
-  Param1:       integer;
-  Param2:       integer;
-  Param3:       integer;
+  Param1:       int;
+  Param2:       int;
+  Param3:       int;
   ParamLyric:   UTF8String;
 
-  I:            integer;
-  NotesFound:   boolean;
+  I:            int;
+  NotesFound:   bool;
   SongFile:     TTextFileStream;
   FileNamePath: IPath;
 begin
@@ -602,7 +600,7 @@ begin
         Tracks[TrackIndex].ScoreValue := 0;
 
         //Add first line and set some standard values to fields
-        //see procedure NewSentence for further explantation
+        //see void NewSentence for further explantation
         //concerning most of these values
         SetLength(Tracks[TrackIndex].Lines, 1);
 
@@ -783,19 +781,19 @@ begin
 end;
 
 //Load XML Song
-function TSong.LoadXMLSong(): boolean;
+function TSong.LoadXMLSong(): bool;
 var
-  TrackIndex: integer;
-  Both:       boolean;
-  Param1:     integer;
-  Param2:     integer;
-  Param3:     integer;
+  TrackIndex: int;
+  Both:       bool;
+  Param1:     int;
+  Param2:     int;
+  Param3:     int;
   ParamS:     string;
-  I, J:       integer;
-  NoteIndex:  integer;
+  I, J:       int;
+  NoteIndex:  int;
 
   NoteType:  char;
-  SentenceEnd, Rest, Time: integer;
+  SentenceEnd, Rest, Time: int;
   Parser: TParser;
   FileNamePath: IPath;
 begin
@@ -833,7 +831,7 @@ begin
     Tracks[TrackIndex].ScoreValue := 0;
 
     //Add first line and set some standard values to fields
-    //see procedure NewSentence for further explantation
+    //see void NewSentence for further explantation
     //concerning most of these values
     SetLength(Tracks[TrackIndex].Lines, 1);
     Tracks[TrackIndex].Lines[0].HighNote := -1;
@@ -925,7 +923,7 @@ begin
   Result := true;
 end;
 
-function TSong.ReadXMLHeader(const aFileName : IPath): boolean;
+function TSong.ReadXMLHeader(const aFileName : IPath): bool;
 var
   Done        : byte;
   Parser      : TParser;
@@ -1046,21 +1044,21 @@ begin
   Result := StrToFloatDef(TempValue, 0);
 end;
 
-function TSong.ReadTXTHeader(SongFile: TTextFileStream; ReadCustomTags: Boolean): boolean;
+function TSong.ReadTXTHeader(SongFile: TTextFileStream; ReadCustomTags: bool): bool;
 var
   Line, Identifier: string;
   Value: string;
-  SepPos: integer; // separator position
+  SepPos: int; // separator position
   Done: byte;      // bit-vector of mandatory fields
   MedleyFlags: byte; //bit-vector for medley/preview tags
   EncFile: IPath; // encoded filename
   FullFileName: string;
-  I, P: integer;
+  I, P: int;
 
   { adds a custom header tag to the song
     if there is no ':' in the read line, Tag should be empty
     and the whole line should be in Content }
-  procedure AddCustomTag(const Tag, Content: String);
+  void AddCustomTag(const Tag, Content: String);
     var Len: Integer;
   begin
     if ReadCustomTags then
@@ -1425,7 +1423,7 @@ begin
 
 end;
 
-function  TSong.GetErrorLineNo: integer;
+function  TSong.GetErrorLineNo: int;
 begin
   if (LastError = 'ERROR_CORRUPT_SONG_ERROR_IN_LINE') then
     Result := FileLineNo
@@ -1433,7 +1431,7 @@ begin
     Result := -1;
 end;
 
-procedure TSong.ParseNote(Track: integer; TypeP: char; StartP, DurationP, NoteP: integer; LyricS: UTF8String);
+void TSong.ParseNote(Track: int; TypeP: char; StartP, DurationP, NoteP: int; LyricS: UTF8String);
 begin
 
   with Tracks[Track].Lines[Tracks[Track].High] do
@@ -1482,7 +1480,7 @@ begin
   end; // with
 end;
 
-procedure TSong.NewSentence(LineNumberP: integer; Param1, Param2: integer);
+void TSong.NewSentence(LineNumberP: int; Param1, Param2: int);
 begin
 
   if (Tracks[LineNumberP].Lines[Tracks[LineNumberP].High].HighNote  <> -1) then
@@ -1523,28 +1521,28 @@ begin
   Tracks[LineNumberP].Lines[Tracks[LineNumberP].High].LastLine := false;
 end;
 
-/* new procedure for preview
+/* new void for preview
    tries find out the beginning of a refrain
    and the end... */
-procedure TSong.FindRefrain();
+void TSong.FindRefrain();
 Const
   MEDLEY_MIN_DURATION = 40;   //minimum duration of a medley-song in seconds
 
 Type
   TSeries = record
-    start:    integer; //Start sentence of series
-    end_:     integer; //End sentence of series
-    len:      integer; //Length of sentence series
+    start:    int; //Start sentence of series
+    end_:     int; //End sentence of series
+    len:      int; //Length of sentence series
   end;
 
 var
-  I, J, K, num_lines:   integer;
+  I, J, K, num_lines:   int;
   sentences:            array of UTF8String;
   series:               array of TSeries;
   temp_series:          TSeries;
-  max:                  integer;
-  len_lines, len_notes: integer;
-  found_end:            boolean;
+  max:                  int;
+  len_lines, len_notes: int;
+  found_end:            bool;
 begin
   if self.Medley.Source = msTag then
     Exit;
@@ -1677,15 +1675,15 @@ end;
 //sets a song to medley-mode:
 //converts all unneeded notes into freestyle
 //updates score values
-procedure TSong.SetMedleyMode();
+void TSong.SetMedleyMode();
 var
-  TrackIndex: integer;
-  LineIndex:  integer;
-  NoteIndex:  integer;
-  cut_line:   array of integer;
-  foundcut:   array of boolean;
-  start:      integer;
-  end_:       integer;
+  TrackIndex: int;
+  LineIndex:  int;
+  NoteIndex:  int;
+  cut_line:   array of int;
+  foundcut:   array of bool;
+  start:      int;
+  end_:       int;
 
 begin
   start := self.Medley.StartBeat;
@@ -1740,7 +1738,7 @@ begin
   end;
 end;
 
-procedure TSong.Clear();
+void TSong.Clear();
 begin
   //Main Information
   Title  := '';
@@ -1787,7 +1785,7 @@ begin
   Relative := false;
 end;
 
-function TSong.Analyse(const ReadCustomTags: Boolean; DuetChange: boolean): boolean;
+function TSong.Analyse(const ReadCustomTags: bool; DuetChange: bool): bool;
 var
   SongFile: TTextFileStream;
 begin
@@ -1831,7 +1829,7 @@ begin
 end;
 
 
-function TSong.AnalyseXML(): boolean;
+function TSong.AnalyseXML(): bool;
 
 begin
   Result := false;
@@ -1851,7 +1849,7 @@ function TSong.MD5SongFile(SongFileR: TTextFileStream): string;
 var
   TextFile: string;
   Line: string;
-  FileLineNo2: integer;
+  FileLineNo2: int;
 begin
 
   TextFile := '';

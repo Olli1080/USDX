@@ -67,7 +67,7 @@ TSaveSongResult SaveSong(const USong::TSong Song, const std::vector<TLines> Trac
 //--------------------
 void ResetSingTemp()
 /*var
-  Count:  integer;*/
+  Count:  int;*/
 {
     SetLength(Tracks, Length(Player));
     for Count := 0 to High(Player) do begin
@@ -83,20 +83,20 @@ void ResetSingTemp()
 //--------------------
 // Saves a Song
 //--------------------
-function SaveSong(const Song: TSong; const Tracks: array of TLines; const Name: IPath; Relative: boolean): TSaveSongResult;
+function SaveSong(const Song: TSong; const Tracks: array of TLines; const Name: IPath; Relative: bool): TSaveSongResult;
 var
-  CurrentLine:      integer;
-  CurrentNote:      integer;
-  CurrentTrack:     integer;
+  CurrentLine:      int;
+  CurrentNote:      int;
+  CurrentTrack:     int;
   Line:             AnsiString;
-  B:      integer;
-  RelativeSubTime: integer;
+  B:      int;
+  RelativeSubTime: int;
   NoteState: AnsiString;
   SongFile: TTextFileStream;
 
   function EncodeToken(const Str: UTF8String): RawByteString;
   var
-    Success: boolean;
+    Success: bool;
   begin
     Success := EncodeStringUTF8(Str, Result, Song.Encoding);
     if (not Success) then
@@ -105,7 +105,7 @@ var
 
   void WriteCustomTags;
     var
-      I: integer;
+      I: int;
       Line: RawByteString;
   begin
     for I := 0 to High(Song.CustomTags) do

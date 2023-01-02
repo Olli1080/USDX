@@ -30,6 +30,7 @@
 #include <list>
 #include <filesystem>
 
+#include "UCatCovers.h"
 #include "ULog.h"
 #include "UPathUtils.h"
 #include "USong.h"
@@ -128,6 +129,11 @@ namespace USongs
 
     class TCatSongs
     {
+        TCatSongs()
+        {
+            Refresh();
+        }
+
         std::vector<USong::TSong> Song; // array of categories with songs
         std::vector<USong::TSong> SongSort;
 
@@ -152,20 +158,20 @@ namespace USongs
         uint32_t SetFilter(std::string FilterStr, TSongFilter Filter);
     };
 
-    inline std::unique_ptr<TSongs> Songs;    // all songs
-    inline std::unique_ptr<TCatSongs> CatSongs; // categorized songs
+    inline TSongs Songs;    // all songs
+    inline TCatSongs CatSongs; // categorized songs
 
-    const int IN_ACCESS = 0x00000001; //* File was accessed */
-    const int IN_MODIFY = 0x00000002; //* File was modified */
-    const int IN_ATTRIB = 0x00000004; //* Metadata changed */
-    const int IN_CLOSE_WRITE = 0x00000008; //* Writtable file was closed */
-    const int IN_CLOSE_NOWRITE = 0x00000010; //* Unwrittable file closed */
-    const int IN_OPEN = 0x00000020; //* File was opened */
-    const int IN_MOVED_FROM = 0x00000040; //* File was moved from X */
-    const int IN_MOVED_TO = 0x00000080; //* File was moved to Y */
-    const int IN_CREATE = 0x00000100; //* Subfile was created */
-    const int IN_DELETE = 0x00000200; //* Subfile was deleted */
-    const int IN_DELETE_SELF = 0x00000400; //* Self was deleted */
+    constexpr int IN_ACCESS = 0x00000001; //* File was accessed */
+    constexpr int IN_MODIFY = 0x00000002; //* File was modified */
+    constexpr int IN_ATTRIB = 0x00000004; //* Metadata changed */
+    constexpr int IN_CLOSE_WRITE = 0x00000008; //* Writtable file was closed */
+    constexpr int IN_CLOSE_NOWRITE = 0x00000010; //* Unwrittable file closed */
+    constexpr int IN_OPEN = 0x00000020; //* File was opened */
+    constexpr int IN_MOVED_FROM = 0x00000040; //* File was moved from X */
+    constexpr int IN_MOVED_TO = 0x00000080; //* File was moved to Y */
+    constexpr int IN_CREATE = 0x00000100; //* Subfile was created */
+    constexpr int IN_DELETE = 0x00000200; //* Subfile was deleted */
+    constexpr int IN_DELETE_SELF = 0x00000400; //* Self was deleted */
 
     /*uses
     StrUtils,
@@ -230,19 +236,19 @@ namespace USongs
             for (const auto& SongPath : UPathUtils::SongPaths)
                 BrowseDir(SongPath);
 
-            if (CatSongs)
-                CatSongs->Refresh();
+            /*if (CatSongs)
+                CatSongs.Refresh();*/
 
-            if (CatCovers)
-                CatCovers->Load();
+            /*if (UCatCovers::CatCovers)
+	            UCatCovers::CatCovers.Load();*/
 
             //if assigned(Covers) then
             //  Covers.Load;
 
             if (ScreenSong)
             {
-                ScreenSong->GenerateThumbnails();
-                ScreenSong->OnShow(); // refresh ScreenSong
+                ScreenSong.GenerateThumbnails();
+                ScreenSong.OnShow(); // refresh ScreenSong
             }
         }
         catch (...)
@@ -533,7 +539,7 @@ MainArtist:  UTF8String;
         tmp.Main = true;
         tmp.OrderTyp = 0;
         tmp.OrderNum = Order;
-        tmp.Cover = CatCovers.GetCover(UIni::Ini.Sorting, CategoryName);
+        tmp.Cover = UCatCovers::CatCovers.GetCover((UIni::TSortingType)UIni::Ini.Sorting, CategoryName);
         tmp.Visible = true;
 
         Song.emplace_back(std::move(tmp));
@@ -545,185 +551,184 @@ MainArtist:  UTF8String;
 
     	CatNumber = 0;
     };
+    
+	CatNumShow = -1;
 
+	SortSongs();
 
-CatNumShow : = -1;
+	std::string CurCategory;
+	Order = 0;
+	CatNumber = 0;
 
-SortSongs();
+	// Note: do NOT set Letter to ' ', otherwise no category-button will be
+	// created for songs {ning with ' ' if songs of this category exist.
+	// TODO: trim song-properties so ' ' will not occur as first chararcter.
+	char Letter = 0;
 
-CurCategory: = '';
-Order: = 0;
-CatNumber: = 0;
+	// clear song-list
+	for (SongIndex : = 0 to Songs.SongList.Count - 1)
+	{
+		// free category buttons
+		// Note: do NOT delete songs, they are just references to Songs.SongList entries
+		CurSong : = TSong(Songs.SongList[SongIndex]);
+		if (CurSong.Main) then
+		CurSong.Free;
+	}
+	SetLength(Song, 0);
 
-// Note: do NOT set Letter to ' ', otherwise no category-button will be
-// created for songs {ning with ' ' if songs of this category exist.
-// TODO: trim song-properties so ' ' will not occur as first chararcter.
-Letter: = 0;
-
-// clear song-list
-for SongIndex : = 0 to Songs.SongList.Count - 1 do
-{
-// free category buttons
-// Note: do NOT delete songs, they are just references to Songs.SongList entries
-CurSong : = TSong(Songs.SongList[SongIndex]);
-if (CurSong.Main) then
-CurSong.Free;
-};
-SetLength(Song, 0);
-
-for SongIndex : = 0 to Songs.SongList.Count - 1 do
-{
-CurSong : = TSong(Songs.SongList[SongIndex]);
-// if tabs are on, add section buttons for each new section
-if (UIni::Ini.Tabs = 1) then
-{
-case (TSortingType(Ini.Sorting)) of
-sEdition : {
-if (CompareText(CurCategory, CurSong.Edition) < > 0) then
-{
-CurCategory : = CurSong.Edition;
-
-// add Category Button
-AddCategoryButton(CurCategory);
-};
-};
-
-sGenre: {
-if (CompareText(CurCategory, CurSong.Genre) < > 0) then
-{
-CurCategory : = CurSong.Genre;
-// add Genre Button
-AddCategoryButton(CurCategory);
-};
-};
-
-sLanguage: {
-if (CompareText(CurCategory, CurSong.Language) < > 0) then
-{
-CurCategory : = CurSong.Language;
-// add Language Button
-AddCategoryButton(CurCategory);
-}
-};
-
-sTitle: {
-if (Length(CurSong.Title) >= 1) then
-{
-LetterTmp : = UCS4UpperCase(UTF8ToUCS4String(CurSong.Title)[0]);
-/* all numbersand some punctuation chars are put into a
-category named '#'
-we can't put the other punctuation chars into this category
-because they are not in order, so there will be two different
-categories named '#' */
-if (LetterTmp in[Ord('!') ..Ord('?')]) then
-LetterTmp : = Ord('#')
-else
-LetterTmp : = UCS4UpperCase(LetterTmp);
-if (Letter <> LetterTmp) then
-{
-Letter : = LetterTmp;
-// add a letter Category Button
-AddCategoryButton(UCS4ToUTF8String(Letter));
-};
-};
-};
-
-sArtist: {
-if (Length(CurSong.Artist) >= 1) then
-{
-LetterTmp : = UCS4UpperCase(UTF8ToUCS4String(CurSong.Artist)[0]);
-/* all numbersand some punctuation chars are put into a
-category named '#'
-we can't put the other punctuation chars into this category
-because they are not in order, so there will be two different
-categories named '#' */
-if (LetterTmp in[Ord('!') ..Ord('?')]) then
-LetterTmp : = Ord('#')
-else
-LetterTmp : = UCS4UpperCase(LetterTmp);
-
-if (Letter <> LetterTmp) then
-{
-Letter : = LetterTmp;
-// add a letter Category Button
-AddCategoryButton(UCS4ToUTF8String(Letter));
-};
-};
-};
-
-sFolder: {
-if (UTF8CompareText(CurCategory, CurSong.Folder) < > 0) then
-{
-CurCategory : = CurSong.Folder;
-// add folder tab
-AddCategoryButton(CurCategory);
-};
-};
-
-sArtist2: {
-/* this new sorting puts all songs by the same artist into
-  a single category */
-  //
-    if (UTF8ContainsText(CurSong.Artist, ' feat.')) then
+	for (SongIndex : = 0 to Songs.SongList.Count - 1)
+	{
+		CurSong : = TSong(Songs.SongList[SongIndex]);
+		// if tabs are on, add section buttons for each new section
+		if (UIni::Ini.Tabs = 1) then
+		{
+		case (TSortingType(Ini.Sorting)) of
+        sEdition : 
         {
-        StringIndex : = UTF8Pos(' feat', CurSong.Artist);
-MainArtist: = TrimRight(UTF8Copy(CurSong.Artist, 1, StringIndex - 1));
-}
-    else
-        MainArtist : = CurSong.Artist;
-//
-if (UTF8CompareText(CurCategory, MainArtist) < > 0) then
-{
-CurCategory : = MainArtist;
-// add folder tab
-AddCategoryButton(CurCategory);
-};
-};
+			if (CompareText(CurCategory, CurSong.Edition) != 0)
+			{
+			CurCategory : = CurSong.Edition;
 
-sYear: {
-if (CurSong.Year < > 0) then
-tmpCategory : = IntToStr(CurSong.Year)
-else
-tmpCategory : = 'Unknown';
+			// add Category Button
+			AddCategoryButton(CurCategory);
+			}
+		}
+		sGenre: 
+        {
+			if (CompareText(CurCategory, CurSong.Genre) != 0)
+			{
+				CurCategory : = CurSong.Genre;
+				// add Genre Button
+				AddCategoryButton(CurCategory);
+			}
+		}
+		sLanguage: {
+		if (CompareText(CurCategory, CurSong.Language) < > 0) then
+		{
+		CurCategory : = CurSong.Language;
+		// add Language Button
+		AddCategoryButton(CurCategory);
+		}
+		};
 
-if (tmpCategory <> CurCategory) then
-{
-CurCategory : = tmpCategory;
+		sTitle: {
+		if (Length(CurSong.Title) >= 1) then
+		{
+		LetterTmp : = UCS4UpperCase(UTF8ToUCS4String(CurSong.Title)[0]);
+		/* all numbersand some punctuation chars are put into a
+		category named '#'
+		we can't put the other punctuation chars into this category
+		because they are not in order, so there will be two different
+		categories named '#' */
+		if (LetterTmp in[Ord('!') ..Ord('?')]) then
+		LetterTmp : = Ord('#')
+		else
+		LetterTmp : = UCS4UpperCase(LetterTmp);
+		if (Letter <> LetterTmp) then
+		{
+		Letter : = LetterTmp;
+		// add a letter Category Button
+		AddCategoryButton(UCS4ToUTF8String(Letter));
+		};
+		};
+		};
 
-// add Category Button
-AddCategoryButton(CurCategory);
-};
-};
+		sArtist: {
+		if (Length(CurSong.Artist) >= 1) then
+		{
+		LetterTmp : = UCS4UpperCase(UTF8ToUCS4String(CurSong.Artist)[0]);
+		/* all numbersand some punctuation chars are put into a
+		category named '#'
+		we can't put the other punctuation chars into this category
+		because they are not in order, so there will be two different
+		categories named '#' */
+		if (LetterTmp in[Ord('!') ..Ord('?')]) then
+		LetterTmp : = Ord('#')
+		else
+		LetterTmp : = UCS4UpperCase(LetterTmp);
 
-sYearReversed: {
-if (CurSong.Year < > 0) then
-tmpCategory : = IntToStr(CurSong.Year)
-else
-tmpCategory : = 'Unknown';
+		if (Letter <> LetterTmp) then
+		{
+		Letter : = LetterTmp;
+		// add a letter Category Button
+		AddCategoryButton(UCS4ToUTF8String(Letter));
+		};
+		};
+		};
 
-if (tmpCategory <> CurCategory) then
-{
-CurCategory : = tmpCategory;
+		sFolder: {
+		if (UTF8CompareText(CurCategory, CurSong.Folder) < > 0) then
+		{
+		CurCategory : = CurSong.Folder;
+		// add folder tab
+		AddCategoryButton(CurCategory);
+		};
+		};
 
-// add Category Button
-AddCategoryButton(CurCategory);
-};
-};
+		sArtist2: {
+		/* this new sorting puts all songs by the same artist into
+		  a single category */
+		  //
+		    if (UTF8ContainsText(CurSong.Artist, ' feat.')) then
+		        {
+		        StringIndex : = UTF8Pos(' feat', CurSong.Artist);
+		MainArtist: = TrimRight(UTF8Copy(CurSong.Artist, 1, StringIndex - 1));
+		}
+		    else
+		        MainArtist : = CurSong.Artist;
+		//
+		if (UTF8CompareText(CurCategory, MainArtist) < > 0) then
+		{
+		CurCategory : = MainArtist;
+		// add folder tab
+		AddCategoryButton(CurCategory);
+		};
+		};
 
-sDecade: {
-if (CurSong.Year < > 0) then
-tmpCategory : = IntToStr(Trunc(CurSong.Year / 10) * 10) + '-' + IntToStr(Trunc(CurSong.Year / 10) * 10 + 9)
-else
-tmpCategory : = 'Unknown';
+		sYear: {
+		if (CurSong.Year < > 0) then
+		tmpCategory : = IntToStr(CurSong.Year)
+		else
+		tmpCategory : = 'Unknown';
 
-if (tmpCategory <> CurCategory) then
-{
-CurCategory : = tmpCategory;
+		if (tmpCategory <> CurCategory) then
+		{
+		CurCategory : = tmpCategory;
 
-// add Category Button
-AddCategoryButton(CurCategory);
-};
-};
+		// add Category Button
+		AddCategoryButton(CurCategory);
+		};
+		};
+
+		sYearReversed: {
+		if (CurSong.Year < > 0) then
+		tmpCategory : = IntToStr(CurSong.Year)
+		else
+		tmpCategory : = 'Unknown';
+
+		if (tmpCategory <> CurCategory) then
+		{
+		CurCategory : = tmpCategory;
+
+		// add Category Button
+		AddCategoryButton(CurCategory);
+		};
+		};
+
+		sDecade: {
+		if (CurSong.Year < > 0) then
+		tmpCategory : = IntToStr(Trunc(CurSong.Year / 10) * 10) + '-' + IntToStr(Trunc(CurSong.Year / 10) * 10 + 9)
+		else
+		tmpCategory : = 'Unknown';
+
+		if (tmpCategory <> CurCategory) then
+		{
+		CurCategory : = tmpCategory;
+
+		// add Category Button
+		AddCategoryButton(CurCategory);
+		};
+		};
 }; // case (Ini.Sorting)
 }; // if (Ini.Tabs = 1)
 
@@ -760,7 +765,7 @@ LastVisChecked: = 0;
 LastVisIndex: = 0;
 
 // set CatNumber of last category
-if (Ini.TabsAtStartup = 1) and (High(Song) >= 1) then
+if (UIni::Ini.TabsAtStartup == 1 && High(Song) >= 1)
 {
 // set number of songs in previous category
 SongIndex : = CatIndex - CatNumber;
@@ -906,7 +911,7 @@ Song[LastVisChecked].VisibleIndex : = LastVisIndex;
 Result: = Song[Index].VisibleIndex;
 };
 
-function TCaTSongs::SetFilter(FilterStr: UTF8String; Filter: TSongFilter) : cardinal;
+function TCaTSongs::SetFilter(FilterStr: UTF8String; Filter: TSongFilter) : uint32_t;
 var
 I, J:      int;
 TmpString: UTF8String;

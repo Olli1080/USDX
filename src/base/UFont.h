@@ -47,6 +47,8 @@
 #include <freetype/freetype.h>
 #include <freetype/ftglyph.h>
 
+#include "UTexture.h"
+
 namespace UFont
 {
 #ifndef  FREETYPE_DEMO
@@ -285,6 +287,8 @@ public:
 
     /** Font style (italic/underline/...) */
     virtual void Style(TFontStyle Style);
+    virtual void AddStyle(FontStyles style);
+    virtual void RemoveStyle(FontStyles style);
     [[nodiscard]] virtual TFontStyle Style() const;
     [[nodiscard]] virtual float UnderlinePosition() const = 0;
     [[nodiscard]] virtual float UnderlineThickness() const = 0;
@@ -390,6 +394,8 @@ public:
     void ReflectionSpacing(float Spacing) override;
     [[nodiscard]] float ReflectionSpacing() const override;
 
+    void AddStyle(FontStyles style) override;
+    void RemoveStyle(FontStyles style) override;
     void Style(TFontStyle Style) override;
     [[nodiscard]] TFontStyle Style() const override;
 
@@ -830,7 +836,7 @@ public:
 class TBitmapFont : public TFont
 {
 private:
-    TTexture fTex;
+	UTexture::PTexture fTex;
     int fTexSize;
     int fBaseline;
     int fAscender;

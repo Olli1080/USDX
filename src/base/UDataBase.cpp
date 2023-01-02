@@ -219,7 +219,7 @@ namespace UDataBase
           TableData:  TSQLiteUniTable;
           Difficulty: int;
           I: int;
-          PlayerListed: boolean;*/
+          PlayerListed: bool;*/
     {
         try
         {

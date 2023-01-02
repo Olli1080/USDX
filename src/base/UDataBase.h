@@ -795,7 +795,7 @@ var
  * entries.
  * Free the result-list with FreeStats() after usage to avoid memory leaks.
  */
-function TDataBaseSystem::GetStats(Typ: TStatType; Count: uint8_t; Page: uint32_t; Reversed: boolean): TList;
+function TDataBaseSystem::GetStats(Typ: TStatType; Count: uint8_t; Page: uint32_t; Reversed: bool): TList;
 var
   Query:     string;
   TableData: TSQLiteUniTable;

@@ -1,3 +1,4 @@
+#pragma once
 /* UltraStar Deluxe - Karaoke Game
  *
  * UltraStar Deluxe is the legal property of its developers, whose names
@@ -24,6 +25,7 @@
  */
 
 //TODO: lots of parts in this code should be rewritten in a more object oriented way.
+#include "../switches.h"
 
 #include <string>
 #include <vector>
@@ -33,7 +35,6 @@
 #include <filesystem>
 #include <cstdint>
 
-#include "switches.h"
 #include "IniFileHelper.hpp"
 
 namespace UIni
@@ -150,7 +151,7 @@ public:
   int Screens;
   int Split;
   int Resolution;             // Resolution for windowed mode
-  int ResolutionFullscreen;   // Resolution for real fullscreen (changing Video mode)
+  int ResolutionFullscreen;   // Resolution for double fullscreen (changing Video mode)
   int Depth;
   int VisualizerOption;
   int FullScreen;
@@ -158,8 +159,8 @@ public:
   int SingWindow;
   int Oscilloscope;
   // not used
-  //Spectrum:       integer;
-  //Spectrograph:   integer;
+  //Spectrum:       int;
+  //Spectrograph:   int;
   int MovieSize;
   int VideoPreview;
   int VideoEnabled;
@@ -318,7 +319,7 @@ public:
 
 enum TSortingType
 {
-  sEdition, sGenre, sLanguage, sFolder, sTitle, sArtist, sArtist2, sYear, sYearReversed, sDecade, sPlaylist
+  sEdition, sGenre, sLanguage, sFolder, sTitle, sArtist, sArtist2, sYear, sYearReversed, sDecade, sPlaylist, Size
 };
 
 enum TSyncToType 

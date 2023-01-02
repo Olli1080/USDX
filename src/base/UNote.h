@@ -1,3 +1,4 @@
+#pragma once
 /* UltraStar Deluxe - Karaoke Game
  *
  * UltraStar Deluxe is the legal property of its developers, whose names
@@ -23,12 +24,13 @@
  * $Id$
  */
 
+#include "../switches.h"
+
 #include <memory>
 #include <string>
 #include <vector>
 #include <cstdint>
 
-#include "switches.h"
 #include "UMusic.h"
 #include "USong.h"
 #include "UIni.h"
@@ -177,55 +179,55 @@ void GetMidBeatSub(int BPMNum, SecDouble& Time, double& CurBeat);
 double GetMidBeat(SecDouble Time);
 
 
-void Sing(TScreenSingController Screen);
-var
-  LineIndex:  integer;
-  CountGr:    integer;
-  TrackIndex: integer;
-  PetGr:      integer;
-begin
-  LyricsState.UpdateBeats();
+void Sing(TScreenSingController Screen)
+/*var
+  LineIndex:  int;
+  CountGr:    int;
+  TrackIndex: int;
+  PetGr:      int;*/
+{
+    LyricsState.UpdateBeats();
 
-  PetGr := 0;
-  if (CurrentSong.isDuet) and (PlayersPlay <> 1) then
-    PetGr := 1;
+PetGr: = 0;
+    if (CurrentSong.isDuet) and (PlayersPlay != 1)
+        PetGr : = 1;
 
-  // sentences routines
-  for CountGr := 0 to PetGr do //High(Tracks)
-  begin;
-    TrackIndex := CountGr;
+    // sentences routines
+    for CountGr = 0 to PetGr do //High(Tracks)
+    {
+TrackIndex = CountGr;
 
     // old parts
-    LyricsState.OldLine := Tracks[TrackIndex].CurrentLine;
+    LyricsState.OldLine = Tracks[TrackIndex].CurrentLine;
 
     // choose current parts
-    for LineIndex := 0 to Tracks[TrackIndex].High do
-    begin
-      if LyricsState.CurrentBeat >= Tracks[TrackIndex].Lines[LineIndex].StartBeat then
-        Tracks[TrackIndex].CurrentLine := LineIndex;
-    end;
+    for LineIndex : = 0 to Tracks[TrackIndex].High do
+    {
+        if LyricsState.CurrentBeat >= Tracks[TrackIndex].Lines[LineIndex].StartBeat
+            Tracks[TrackIndex].CurrentLine : = LineIndex;
+}
 
     // clean player note if there is a new line
     // (optimization on halfbeat time)
-    if Tracks[TrackIndex].CurrentLine <> LyricsState.OldLine then
-      NewSentence(TrackIndex, Screen);
+    if Tracks[TrackIndex].CurrentLine != LyricsState.OldLine
+        NewSentence(TrackIndex, Screen);
 
-  end; // for CountGr
+    } // for CountGr
 
-  // make some operations on clicks
-  if {(LyricsState.CurrentBeatC >= 0) and }(LyricsState.OldBeatC <> LyricsState.CurrentBeatC) then
-    NewBeatClick(Screen);
+    // make some operations on clicks
+    if {(LyricsState.CurrentBeatC >= 0) && }(LyricsState.OldBeatC != LyricsState.CurrentBeatC)
+        NewBeatClick(Screen);
 
-  // make some operations when detecting new voice pitch
-  if (LyricsState.CurrentBeatD >= 0) and (LyricsState.OldBeatD <> LyricsState.CurrentBeatD) then
-    NewBeatDetect(Screen);
-end;
+    // make some operations when detecting new voice pitch
+    if (LyricsState.CurrentBeatD >= 0) && (LyricsState.OldBeatD != LyricsState.CurrentBeatD)
+        NewBeatDetect(Screen);
+}
 
 void SingJukebox(TScreenJukebox Screen);
 var
-  Count:   integer;
-  CountGr: integer;
-  CP:      integer;
+  Count:   int;
+  CountGr: int;
+  CP:      int;
 begin
   LyricsState.UpdateBeats();
 
@@ -250,7 +252,7 @@ end;
 
 void NewSentence(int CP, TScreenSingController Screen);
 var
-  I: integer;
+  I: int;
 begin
   // clean note of player
   for I := 0 to High(Player) do
@@ -270,8 +272,8 @@ void NewBeatClick();
 
 void NewBeatDetect(Screen: TScreenSingController);
   var
-    MaxCP, CP, SentenceEnd: integer;
-    I, J: cardinal;
+    MaxCP, CP, SentenceEnd: int;
+    I, J: uint32_t;
 begin
   // check for sentence end
   // we check all lines here because a new sentence may
@@ -313,27 +315,27 @@ begin
   end;
 end;
 
-void NewNote(CP: integer; Screen: TScreenSingController);
+void NewNote(CP: int; Screen: TScreenSingController);
 var
-  LineFragmentIndex:   integer;
+  LineFragmentIndex:   int;
   CurrentLineFragment: PLineFragment;
-  PlayerIndex:         integer;
+  PlayerIndex:         int;
   CurrentSound:        TCaptureBuffer;
   CurrentPlayer:       PPlayer;
   LastPlayerNote:      PPlayerNote;
   Line: 	       PLine;
-  SentenceIndex:       integer;
-  SentenceMin:         integer;
-  SentenceMax:         integer;
-  SentenceDetected:    integer; // sentence of detected note
-  ActualBeat:          integer;
-  ActualTone:          integer;
-  NoteAvailable:       boolean;
-  NewNote:             boolean;
-  Range:               integer;
-  NoteHit:             boolean;
-  MaxSongPoints:       integer; // max. points for the song (without line bonus)
-  CurNotePoints:       real;    // Points for the cur. Note (PointsperNote * ScoreFactor[CurNote])
+  SentenceIndex:       int;
+  SentenceMin:         int;
+  SentenceMax:         int;
+  SentenceDetected:    int; // sentence of detected note
+  ActualBeat:          int;
+  ActualTone:          int;
+  NoteAvailable:       bool;
+  NewNote:             bool;
+  Range:               int;
+  NoteHit:             bool;
+  MaxSongPoints:       int; // max. points for the song (without line bonus)
+  CurNotePoints:       double;    // Points for the cur. Note (PointsperNote * ScoreFactor[CurNote])
   CurrentNoteType:     TNoteType;
 begin
   ActualTone := 0;

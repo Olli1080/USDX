@@ -32,7 +32,9 @@
 
 #include <SDL2/SDL.h>
 
+#include "UCommon.h"
 #include "UIni.h"
+#include "UWebcam.h"
 
 namespace UDraw
 {
@@ -125,36 +127,34 @@ void SingDrawWebCamFrame()
   status: int;
   TextureCam2: PTexture;*/
 {
+	UWebcam::Webcam.GetWebcamFrame();
 
-  Webcam.GetWebcamFrame;
-
-  if (Webcam.TextureCam.TexNum > 0) then
+  if (UWebcam::Webcam.TextureCam.TexNum > 0)
   {
     glColor4f(1, 1, 1, 1);
     glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
     glEnable(GL_TEXTURE_2D);
 
-    glBindTexture(GL_TEXTURE_2D, Webcam.TextureCam.TexNum);
-    glEnable(GL_BL});
-    gl{(GL_QUADS);
+    glBindTexture(GL_TEXTURE_2D, UWebcam::Webcam.TextureCam.TexNum);
+    glEnable(GL_BLEND);
+    glBegin(GL_QUADS);
 
       glTexCoord2f(0, 0);
       glVertex2f(800,  0);
-      glTexCoord2f(0, Webcam.TextureCam.TexH);
+      glTexCoord2f(0, UWebcam::Webcam.TextureCam.TexH);
       glVertex2f(800,  600);
-      glTexCoord2f( Webcam.TextureCam.TexW, Webcam.TextureCam.TexH);
+      glTexCoord2f(UWebcam::Webcam.TextureCam.TexW, UWebcam::Webcam.TextureCam.TexH);
       glVertex2f(0, 600);
-      glTexCoord2f( Webcam.TextureCam.TexW, 0);
+      glTexCoord2f(UWebcam::Webcam.TextureCam.TexW, 0);
       glVertex2f(0, 0);
 
-    gl};
+    glEnd();
     glDisable(GL_TEXTURE_2D);
-    glDisable(GL_BL});
+    glDisable(GL_BLEND);
 
     // reset to default
     glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
-
-  };
+  }
 
   /*
   // Save Frame to AVI
@@ -168,21 +168,20 @@ void SingDrawWebCamFrame()
 
 };
 
-void SingDrawBackground;
-var
-  Rec:    TRecR;
-  TexRec: TRecR;
+void SingDrawBackground()
 {
-  if (ScreenSing.Tex_Background.TexNum > 0) then
+  if (ScreenSing.Tex_Background.TexNum > 0)
   {
-    if (Ini.MovieSize <= 1) then  //HalfSize BG
+    if (UIni::Ini.MovieSize <= 1)  //HalfSize BG
     {
-      (* half screen + gradient *)
+      /* half screen + gradient */
+    TRecR Rec;
       Rec.Top = 110; // 80
       Rec.Bottom = Rec.Top + 20;
       Rec.Left  = 0;
       Rec.Right = 800;
 
+      TRecR TexRec;
       TexRec.Top = (Rec.Top / 600) * ScreenSing.Tex_Background.TexH;
       TexRec.Bottom = (Rec.Bottom / 600) * ScreenSing.Tex_Background.TexH;
       TexRec.Left = 0;
@@ -190,17 +189,17 @@ var
 
       glEnable(GL_TEXTURE_2D);
       glBindTexture(GL_TEXTURE_2D, ScreenSing.Tex_Background.TexNum);
-      glEnable(GL_BL});
-      gl{(GL_QUADS);
-        (* gradient draw *)
-        (* top *)
+      glEnable(GL_BLEND);
+      glBegin(GL_QUADS);
+        /* gradient draw */
+        /* top */
         glColor4f(1, 1, 1, 0);
         glTexCoord2f(TexRec.Right, TexRec.Top);    glVertex2f(Rec.Right, Rec.Top);
         glTexCoord2f(TexRec.Left,  TexRec.Top);    glVertex2f(Rec.Left,  Rec.Top);
         glColor4f(1, 1, 1, 1);
         glTexCoord2f(TexRec.Left,  TexRec.Bottom); glVertex2f(Rec.Left,  Rec.Bottom);
         glTexCoord2f(TexRec.Right, TexRec.Bottom); glVertex2f(Rec.Right, Rec.Bottom);
-        (* mid *)
+        /* mid */
         Rec.Top = Rec.Bottom;
         Rec.Bottom = 490 - 20; // 490 - 20
         TexRec.Top = TexRec.Bottom;
@@ -209,7 +208,7 @@ var
         glTexCoord2f(TexRec.Left,  TexRec.Bottom); glVertex2f(Rec.Left,  Rec.Bottom);
         glTexCoord2f(TexRec.Right, TexRec.Bottom); glVertex2f(Rec.Right, Rec.Bottom);
         glTexCoord2f(TexRec.Right, TexRec.Top);    glVertex2f(Rec.Right, Rec.Top);
-        (* bottom *)
+        /* bottom */
         Rec.Top = Rec.Bottom;
         Rec.Bottom = 490; // 490
         TexRec.Top = TexRec.Bottom;
@@ -220,39 +219,41 @@ var
         glTexCoord2f(TexRec.Left,  TexRec.Bottom); glVertex2f(Rec.Left,  Rec.Bottom);
         glTexCoord2f(TexRec.Right, TexRec.Bottom); glVertex2f(Rec.Right, Rec.Bottom);
 
-      gl};
+      glEnd();
       glDisable(GL_TEXTURE_2D);
-      glDisable(GL_BL});
+      glDisable(GL_BLEND);
     }
     else //Full Size BG
     {
       glEnable(GL_TEXTURE_2D);
       glBindTexture(GL_TEXTURE_2D, ScreenSing.Tex_Background.TexNum);
-      //glEnable(GL_BL});
-      gl{(GL_QUADS);
+      //glEnable(GL_BLEND);
+      glBegin(GL_QUADS);
 
         glTexCoord2f(0, 0);   glVertex2f(0,  0);
         glTexCoord2f(0,  ScreenSing.Tex_Background.TexH);   glVertex2f(0,  600);
         glTexCoord2f( ScreenSing.Tex_Background.TexW,  ScreenSing.Tex_Background.TexH);   glVertex2f(800, 600);
         glTexCoord2f( ScreenSing.Tex_Background.TexW, 0);   glVertex2f(800, 0);
 
-      gl};
+      glEnd();
       glDisable(GL_TEXTURE_2D);
-      //glDisable(GL_BL});
+      //glDisable(GL_BLEND);
     };
   };
 };
 
-void SingDrawJukeboxBackground;
-var
+void SingDrawJukeboxBackground()
+/*var
   Rec:    TRecR;
-  TexRec: TRecR;
+  TexRec: TRecR;*/
 {
-  if (ScreenJukebox.Tex_Background.TexNum > 0) then
+  if (ScreenJukebox.Tex_Background.TexNum > 0)
   {
-    if (Ini.MovieSize <= 1) then  //HalfSize BG
+    if (UIni::Ini.MovieSize <= 1)  //HalfSize BG
     {
-      (* half screen + gradient *)
+	    TRecR Rec;
+	    TRecR TexRec;
+      /* half screen + gradient */
       Rec.Top = 110; // 80
       Rec.Bottom = Rec.Top + 20;
       Rec.Left  = 0;
@@ -265,18 +266,18 @@ var
 
       glEnable(GL_TEXTURE_2D);
       glBindTexture(GL_TEXTURE_2D, ScreenJukebox.Tex_Background.TexNum);
-      glEnable(GL_BL});
+      glEnable(GL_BLEND);
 
-      gl{(GL_QUADS);
-        (* gradient draw *)
-        (* top *)
+      glBegin(GL_QUADS);
+        /* gradient draw */
+        /* top */
         glColor4f(1, 1, 1, 0);
         glTexCoord2f(TexRec.Right, TexRec.Top);    glVertex2f(Rec.Right, Rec.Top);
         glTexCoord2f(TexRec.Left,  TexRec.Top);    glVertex2f(Rec.Left,  Rec.Top);
         glColor4f(1, 1, 1, 1);
         glTexCoord2f(TexRec.Left,  TexRec.Bottom); glVertex2f(Rec.Left,  Rec.Bottom);
         glTexCoord2f(TexRec.Right, TexRec.Bottom); glVertex2f(Rec.Right, Rec.Bottom);
-        (* mid *)
+        /* mid */
         Rec.Top = Rec.Bottom;
         Rec.Bottom = 490 - 20; // 490 - 20
         TexRec.Top = TexRec.Bottom;
@@ -286,7 +287,7 @@ var
         glTexCoord2f(TexRec.Right, TexRec.Bottom); glVertex2f(Rec.Right, Rec.Bottom);
 
         glTexCoord2f(TexRec.Right, TexRec.Top);    glVertex2f(Rec.Right, Rec.Top);
-        (* bottom *)
+        /* bottom */
         Rec.Top = Rec.Bottom;
         Rec.Bottom = 490; // 490
         TexRec.Top = TexRec.Bottom;
@@ -297,16 +298,16 @@ var
         glTexCoord2f(TexRec.Left,  TexRec.Bottom); glVertex2f(Rec.Left,  Rec.Bottom);
         glTexCoord2f(TexRec.Right, TexRec.Bottom); glVertex2f(Rec.Right, Rec.Bottom);
 
-      gl};
+      glEnd();
       glDisable(GL_TEXTURE_2D);
-      glDisable(GL_BL});
+      glDisable(GL_BLEND);
     }
     else //Full Size BG
     {
       glEnable(GL_TEXTURE_2D);
       glBindTexture(GL_TEXTURE_2D, ScreenJukebox.Tex_Background.TexNum);
-      glEnable(GL_BL});
-      gl{(GL_QUADS);
+      glEnable(GL_BLEND);
+      glBegin(GL_QUADS);
         glColor4f(1, 1, 1, 1);
 
         glTexCoord2f(0, 0);   glVertex2f(0,  0);
@@ -314,17 +315,17 @@ var
         glTexCoord2f( ScreenJukebox.Tex_Background.TexW,  ScreenJukebox.Tex_Background.TexH);   glVertex2f(800, 600);
         glTexCoord2f( ScreenJukebox.Tex_Background.TexW, 0);   glVertex2f(800, 0);
 
-      gl};
+      glEnd();
       glDisable(GL_TEXTURE_2D);
-      glDisable(GL_BL});
+      glDisable(GL_BLEND);
     };
   }
   else
   {
     glEnable(GL_TEXTURE_2D);
     glBindTexture(GL_TEXTURE_2D, ScreenJukebox.Tex_Background.TexNum);
-    //glEnable(GL_BL});
-    gl{(GL_QUADS);
+    //glEnable(GL_BLEND);
+    glBegin(GL_QUADS);
       glColor4f(0, 0, 0, 1);
 
       glTexCoord2f(0, 0);   glVertex2f(0,  0);
@@ -332,21 +333,18 @@ var
       glTexCoord2f( ScreenJukebox.Tex_Background.TexW,  ScreenJukebox.Tex_Background.TexH);   glVertex2f(800, 600);
       glTexCoord2f( ScreenJukebox.Tex_Background.TexW, 0);   glVertex2f(800, 0);
 
-    gl};
+    glEnd();
     glDisable(GL_TEXTURE_2D);
-    //glDisable(GL_BL});
+    //glDisable(GL_BLEND);
   };
 };
 
-void SingDrawJukeboxBlackBackground;
-var
-  Rec:    TRecR;
-  TexRec: TRecR;
+void SingDrawJukeboxBlackBackground()
 {
   glEnable(GL_TEXTURE_2D);
   glBindTexture(GL_TEXTURE_2D, ScreenJukebox.Tex_Background.TexNum);
-  //glEnable(GL_BL});
-  gl{(GL_QUADS);
+  //glEnable(GL_BLEND);
+  glBegin(GL_QUADS);
     glColor4f(0, 0, 0, 1);
 
     glTexCoord2f(0, 0);   glVertex2f(0,  0);
@@ -354,45 +352,45 @@ var
     glTexCoord2f( ScreenJukebox.Tex_Background.TexW,  ScreenJukebox.Tex_Background.TexH);   glVertex2f(800, 600);
     glTexCoord2f( ScreenJukebox.Tex_Background.TexW, 0);   glVertex2f(800, 0);
 
-  gl};
+  glEnd();
   glDisable(GL_TEXTURE_2D);
-  //glDisable(GL_BL});
+  //glDisable(GL_BLEND);
 };
 
-void SingDrawOscilloscope(X, Y, W, H: double; NrSound: int);
-var
+void SingDrawOscilloscope(double X, double Y, double W, double H, int NrSound)
+/*var
   SampleIndex: int;
   Sound:       TCaptureBuffer;
   MaxX, MaxY:  double;
-  Col: TRGB;
-{;
-  Sound = AudioInputProcessor.Sound[NrSound];
+  Col: TRGB;*/
+{
+    TCaptureBuffer Sound = AudioInputProcessor.Sound[NrSound];
 
   //  Log.LogStatus('Oscilloscope', 'SingDraw');
   //glColor3f(Skin_OscR, Skin_OscG, Skin_OscB);
-
-  if (Party.bPartyGame) then
-    Col = GetPlayerColor(Ini.TeamColor[NrSound])
+  UCommon::TRGB Col;
+  if (Party.bPartyGame)
+      Col = GetPlayerColor(UIni::Ini.TeamColor[NrSound]);
   else
-    Col = GetPlayerColor(Ini.PlayerColor[NrSound]);
+    Col = GetPlayerColor(UIni::Ini.PlayerColor[NrSound]);
 
   glColor3f(Col.R, Col.G, Col.B);
 /*
   if (ParamStr(1)=='-black') or (ParamStr(1)=='-fsblack') then
     glColor3f(1, 1, 1);
 */
-  MaxX = W-1;
-  MaxY = (H-1) / 2;
+  double MaxX = W-1;
+  double MaxY = (H-1) / 2;
 
   Sound.LockAnalysisBuffer();
 
-  gl{(GL_LINE_STRIP);
-    for SampleIndex = 0 to High(Sound.AnalysisBuffer) do
+  glBegin(GL_LINE_STRIP);
+  for (int SampleIndex = 0; SampleIndex < Sound.AnalysisBuffer.size(); ++SampleIndex)
     {
-      glVertex2f(X + MaxX * SampleIndex/High(Sound.AnalysisBuffer),
-                 Y + MaxY * (1 - Sound.AnalysisBuffer[SampleIndex]/-Low(Smallint)));
+      glVertex2f(X + MaxX * SampleIndex / (Sound.AnalysisBuffer.size() - 1),
+                 Y + MaxY * (1 - Sound.AnalysisBuffer[SampleIndex]/-Low(int16_t)));
     };
-  gl};
+  glEnd();
 
   Sound.UnlockAnalysisBuffer();
 };
@@ -401,32 +399,32 @@ void SingDrawNoteLines(Left, Top, Right: double; LineSpacing: int);
 var
   Count: int;
 {
-  glEnable(GL_BL});
+  glEnable(GL_BLEND);
   glColor4f(Skin_P1_LinesR, Skin_P1_LinesG, Skin_P1_LinesB, 0.4);
-  gl{(GL_LINES);
+  glBegin(GL_LINES);
   for Count = 0 to 9 do
   {
     glVertex2f(Left,  Top + Count * LineSpacing);
     glVertex2f(Right, Top + Count * LineSpacing);
   };
-  gl};
-  glDisable(GL_BL});
+  glEnd();
+  glDisable(GL_BLEND);
 };
 
 // draw blank Notebars
-void SingDrawLine(Left, Top, Right: double; Track, PlayerNumber: int; LineSpacing: int);
-var
+void SingDrawLine(double Left, double Top, double Right, int Track, int PlayerNumber, int LineSpacing)
+/*var
   Rec:   TRecR;
   Count: int;
   TempR: double;
 
-  GoldenStarPos: double;
+  GoldenStarPos: double;*/
 {
 // We actually don't have a playernumber in this void, it should reside in Track - but it is always set to zero
 // So we exploit this behavior a bit - we give Track the playernumber, keep it in playernumber - and then we set Track to zero
 // This could also come quite in handy when we do the duet mode, cause just the notes for the player that has to sing should be drawn then
 // BUT this is not implemented yet, all notes are drawn! :D
-  if (ScreenSing.settings.NotesVisible and (1 shl Track) != 0) then
+  if (ScreenSing.settings.NotesVisible and (1 << Track) != 0)
   {
     //PlayerNumber = Track + 1; // Player 1 is 0
 
@@ -434,11 +432,12 @@ var
 
     glColor3f(1, 1, 1);
     glEnable(GL_TEXTURE_2D);
-    glEnable(GL_BL});
-    glBl}Func(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-    if not Tracks[Track].Lines[Tracks[Track].CurrentLine].HasLength(TempR) then TempR = 0
-    else TempR = (Right-Left) / TempR;
+    double TempR = 0;
+    if (Tracks[Track].Lines[Tracks[Track].CurrentLine].HasLength(TempR)) 
+        TempR = (Right-Left) / TempR;
 
 
     with Tracks[Track].Lines[Tracks[Track].CurrentLine] do
@@ -447,9 +446,9 @@ var
       {
         with Notes[Count] do
         {
-          if NoteType != ntFreestyle then
+          if (NoteType != ntFreestyle)
           {
-            if Ini.EffectSing==0 then
+            if (Ini.EffectSing==0)
               // If Golden note Effect of then Change not Color
             {
               case NoteType of
@@ -475,12 +474,12 @@ var
             {
               glBindTexture(GL_TEXTURE_2D, Tex_plain_Left[PlayerNumber].TexNum);
             };
-            gl{(GL_QUADS);
+            glBegin(GL_QUADS);
               glTexCoord2f(0, 0); glVertex2f(Rec.Left,  Rec.Top);
               glTexCoord2f(0, 1); glVertex2f(Rec.Left,  Rec.Bottom);
               glTexCoord2f(1, 1); glVertex2f(Rec.Right, Rec.Bottom);
               glTexCoord2f(1, 0); glVertex2f(Rec.Right, Rec.Top);
-            gl};
+            glEnd();
 
             //We keep the postion of the top left corner b4 it's overwritten
             GoldenStarPos = Rec.Left;
@@ -504,12 +503,12 @@ var
             };
             glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT );
             glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT );
-            gl{(GL_QUADS);
+            glBegin(GL_QUADS);
               glTexCoord2f(0, 0); glVertex2f(Rec.Left,  Rec.Top);
               glTexCoord2f(0, 1); glVertex2f(Rec.Left,  Rec.Bottom);
               glTexCoord2f(round((Rec.Right-Rec.Left)/32), 1); glVertex2f(Rec.Right, Rec.Bottom);
               glTexCoord2f(round((Rec.Right-Rec.Left)/32), 0); glVertex2f(Rec.Right, Rec.Top);
-            gl};
+            glEnd();
 
             // right part
             Rec.Left  = Rec.Right;
@@ -524,12 +523,12 @@ var
             {
               glBindTexture(GL_TEXTURE_2D, Tex_plain_Right[PlayerNumber].TexNum);
             };
-            gl{(GL_QUADS);
+            glBegin(GL_QUADS);
               glTexCoord2f(0, 0); glVertex2f(Rec.Left,  Rec.Top);
               glTexCoord2f(0, 1); glVertex2f(Rec.Left,  Rec.Bottom);
               glTexCoord2f(1, 1); glVertex2f(Rec.Right, Rec.Bottom);
               glTexCoord2f(1, 0); glVertex2f(Rec.Right, Rec.Top);
-            gl};
+            glEnd();
 
             // Golden Star Patch
             if ((NoteType==ntGolden) or (NoteType==ntRapGolden)) and (Ini.EffectSing=1) then
@@ -540,7 +539,7 @@ var
         }; // with
       }; // for
     }; // with
-    glDisable(GL_BL});
+    glDisable(GL_BLEND);
     glDisable(GL_TEXTURE_2D);
   };
 };
@@ -560,8 +559,8 @@ var
 
     glColor3f(1, 1, 1);
     glEnable(GL_TEXTURE_2D);
-    glEnable(GL_BL});
-    glBl}Func(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     //if Player[NrGracza].LengthNote > 0 then
     {
@@ -599,12 +598,12 @@ var
           {
             glBindTexture(GL_TEXTURE_2D, Tex_Left[PlayerIndex+1].TexNum);
           };
-          gl{(GL_QUADS);
+          glBegin(GL_QUADS);
             glTexCoord2f(0, 0); glVertex2f(Rec.Left,  Rec.Top);
             glTexCoord2f(0, 1); glVertex2f(Rec.Left,  Rec.Bottom);
             glTexCoord2f(1, 1); glVertex2f(Rec.Right, Rec.Bottom);
             glTexCoord2f(1, 0); glVertex2f(Rec.Right, Rec.Top);
-          gl};
+          glEnd();
 
           // Middle part of the note
           Rec.Left  = Rec.Right;
@@ -629,12 +628,12 @@ var
           };
           glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT );
           glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT );
-          gl{(GL_QUADS);
+          glBegin(GL_QUADS);
             glTexCoord2f(0, 0); glVertex2f(Rec.Left,  Rec.Top);
             glTexCoord2f(0, 1); glVertex2f(Rec.Left,  Rec.Bottom);
             glTexCoord2f(round((Rec.Right-Rec.Left)/32), 1); glVertex2f(Rec.Right, Rec.Bottom);
             glTexCoord2f(round((Rec.Right-Rec.Left)/32), 0); glVertex2f(Rec.Right, Rec.Top);
-          gl};
+          glEnd();
           glColor3f(1, 1, 1);
 
           // the right part of the note
@@ -649,12 +648,12 @@ var
           {
           glBindTexture(GL_TEXTURE_2D, Tex_Right[PlayerIndex+1].TexNum);
           };
-          gl{(GL_QUADS);
+          glBegin(GL_QUADS);
             glTexCoord2f(0, 0); glVertex2f(Rec.Left,  Rec.Top);
             glTexCoord2f(0, 1); glVertex2f(Rec.Left,  Rec.Bottom);
             glTexCoord2f(1, 1); glVertex2f(Rec.Right, Rec.Bottom);
             glTexCoord2f(1, 0); glVertex2f(Rec.Right, Rec.Top);
-          gl};
+          glEnd();
 
           // Perfect note is stored
           if Perfect and (Ini.EffectSing=1) then
@@ -694,8 +693,8 @@ var
     //glColor4f(1, 1, 1, sqrt((1+sin( AudioPlayback.Position * 3))/4)/ 2 + 0.5 );
     glColor4f(1, 1, 1, sqrt((1 + sin(AudioPlayback.Position * 3)))/2 + 0.05);
     glEnable(GL_TEXTURE_2D);
-    glEnable(GL_BL});
-    glBl}Func(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     if not Tracks[Track].Lines[Tracks[Track].CurrentLine].HasLength(TempR) then TempR = 0
     else TempR = (Right-Left) / TempR;
@@ -735,12 +734,12 @@ var
             {
               glBindTexture(GL_TEXTURE_2D, Tex_BG_Left[PlayerIndex+1].TexNum);
             };
-            gl{(GL_QUADS);
+            glBegin(GL_QUADS);
               glTexCoord2f(0, 0); glVertex2f(Rec.Left,  Rec.Top);
               glTexCoord2f(0, 1); glVertex2f(Rec.Left,  Rec.Bottom);
               glTexCoord2f(1, 1); glVertex2f(Rec.Right, Rec.Bottom);
               glTexCoord2f(1, 0); glVertex2f(Rec.Right, Rec.Top);
-            gl};
+            glEnd();
 
             // middle part
             Rec.Left  = Rec.Right;
@@ -758,12 +757,12 @@ var
             {
               glBindTexture(GL_TEXTURE_2D, Tex_BG_Mid[PlayerIndex+1].TexNum);
             };
-            gl{(GL_QUADS);
+            glBegin(GL_QUADS);
               glTexCoord2f(0, 0); glVertex2f(Rec.Left,  Rec.Top);
               glTexCoord2f(0, 1); glVertex2f(Rec.Left,  Rec.Bottom);
               glTexCoord2f(1, 1); glVertex2f(Rec.Right, Rec.Bottom);
               glTexCoord2f(1, 0); glVertex2f(Rec.Right, Rec.Top);
-            gl};
+            glEnd();
 
             // right part
             Rec.Left  = Rec.Right;
@@ -777,19 +776,19 @@ var
             {
               glBindTexture(GL_TEXTURE_2D, Tex_BG_Right[PlayerIndex+1].TexNum);
             };
-            gl{(GL_QUADS);
+            glBegin(GL_QUADS);
               glTexCoord2f(0, 0); glVertex2f(Rec.Left,  Rec.Top);
               glTexCoord2f(0, 1); glVertex2f(Rec.Left,  Rec.Bottom);
               glTexCoord2f(1, 1); glVertex2f(Rec.Right, Rec.Bottom);
               glTexCoord2f(1, 0); glVertex2f(Rec.Right, Rec.Top);
-            gl};
+            glEnd();
 
           }; // if not FreeStyle
         }; // with
       }; // for
     }; // with
 
-    glDisable(GL_BL});
+    glDisable(GL_BLEND);
     glDisable(GL_TEXTURE_2D);
   };
 };
@@ -896,7 +895,7 @@ const
 
       // draw lyric help bar
       glEnable(GL_TEXTURE_2D);
-      glEnable(GL_BL});
+      glEnable(GL_BLEND);
 
       if (CurrentSong.isDuet) then
       {
@@ -926,15 +925,15 @@ const
 
       glColor4f(Col.R, Col.G, Col.B, BarAlpha);
 
-      glBl}Func(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+      glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
       glBindTexture(GL_TEXTURE_2D, Tex_Lyric_Help_Bar.TexNum);
-      gl{(GL_QUADS);
+      glBegin(GL_QUADS);
         glTexCoord2f(0, 0); glVertex2f(Bounds.Left,  Bounds.Top);
         glTexCoord2f(0, 1); glVertex2f(Bounds.Left,  Bounds.Bottom);
         glTexCoord2f(1, 1); glVertex2f(Bounds.Right, Bounds.Bottom);
         glTexCoord2f(1, 0); glVertex2f(Bounds.Right, Bounds.Top);
-      gl};
-      glDisable(GL_BL});
+      glEnd();
+      glDisable(GL_BLEND);
     };
   };
 };
@@ -1028,20 +1027,20 @@ const
 
       // draw lyric help bar
       glEnable(GL_TEXTURE_2D);
-      glEnable(GL_BL});
+      glEnable(GL_BLEND);
 
       //glColor4f(1, 0.75, 0, BarAlpha);
       glColor4f(ScreenJukebox.LyricHelper.R, ScreenJukebox.LyricHelper.G, ScreenJukebox.LyricHelper.B, BarAlpha);
 
-      glBl}Func(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+      glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
       glBindTexture(GL_TEXTURE_2D, Tex_Lyric_Help_Bar.TexNum);
-      gl{(GL_QUADS);
+      glBegin(GL_QUADS);
         glTexCoord2f(0, 0); glVertex2f(Bounds.Left,  Bounds.Top);
         glTexCoord2f(0, 1); glVertex2f(Bounds.Left,  Bounds.Bottom);
         glTexCoord2f(1, 1); glVertex2f(Bounds.Right, Bounds.Bottom);
         glTexCoord2f(1, 0); glVertex2f(Bounds.Right, Bounds.Top);
-      gl};
-      glDisable(GL_BL});
+      glEnd();
+      glDisable(GL_BLEND);
     };
   };
 };
@@ -1760,7 +1759,7 @@ var
       };
     };
   };
-  glDisable(GL_BL});
+  glDisable(GL_BLEND);
   glDisable(GL_TEXTURE_2D);
 };
 
@@ -1795,7 +1794,7 @@ var
     };
   };
 
-  glDisable(GL_BL});
+  glDisable(GL_BLEND);
   glDisable(GL_TEXTURE_2D);
 };
 
@@ -1815,8 +1814,8 @@ var
   Space = H / (NumLines - 1);
   glColor3f(1, 1, 1);
   glEnable(GL_TEXTURE_2D);
-  glEnable(GL_BL});
-  glBl}Func(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+  glEnable(GL_BLEND);
+  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
   if not Tracks[Track].Lines[Tracks[Track].CurrentLine].HasLength(TempR) then TempR = 0
   else TempR = W / TempR;
@@ -1850,12 +1849,12 @@ var
         {
           glBindTexture(GL_TEXTURE_2D, Tex_Left[Color].TexNum);
         };
-        gl{(GL_QUADS);
+        glBegin(GL_QUADS);
           glTexCoord2f(0, 0); glVertex2f(Rec.Left,  Rec.Top);
           glTexCoord2f(0, 1); glVertex2f(Rec.Left,  Rec.Bottom);
           glTexCoord2f(1, 1); glVertex2f(Rec.Right, Rec.Bottom);
           glTexCoord2f(1, 0); glVertex2f(Rec.Right, Rec.Top);
-        gl};
+        glEnd();
         GoldenStarPos = Rec.Left;
 
         // middle part
@@ -1870,12 +1869,12 @@ var
         {
           glBindTexture(GL_TEXTURE_2D, Tex_Mid[Color].TexNum);
         };
-        gl{(GL_QUADS);
+        glBegin(GL_QUADS);
           glTexCoord2f(0, 0); glVertex2f(Rec.Left,  Rec.Top);
           glTexCoord2f(0, 1); glVertex2f(Rec.Left,  Rec.Bottom);
           glTexCoord2f(1, 1); glVertex2f(Rec.Right, Rec.Bottom);
           glTexCoord2f(1, 0); glVertex2f(Rec.Right, Rec.Top);
-        gl};
+        glEnd();
 
         // right part
         Rec.Left  = Rec.Right;
@@ -1889,12 +1888,12 @@ var
         {
           glBindTexture(GL_TEXTURE_2D, Tex_Right[Color].TexNum);
         };
-        gl{(GL_QUADS);
+        glBegin(GL_QUADS);
           glTexCoord2f(0, 0); glVertex2f(Rec.Left,  Rec.Top);
           glTexCoord2f(0, 1); glVertex2f(Rec.Left,  Rec.Bottom);
           glTexCoord2f(1, 1); glVertex2f(Rec.Right, Rec.Bottom);
           glTexCoord2f(1, 0); glVertex2f(Rec.Right, Rec.Top);
-        gl};
+        glEnd();
 
         if ((NoteType==ntGolden) or (NoteType==ntRapGolden)) and (Ini.EffectSing==1) then
         {
@@ -1905,25 +1904,25 @@ var
     }; // for
   }; // with
 
-  glDisable(GL_BL});
+  glDisable(GL_BLEND);
   glDisable(GL_TEXTURE_2D);
 };
 
 void EditDrawBorderedBox(X, Y, W, H: int; FillR, FillG, FillB, FillAlpha: double);
 {
-  glDisable(GL_BL});
+  glDisable(GL_BLEND);
 
   // box
   glColor4f(FillR,
             FillG,
             FillB,
             FillAlpha);
-  gl{(gl_quads);
+  glBegin(GL_QUADS);
     glVertex2f(X, Y);
     glVertex2f(X, Y+H);
     glVertex2f(X+W, Y+H);
     glVertex2f(X+W, Y);
-  gl};
+  glEnd();
 
   // black border
   glColor4f(0, 0, 0, 1);
@@ -1933,7 +1932,7 @@ void EditDrawBorderedBox(X, Y, W, H: int; FillR, FillG, FillB, FillAlpha: double
     glVertex2f(X+W+1, Y-1);
     glVertex2f(X+W+1, Y+H+1);
     glVertex2f(X-1, Y+H+1);
-  gl};
+  glEnd();
 };
 
 void EditDrawBeatDelimiters(X, Y, W, H: double; Track: int);
@@ -1949,8 +1948,8 @@ var
       TempR = W / (Tracks[Track].Lines[Tracks[Track].CurrentLine].}Beat - Tracks[Track].Lines[Tracks[Track].CurrentLine].Notes[0].StartBeat)
     else
       TempR = 0;
-  glEnable(GL_BL});
-  gl{(GL_LINES);
+  glEnable(GL_BLEND);
+  glBegin(GL_LINES);
   for Count = Tracks[Track].Lines[Tracks[Track].CurrentLine].Notes[0].StartBeat to Tracks[Track].Lines[Tracks[Track].CurrentLine].}Beat do
   {
     if (Count mod Tracks[Track].Resolution)==Tracks[Track].NotesGAP then
@@ -1960,8 +1959,8 @@ var
     glVertex2f(X + TempR * (Count - Tracks[Track].Lines[Tracks[Track].CurrentLine].Notes[0].StartBeat), Y);
     glVertex2f(X + TempR * (Count - Tracks[Track].Lines[Tracks[Track].CurrentLine].Notes[0].StartBeat), Y + H);
   };
-  gl};
-  glDisable(GL_BL});
+  glEnd();
+  glDisable(GL_BLEND);
 };
 
 void SingDrawTimeBar();
@@ -1984,11 +1983,11 @@ var
             Theme.Sing.StaticTimeProgress.ColB, 1); //Set Color
 
   glEnable(GL_TEXTURE_2D);
-  glEnable(GL_BL});
+  glEnable(GL_BLEND);
 
   glBindTexture(GL_TEXTURE_2D, Tex_TimeProgress.TexNum);
 
-  gl{(GL_QUADS);
+  glBegin(GL_QUADS);
     glTexCoord2f(0, 0);
     glVertex2f(x, y);
 
@@ -2019,10 +2018,10 @@ var
 
     glTexCoord2f(0, 1);
     glVertex2f(x, y + height);
-  gl};
+  glEnd();
 
  glDisable(GL_TEXTURE_2D);
- glDisable(GL_BL});
+ glDisable(GL_BLEND);
  glcolor4f(1, 1, 1, 1);
 };
 
@@ -2061,11 +2060,11 @@ var
   };
 
   glEnable(GL_TEXTURE_2D);
-  glEnable(GL_BL});
+  glEnable(GL_BLEND);
 
   glBindTexture(GL_TEXTURE_2D, Tex_JukeboxTimeProgress.TexNum);
 
-  gl{(GL_QUADS);
+  glBegin(GL_QUADS);
     glTexCoord2f(0, 0);
     glVertex2f(x, y);
 
@@ -2086,10 +2085,10 @@ var
 
     glTexCoord2f(0, 1);
     glVertex2f(x, y + height);
-  gl};
+  glEnd();
 
  glDisable(GL_TEXTURE_2D);
- glDisable(GL_BL});
+ glDisable(GL_BLEND);
  glcolor4f(1, 1, 1, 1);
 
 };

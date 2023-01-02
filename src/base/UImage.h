@@ -140,7 +140,7 @@ namespace UImage
     // sets converted to true if the surface needed to be converted
     std::shared_ptr<SDL_Surface> ConvertToBGR_BGRASurface(std::shared_ptr<SDL_Surface>& Surface, bool& Converted)
     {
-        SDL_PixelFormat pixelFmt = Surface->format;
+        const SDL_PixelFormat& pixelFmt = *Surface->format;
         if (IsBGRSurface(pixelFmt) || IsBGRASurface(pixelFmt))
         {
             Converted = false;
@@ -159,7 +159,7 @@ namespace UImage
     // sets converted to true if the surface needed to be converted
     std::shared_ptr<SDL_Surface> ConvertToRGB_RGBASurface(std::shared_ptr<SDL_Surface>& Surface, bool& Converted)
     {
-        SDL_PixelFormat pixelFmt = Surface->format;
+        const SDL_PixelFormat& pixelFmt = *Surface->format;
         if (IsRGBSurface(pixelFmt) || IsRGBASurface(pixelFmt))
         {
             Converted = false;
@@ -573,7 +573,7 @@ void ColorizeImage(SDL_Surface& ImgSurface, uint32_t NewColor)
   Min, Max, Delta: uint32_t;
   HueInteger: uint32_t;
   f, p, q, t: uint32_t;
-  GreyReal: real;
+  GreyReal: double;
   Grey: uint8_t;*/
 {
     auto ColorToHue = [](const uint32_t Color)->uint32_t

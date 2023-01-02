@@ -1,3 +1,4 @@
+#pragma once
 /* UltraStar Deluxe - Karaoke Game
  *
  * UltraStar Deluxe is the legal property of its developers, whose names
@@ -23,267 +24,274 @@
  * $Id: UMusic.pas 3103 2014-11-22 23:21:19Z k-m_schindler $
  */
 
-enum TNoteType 
+#include "../switches.h"
+
+#include <array>
+#include <vector>
+#include <memory>
+#include <cstdint>
+
+namespace UMusic
 {
-  ntFreestyle, ntNormal, ntGolden, ntRap, ntRapGolden
-};
 
-struct TPos // Tracks[track].Lines[line].Notes[note]
-{
-  int track;
-  int line;
-  int note;
-};
+    enum TNoteType
+    {
+        ntFreestyle, ntNormal, ntGolden, ntRap, ntRapGolden, Size
+    };
 
-/**
-   * acoStretch: Stretch to screen width and height
-   *   - ignores aspect
-   *   + no borders
-   *   + no image data loss
-   * acoCrop: Stretch to screen width or height, crop the other dimension
-   *   + keeps aspect
-   *   + no borders
-   *   - frame borders are cropped (image data loss)
-   * acoLetterBox: Stretch to screen width, add bars at or crop top and bottom
-   *   + keeps aspect
-   *   - borders at top and bottom
-   *   o top/bottom is cropped if width < height (unusual)
-   */
+    struct TPos // Tracks[track].Lines[line].Notes[note]
+    {
+        int track;
+        int line;
+        int note;
+    };
 
-enum TAspectCorrection 
-{
-  acoStretch, acoCrop, acoLetterBox
-};
+    /**
+       * acoStretch: Stretch to screen width and height
+       *   - ignores aspect
+       *   + no borders
+       *   + no image data loss
+       * acoCrop: Stretch to screen width or height, crop the other dimension
+       *   + keeps aspect
+       *   + no borders
+       *   - frame borders are cropped (image data loss)
+       * acoLetterBox: Stretch to screen width, add bars at or crop top and bottom
+       *   + keeps aspect
+       *   - borders at top and bottom
+       *   o top/bottom is cropped if width < height (unusual)
+       */
 
-struct TRectCoords
-{
-  double Left, Right;
-  double Upper, Lower;
-};
+    enum TAspectCorrection
+    {
+        acoStretch, acoCrop, acoLetterBox
+    };
 
-class UMusic
-{
-public:
+    struct TRectCoords
+    {
+        double Left, Right;
+        double Upper, Lower;
+    };
 
-#include "switches.h"
-/*
-uses
-  SysUtils,
-  Classes,
-  UTime,
-  UBeatTimer,
-  UPath,
-  UWebcam;
-*/
-
-const
-  // ScoreFactor defines how a notehit of a specified notetype is
-  // measured in comparison to the other types
-  // 0 means this notetype is not rated at all
-  // 2 means a hit of this notetype will be rated w/ twice as much
-  // points as a hit of a notetype w/ ScoreFactor 1
-  ScoreFactor:         array[TNoteType] of integer = (0, 1, 2, 1, 2);
-
-type
-  (**
-   * TLineFragment represents a fragment of a lyrics line.
-   * This is a text-fragment (e.g. a syllable) assigned to a note pitch,
-   * represented by a bar in the sing-screen.
-   *)
-  PLineFragment = ^TLineFragment;
-  TLineFragment = record
-    Color:          integer;
-    StartBeat:      integer;    // beat the fragment starts at
-    Duration:       integer;    // duration in beats
-    Tone:           integer;    // full range tone
-    Text:           UTF8String; // text assigned to this fragment (a syllable, word, etc.)
-    NoteType:       TNoteType;  // note-type: golden-note/freestyle etc.
-
-    IsMedley:       boolean; // just for editor
-    IsStartPreview: boolean; // just for editor
-
-    private
-    function GetEnd:integer;
-
-    public
-    property EndBeat:integer read GetEnd;
+    /*
+    uses
+      SysUtils,
+      Classes,
+      UTime,
+      UBeatTimer,
+      UPath,
+      UWebcam;
+    */
 
 
-  end;
+    // ScoreFactor defines how a notehit of a specified notetype is
+    // measured in comparison to the other types
+    // 0 means this notetype is not rated at all
+    // 2 means a hit of this notetype will be rated w/ twice as much
+    // points as a hit of a notetype w/ ScoreFactor 1
+    const std::array<int, TNoteType::Size> ScoreFactor = { 0, 1, 2, 1, 2 };
 
-  (**
-   * TLine represents one lyrics line and consists of multiple
-   * notes.
-   *)
-  PLine = ^TLine;
-  TLine = record
-    StartBeat:  integer; // the start beat of this line (<> start beat of the first note of this line)
-    Lyric:      UTF8String;
-    //LyricWidth: real;    // @deprecated: width of the line in pixels.
-                         // Do not use this as the width is not correct.
-                         // Use TLyricsEngine.GetUpperLine().Width instead.
-    EndBeat:    integer;
-    BaseNote:   integer;
-    HighNote:   integer; // index of last note in line (= High(Note)?)
-    ScoreValue: integer; // value of all notes in the line
-    LastLine:   boolean;
-    Notes:      array of TLineFragment;
+    /**
+     * TLineFragment represents a fragment of a lyrics line.
+     * This is a text-fragment (e.g. a syllable) assigned to a note pitch,
+     * represented by a bar in the sing-screen.
+     */
 
-    private
-    function GetLength(): integer;
+    struct TLineFragment
+    {
+        int Color;
+        int StartBeat;    // beat the fragment starts at
+        int Duration;    // duration in beats
+        int Tone;    // full range tone
+        std::string Text; // text assigned to this fragment (a syllable, word, etc.)
+        TNoteType NoteType;  // note-type: golden-note/freestyle etc.
 
-    public
-    { Returns whether the line has a valid length. }
-    function HasLength(): boolean; overload;
-    { Returns whether the line has a valid length and passes length. }
-    function HasLength(out Len: Integer): boolean; overload;
-    { Returns whether the line has a valid length and passes length. Output converted to Real }
-    function HasLength(out Len: real): boolean; overload;
-    { Returns whether the line has a valid length and passes length. Output converted to Double }
-    function HasLength(out Len: double): boolean; overload;
+        bool IsMedley; // just for editor
+        bool IsStartPreview; // just for editor
 
-    property Length_: integer read GetLength;
+    private:
+        int GetEnd() const;
 
-  end;
+    public:
+        int EndBeat() const { return GetEnd(); }
+    };
 
-  (**
-   * TLines stores sets of lyric lines and information on them.
-   * Normally just one set is defined but in duet mode it might for example
-   * contain two sets.
-   *)
-  TLines = record
-    CurrentLine: integer;  // for drawing of current line
-    High:        integer;  // = High(Line)!
-    Number:      integer;
-    Resolution:  integer;
-    NotesGAP:    integer;
-    ScoreValue:  integer;
-    Lines:       array of TLine;
-  end;
+    typedef std::shared_ptr<TLineFragment> PLineFragment;
 
-const
-  FFTSize = 512; // size of FFT data (output: FFTSize/2 values)
-type
-  TFFTData  = array[0..(FFTSize div 2)-1] of Single;
+    /**
+    * TLine represents one lyrics line and consists of multiple
+    * notes.
+    */
+    struct TLine
+    {
+        int StartBeat; // the start beat of this line (<> start beat of the first note of this line)
+        std::string Lyric;
+        //LyricWidth: double;    // @deprecated: width of the line in pixels.
+                             // Do not use this as the width is not correct.
+                             // Use TLyricsEngine.GetUpperLine().Width instead.
+        int EndBeat;
+        int BaseNote;
+        int HighNote; // index of last note in line (= High(Note)?)
+        int ScoreValue; // value of all notes in the line
+        bool LastLine;
+        std::vector<TLineFragment> Notes;
 
-type
-  PPCMStereoSample = ^TPCMStereoSample;
-  TPCMStereoSample = array[0..1] of SmallInt;
-  TPCMData  = array[0..511] of TPCMStereoSample;
+    private:
+        int GetLength() const;
 
-type
-  TStreamStatus = (ssStopped, ssPlaying, ssPaused);
-const
-  StreamStatusStr:  array[TStreamStatus] of string =
-    ('Stopped', 'Playing', 'Paused');
+    public:
+        // Returns whether the line has a valid length. }
+        bool HasLength() const;
+        // Returns whether the line has a valid lengthand passes length. }
+        bool HasLength(int& Len);
+        // Returns whether the line has a valid lengthand passes length.Output converted to Double }
+        bool HasLength(double& Len);
 
-type
-  TAudioSampleFormat = (
-    asfU8, asfS8,         // unsigned/signed  8 bits
-    asfU16LSB, asfS16LSB, // unsigned/signed 16 bits (endianness: LSB)
-    asfU16MSB, asfS16MSB, // unsigned/signed 16 bits (endianness: MSB)
-    asfU16, asfS16,       // unsigned/signed 16 bits (endianness: System)
-    asfS32,               // signed 32 bits (endianness: System)
-    asfFloat,             // float
-    asfDouble             // double
-  );
+        int Length_() const { return GetLength(); }
+    };
 
-const
-  // Size of one sample (one channel only) in bytes
-  AudioSampleSize: array[TAudioSampleFormat] of integer = (
-    1, 1,     // asfU8, asfS8
-    2, 2,     // asfU16LSB, asfS16LSB
-    2, 2,     // asfU16MSB, asfS16MSB
-    2, 2,     // asfU16,    asfS16
-    4,        // asfS32
-    4,        // asfFloat
-    8         // asfDouble
-  );
+    typedef std::shared_ptr<TLine> PLine;
 
-const
-  CHANNELMAP_LEFT  = 1;
-  CHANNELMAP_RIGHT = 2;
-  CHANNELMAP_FRONT = CHANNELMAP_LEFT or CHANNELMAP_RIGHT;
+    /**
+    * TLines stores sets of lyric lines and information on them.
+    * Normally just one set is defined but in duet mode it might for example
+    * contain two sets.
+    */
+    struct TLines
+    {
+        int CurrentLine;  // for drawing of current line
+        int High;  // = High(Line)!
+        int Number;
+        int Resolution;
+        int NotesGAP;
+        int ScoreValue;
+        std::vector<TLine> Lines;
+    };
+    constexpr int FFTSize = 512; // size of FFT data (output: FFTSize/2 values)
 
-type
-  TAudioFormatInfo = class
-    private
-      fSampleRate : double;
-      fChannels   : byte;
-      fFormat     : TAudioSampleFormat;
-      fFrameSize  : integer;
+    typedef std::array<float, FFTSize / 2> TFFTData;
+    typedef std::array<int16_t, 2> TPCMStereoSample;
+    typedef std::shared_ptr<TPCMStereoSample> PPCMStereoSample;
+    typedef std::array<TPCMStereoSample, 512> TPCMData;
 
-      procedure SetChannels(Channels: byte);
-      procedure SetFormat(Format: TAudioSampleFormat);
-      procedure UpdateFrameSize();
-      function GetBytesPerSec(): double;
-      function GetSampleSize(): integer;
-    public
-      constructor Create(Channels: byte; SampleRate: double; Format: TAudioSampleFormat);
-      function Copy(): TAudioFormatInfo;
+    enum class TStreamStatus { ssStopped, ssPlaying, ssPaused, Size };
+    const std::array<std::string, static_cast<size_t>(TStreamStatus::Size)> StreamStatusStr = { "Stopped", "Playing", "Paused" };
 
-      (**
-       * Returns the inverse ratio of the size of data in this format to its
-       * size in a given target format.
-       * Example: SrcSize*SrcInfo.GetRatio(TgtInfo) = TgtSize
-       *)
-      function GetRatio(TargetInfo: TAudioFormatInfo): double;
+    enum class TAudioSampleFormat
+    {
+        asfU8, asfS8,         // unsigned/signed  8 bits
+        asfU16LSB, asfS16LSB, // unsigned/signed 16 bits (endianness: LSB)
+        asfU16MSB, asfS16MSB, // unsigned/signed 16 bits (endianness: MSB)
+        asfU16, asfS16,       // unsigned/signed 16 bits (endianness: System)
+        asfS32,               // signed 32 bits (endianness: System)
+        asfFloat,             // float
+        asfDouble,             // double
+        Size
+    };
 
-      property SampleRate: double read fSampleRate write fSampleRate;
-      property Channels: byte read fChannels write SetChannels;
-      property Format: TAudioSampleFormat read fFormat write SetFormat;
-      property FrameSize: integer read fFrameSize;
-      property SampleSize: integer read GetSampleSize;
-      property BytesPerSec: double read GetBytesPerSec;
-  end;
 
-type
-  TSoundEffect = class
-    public
-      EngineData: Pointer; // can be used for engine-specific data
-      procedure Callback(Buffer: PByteArray; BufSize: integer); virtual; abstract;
-  end;
+    // Size of one sample (one channel only) in bytes
+    const std::array<int, static_cast<size_t>(TAudioSampleFormat::Size)> AudioSampleSize =
+    {
+        1, 1,     // asfU8, asfS8
+        2, 2,     // asfU16LSB, asfS16LSB
+        2, 2,     // asfU16MSB, asfS16MSB
+        2, 2,     // asfU16,    asfS16
+        4,        // asfS32
+        4,        // asfFloat
+        8         // asfDouble
+    };
 
-  TVoiceRemoval = class(TSoundEffect)
-    public
-      procedure Callback(Buffer: PByteArray; BufSize: integer); override;
-  end;
+    const int CHANNELMAP_LEFT = 0b01;
+    const int CHANNELMAP_RIGHT = 0b10;
+    const int CHANNELMAP_FRONT = CHANNELMAP_LEFT | CHANNELMAP_RIGHT;
 
-  TSoundFX = class
-    public
-      EngineData: Pointer; // can be used for engine-specific data
-      procedure Init(); virtual; abstract;
-      procedure Removed(); virtual; abstract;
 
-      class function CanEnable: boolean; virtual; abstract;
+    class TAudioFormatInfo
+    {
+    private:
+        double fSampleRate;
+        uint8_t fChannels;
+        TAudioSampleFormat fFormat;
+        int fFrameSize;
 
-      function GetType: DWORD; virtual; abstract;
-      function GetPriority: LongInt; virtual; abstract;
-      function GetName: string; virtual; abstract;
+        void SetChannels(uint8_t Channels);
+        void SetFormat(TAudioSampleFormat Format);
+        void UpdateFrameSize();
+        double GetBytesPerSec() const;
+        int GetSampleSize() const;
+    public:
+        TAudioFormatInfo(uint8_t Channels, double SampleRate, TAudioSampleFormat Format);
+        TAudioFormatInfo Copy(); //TODO::copy constructor
 
-  end;
-  
-  TReplayGain = class(TSoundFX)
-  end;
+        /**
+            *Returns the inverse ratio of the size of data in this format to its
+            * size in a given target format.
+            * Example: SrcSize * SrcInfo.GetRatio(TgtInfo) = TgtSize
+            */
+        double GetRatio(TAudioFormatInfo TargetInfo);
+
+        double SampleRate() const { return fSampleRate; }
+        void SampleRate(double rate) { fSampleRate = rate; }
+
+        uint8_t Channels() const { return fChannels; }
+        void Channels(uint8_t channel) { SetChannels(channel); }
+
+        TAudioSampleFormat Format() const { return fFormat; }
+        void Format(TAudioSampleFormat format) { SetFormat(format); }
+
+        int FrameSize() const { return fFrameSize; }
+        int SampleSize() const { return GetSampleSize(); }
+        double BytesPerSec() const { return GetBytesPerSec(); }
+    };
+
+    class TSoundEffect
+    {
+    public:
+        EngineData : Pointer; // can be used for engine-specific data
+        void Callback(Buffer: PByteArray; BufSize: int); virtual; abstract;
+    };
+
+    class TVoiceRemoval : public TSoundEffect
+    {
+        ;
+    public:
+        void Callback(Buffer : PByteArray; BufSize: int); override;
+    };
+
+    class TSoundFX
+    {
+    public:
+        EngineData : Pointer; // can be used for engine-specific data
+        void Init(); virtual; abstract;
+        void Removed(); virtual; abstract;
+
+        class function CanEnable : bool; virtual; abstract;
+
+        function GetType : DWORD; virtual; abstract;
+        function GetPriority : LongInt; virtual; abstract;
+        function GetName : string; virtual; abstract;
+    };
+	class TReplayGain : public TSoundFX
+    {};
 
 type
   TAudioProcessingStream = class;
-  TOnCloseHandler = procedure(Stream: TAudioProcessingStream);
+  TOnCloseHandler = void(Stream: TAudioProcessingStream);
 
   TAudioProcessingStream = class
     protected
       OnCloseHandlers: array of TOnCloseHandler;
 
-      function GetLength(): real;           virtual; abstract;
-      function GetPosition(): real;         virtual; abstract;
-      procedure SetPosition(Time: real);    virtual; abstract;
-      function GetLoop(): boolean;          virtual; abstract;
-      procedure SetLoop(Enabled: boolean);  virtual; abstract;
+      function GetLength(): double;           virtual; abstract;
+      function GetPosition(): double;         virtual; abstract;
+      void SetPosition(Time: double);    virtual; abstract;
+      function GetLoop(): bool;          virtual; abstract;
+      void SetLoop(Enabled: bool);  virtual; abstract;
 
-      procedure PerformOnClose();
+      void PerformOnClose();
     public
       function GetAudioFormatInfo(): TAudioFormatInfo; virtual; abstract;
-      procedure Close(); virtual; abstract;
+      void Close(); virtual; abstract;
 
       (**
        * Adds a new OnClose action handler.
@@ -292,36 +300,36 @@ type
        * already. So do not use any member (variable/method/...) if you are not
        * sure it is valid.
        *)
-      procedure AddOnCloseHandler(Handler: TOnCloseHandler);
+      void AddOnCloseHandler(Handler: TOnCloseHandler);
 
-      property Length: real read GetLength;
-      property Position: real read GetPosition write SetPosition;
-      property Loop: boolean read GetLoop write SetLoop;
+      property Length: double read GetLength;
+      property Position: double read GetPosition write SetPosition;
+      property Loop: bool read GetLoop write SetLoop;
   end;
 
   TAudioSourceStream = class(TAudioProcessingStream)
     protected
-      function IsEOF(): boolean;            virtual; abstract;
-      function IsError(): boolean;          virtual; abstract;
+      function IsEOF(): bool;            virtual; abstract;
+      function IsError(): bool;          virtual; abstract;
     public
-      function ReadData(Buffer: PByteArray; BufferSize: integer): integer; virtual; abstract;
+      function ReadData(Buffer: PByteArray; BufferSize: int): int; virtual; abstract;
 
-      property EOF: boolean read IsEOF;
-      property Error: boolean read IsError;
+      property EOF: bool read IsEOF;
+      property Error: bool read IsError;
   end;
 
-  (*
+  /*
    * State-Chart for playback-stream state transitions
    * []: Transition, (): State
    *
    *               /---[Play/FadeIn]--->-\  /-------[Pause]----->-\
    * -[Create]->(Stop)                  (Play)                 (Pause)
-   *              \\-<-[Stop/EOF*/Error]-/  \-<---[Play/FadeIn]--//
-   *               \-<------------[Stop/EOF*/Error]--------------/
+   *              \\-<-[Stop/EOFError]-/  \-<---[Play/FadeIn]--//
+   *               \-<------------[Stop/EOFError]--------------/
    *
    * *: if not looped, otherwise stream is repeated
    * Note: SetPosition() does not change the state.
-   *)
+   */
 
   TAudioPlaybackStream = class(TAudioProcessingStream)
     protected
@@ -332,9 +340,9 @@ type
       function GetLatency(): double; virtual; abstract;
       function GetStatus(): TStreamStatus;  virtual; abstract;
       function GetVolume(): single;         virtual; abstract;
-      procedure SetVolume(Volume: single);  virtual; abstract;
-      function Synchronize(BufferSize: integer; FormatInfo: TAudioFormatInfo): integer;
-      procedure FillBufferWithFrame(Buffer: PByteArray; BufferSize: integer; Frame: PByteArray; FrameSize: integer);
+      void SetVolume(Volume: single);  virtual; abstract;
+      function Synchronize(BufferSize: int; FormatInfo: TAudioFormatInfo): int;
+      void FillBufferWithFrame(Buffer: PByteArray; BufferSize: int; Frame: PByteArray; FrameSize: int);
     public
       (**
        * Opens a SourceStream for playback.
@@ -344,24 +352,24 @@ type
        * guarantees to deliver this method's SourceStream parameter to
        * the OnClose-handler. Freeing SourceStream at OnClose is allowed.
        *)
-      function Open(SourceStream: TAudioSourceStream): boolean; virtual; abstract;
+      function Open(SourceStream: TAudioSourceStream): bool; virtual; abstract;
 
-      procedure Play();                     virtual; abstract;
-      procedure Pause();                    virtual; abstract;
-      procedure Stop();                     virtual; abstract;
-      procedure FadeIn(Time: real; TargetVolume: single);  virtual; abstract;
-      procedure Fade(Time: real; TargetVolume: single);  virtual; abstract;
+      void Play();                     virtual; abstract;
+      void Pause();                    virtual; abstract;
+      void Stop();                     virtual; abstract;
+      void FadeIn(Time: double; TargetVolume: single);  virtual; abstract;
+      void Fade(Time: double; TargetVolume: single);  virtual; abstract;
 
-      procedure GetFFTData(var data: TFFTData);          virtual; abstract;
-      function GetPCMData(var data: TPCMData): Cardinal; virtual; abstract;
+      void GetFFTData(var data: TFFTData);          virtual; abstract;
+      function GetPCMData(var data: TPCMData): uint32_t; virtual; abstract;
 
-      procedure AddSoundEffect(Effect: TSoundEffect);    virtual; abstract;
-      procedure RemoveSoundEffect(Effect: TSoundEffect); virtual; abstract;
+      void AddSoundEffect(Effect: TSoundEffect);    virtual; abstract;
+      void RemoveSoundEffect(Effect: TSoundEffect); virtual; abstract;
 
-      procedure AddSoundFX(FX: TSoundFX);    virtual; abstract;
-      procedure RemoveSoundFX(FX: TSoundFX); virtual; abstract;
+      void AddSoundFX(FX: TSoundFX);    virtual; abstract;
+      void RemoveSoundFX(FX: TSoundFX); virtual; abstract;
 
-      procedure SetSyncSource(SyncSource: TSyncSource);
+      void SetSyncSource(SyncSource: TSyncSource);
       function GetSourceStream(): TAudioSourceStream;
 
       property Status: TStreamStatus read GetStatus;
@@ -374,21 +382,21 @@ type
   TAudioVoiceStream = class(TAudioSourceStream)
     protected
       FormatInfo: TAudioFormatInfo;
-      ChannelMap: integer;
+      ChannelMap: int;
     public
       destructor Destroy; override;
 
-      function Open(ChannelMap: integer; FormatInfo: TAudioFormatInfo): boolean; virtual;
-      procedure Close(); override;
+      function Open(ChannelMap: int; FormatInfo: TAudioFormatInfo): bool; virtual;
+      void Close(); override;
 
-      procedure WriteData(Buffer: PByteArray; BufferSize: integer); virtual; abstract;
+      void WriteData(Buffer: PByteArray; BufferSize: int); virtual; abstract;
       function GetAudioFormatInfo(): TAudioFormatInfo; override;
 
-      function GetLength(): real;           override;
-      function GetPosition(): real;         override;
-      procedure SetPosition(Time: real);    override;
-      function GetLoop(): boolean;          override;
-      procedure SetLoop(Enabled: boolean);  override;
+      function GetLength(): double;           override;
+      function GetPosition(): double;         override;
+      void SetPosition(Time: double);    override;
+      function GetLoop(): bool;          override;
+      void SetLoop(Enabled: bool);  override;
   end;
 
 type
@@ -407,67 +415,67 @@ type
 
   IVideo = interface
   ['{58DFC674-9168-41EA-B59D-A61307242B80}']
-      procedure Play;
-      procedure Pause;
-      procedure Stop;
+      void Play;
+      void Pause;
+      void Stop;
 
-      procedure SetLoop(Enable: boolean);
-      function GetLoop(): boolean;
+      void SetLoop(Enable: bool);
+      function GetLoop(): bool;
 
-      procedure SetPosition(Time: real);
-      function GetPosition: real;
+      void SetPosition(Time: double);
+      function GetPosition: double;
 
-      procedure SetScreen(Screen: integer);
-      function GetScreen(): integer;
+      void SetScreen(Screen: int);
+      function GetScreen(): int;
 
-      procedure SetScreenPosition(X, Y: double; Z: double = 0.0);
-      procedure GetScreenPosition(var X, Y, Z: double);
+      void SetScreenPosition(X, Y: double; Z: double = 0.0);
+      void GetScreenPosition(var X, Y, Z: double);
 
-      procedure  SetWidth(Width: double);
+      void  SetWidth(Width: double);
        function GetWidth(): double;
 
-      procedure  SetHeight(Height: double);
+      void  SetHeight(Height: double);
        function GetHeight(): double;
 
       /**
        * Sub-image of the video frame to draw.
        * This can be used for zooming or similar purposes.
        */
-      procedure SetFrameRange(Range: TRectCoords);
+      void SetFrameRange(Range: TRectCoords);
       function GetFrameRange(): TRectCoords;
 
-      function GetFrameAspect(): real;
+      function GetFrameAspect(): double;
 
-      procedure SetAspectCorrection(AspectCorrection: TAspectCorrection);
+      void SetAspectCorrection(AspectCorrection: TAspectCorrection);
       function GetAspectCorrection(): TAspectCorrection;
 
 
-      procedure SetAlpha(Alpha: double);
+      void SetAlpha(Alpha: double);
       function GetAlpha(): double;
 
-      procedure SetReflectionSpacing(Spacing: double);
+      void SetReflectionSpacing(Spacing: double);
       function GetReflectionSpacing(): double;
 
-      procedure GetFrame(Time: Extended);
-      procedure Draw();
-      procedure DrawReflection();
+      void GetFrame(Time: Extended);
+      void Draw();
+      void DrawReflection();
 
 
-      property Screen: integer read GetScreen;
+      property Screen: int read GetScreen;
       property Width: double read GetWidth write SetWidth;
       property Height: double read GetHeight write SetHeight;
       property Alpha: double read GetAlpha write SetAlpha;
       property ReflectionSpacing: double read GetReflectionSpacing write SetReflectionSpacing;
-      property FrameAspect: real read GetFrameAspect;
+      property FrameAspect: double read GetFrameAspect;
       property AspectCorrection: TAspectCorrection read GetAspectCorrection write SetAspectCorrection;
-      property Loop: boolean read GetLoop write SetLoop;
-      property Position: real read GetPosition write SetPosition;
+      property Loop: bool read GetLoop write SetLoop;
+      property Position: double read GetPosition write SetPosition;
   end;
 
   IVideoPlayback = Interface( IGenericPlayback )
   ['{3574C40C-28AE-4201-B3D1-3D1F0759B131}']
-      function Init(): boolean;
-      function Finalize: boolean;
+      function Init(): bool;
+      function Finalize: bool;
 
       function Open(const FileName : IPath): IVideo;
   end;
@@ -478,34 +486,34 @@ type
 
   IAudioPlayback = Interface( IGenericPlayback )
   ['{E4AE0B40-3C21-4DC5-847C-20A87E0DFB96}']
-      function InitializePlayback: boolean;
-      function FinalizePlayback: boolean;
+      function InitializePlayback: bool;
+      function FinalizePlayback: bool;
 
       function GetOutputDeviceList(): TAudioOutputDeviceList;
 
-      procedure SetAppVolume(Volume: single);
-      procedure SetVolume(Volume: single);
-      procedure SetLoop(Enabled: boolean);
+      void SetAppVolume(Volume: single);
+      void SetVolume(Volume: single);
+      void SetLoop(Enabled: bool);
 
-      procedure FadeIn(Time: real; TargetVolume: single);
-      procedure Fade(Time: real; TargetVolume: single);
-      procedure SetSyncSource(SyncSource: TSyncSource);
+      void FadeIn(Time: double; TargetVolume: single);
+      void Fade(Time: double; TargetVolume: single);
+      void SetSyncSource(SyncSource: TSyncSource);
 
-      procedure Rewind;
-      function  Finished: boolean;
-      function  Length: real;
+      void Rewind;
+      function  Finished: bool;
+      function  Length: double;
 
-      function Open(const Filename: IPath): boolean; // true if succeed
-      procedure Close;
+      function Open(const Filename: IPath): bool; // true if succeed
+      void Close;
 
-      procedure Play;
-      procedure Pause;
-      procedure Stop;
+      void Play;
+      void Pause;
+      void Stop;
 
-      procedure SetPosition(Time: real);
-      function GetPosition: real;
+      void SetPosition(Time: double);
+      function GetPosition: double;
 
-      property Position: real read GetPosition write SetPosition;
+      property Position: double read GetPosition write SetPosition;
 
       // Sounds
       // TODO:
@@ -516,24 +524,24 @@ type
       // CreateSound.
       function OpenSound(const Filename: IPath): TAudioPlaybackStream;
       function OpenSoundBuffer(Buffer: TStream; Format: TAudioFormatInfo): TAudioPlaybackStream;
-      procedure PlaySound(Stream: TAudioPlaybackStream);
-      procedure StopSound(Stream: TAudioPlaybackStream);
+      void PlaySound(Stream: TAudioPlaybackStream);
+      void StopSound(Stream: TAudioPlaybackStream);
 
       // Equalizer
-      procedure GetFFTData(var Data: TFFTData);
+      void GetFFTData(var Data: TFFTData);
 
       // Interface for Visualizer
-      function GetPCMData(var Data: TPCMData): Cardinal;
+      function GetPCMData(var Data: TPCMData): uint32_t;
 
-      function CreateVoiceStream(ChannelMap: integer; FormatInfo: TAudioFormatInfo): TAudioVoiceStream;
+      function CreateVoiceStream(ChannelMap: int; FormatInfo: TAudioFormatInfo): TAudioVoiceStream;
   end;
 
   IGenericDecoder = Interface
   ['{557B0E9A-604D-47E4-B826-13769F3E10B7}']
       function GetName(): string;
-      function InitializeDecoder(): boolean;
-      function FinalizeDecoder(): boolean;
-      //function IsSupported(const Filename: string): boolean;
+      function InitializeDecoder(): bool;
+      function FinalizeDecoder(): bool;
+      //function IsSupported(const Filename: string): bool;
   end;
 
   (*
@@ -541,13 +549,13 @@ type
   ['{2F184B2B-FE69-44D5-9031-0A2462391DCA}']
        function Open(const Filename: IPath): TVideoDecodeStream;
 
-       procedure SetPosition(Time: real);
-       function GetPosition:  real;
+       void SetPosition(Time: double);
+       function GetPosition:  double;
 
-       procedure UpdateTexture(Texture: glUint);
+       void UpdateTexture(Texture: glUint);
 
-       property Loop: boolean read GetLoop write SetLoop;
-       property Position: real read GetPosition write SetPosition;
+       property Loop: bool read GetLoop write SetLoop;
+       property Position: double read GetPosition write SetPosition;
   end;
   *)
 
@@ -559,11 +567,11 @@ type
   IAudioInput = Interface
   ['{A5C8DA92-2A0C-4AB2-849B-2F7448C6003A}']
       function GetName: String;
-      function InitializeRecord: boolean;
-      function FinalizeRecord(): boolean;
+      function InitializeRecord: bool;
+      function FinalizeRecord(): bool;
 
-      procedure CaptureStart;
-      procedure CaptureStop;
+      void CaptureStart;
+      void CaptureStop;
   end;
 
 type
@@ -572,7 +580,7 @@ type
       fSrcFormatInfo: TAudioFormatInfo;
       fDstFormatInfo: TAudioFormatInfo;
     public
-      function Init(SrcFormatInfo: TAudioFormatInfo; DstFormatInfo: TAudioFormatInfo): boolean; virtual;
+      function Init(SrcFormatInfo: TAudioFormatInfo; DstFormatInfo: TAudioFormatInfo): bool; virtual;
       destructor Destroy(); override;
 
       (**
@@ -581,14 +589,14 @@ type
        * input-buffer bytes used.
        * Returns the number of bytes written to the output-buffer or -1 if an error occured.
        *)
-      function Convert(InputBuffer: PByteArray; OutputBuffer: PByteArray; var InputSize: integer): integer; virtual; abstract;
+      function Convert(InputBuffer: PByteArray; OutputBuffer: PByteArray; var InputSize: int): int; virtual; abstract;
 
       (**
        * Destination/Source size ratio
        *)
       function GetRatio(): double; virtual; abstract;
 
-      function GetOutputBufferSize(InputSize: integer): integer; virtual; abstract;
+      function GetOutputBufferSize(InputSize: int): int; virtual; abstract;
       property SrcFormatInfo: TAudioFormatInfo read fSrcFormatInfo;
       property DstFormatInfo: TAudioFormatInfo read fDstFormatInfo;
   end;
@@ -639,16 +647,16 @@ type
       constructor Create();
       destructor Destroy(); override;
 
-      procedure LoadSounds();
-      procedure UnloadSounds();
+      void LoadSounds();
+      void UnloadSounds();
 
-      procedure StartBgMusic();
-      procedure PauseBgMusic();
+      void StartBgMusic();
+      void PauseBgMusic();
       // TODO
-      //function AddSound(Filename: IPath): integer;
-      //procedure RemoveSound(ID: integer);
-      //function GetSound(ID: integer): TAudioPlaybackStream;
-      //property Sound[ID: integer]: TAudioPlaybackStream read GetSound; default;
+      //function AddSound(Filename: IPath): int;
+      //void RemoveSound(ID: int);
+      //function GetSound(ID: int): TAudioPlaybackStream;
+      //property Sound[ID: int]: TAudioPlaybackStream read GetSound; default;
   end;
 
 var
@@ -658,9 +666,9 @@ var
   SoundLib: TSoundLibrary;
 
 
-procedure InitializeSound;
-procedure InitializeVideo;
-procedure FinalizeMedia;
+void InitializeSound;
+void InitializeVideo;
+void FinalizeMedia;
 
 function  Visualization(): IVideoPlayback;
 function  VideoPlayback(): IVideoPlayback;
@@ -670,9 +678,9 @@ function  AudioDecoders(): TInterfaceList;
 
 function  MediaManager: TInterfaceList;
 
-procedure DumpMediaInterfaces();
+void DumpMediaInterfaces();
 
-function FindNote(beat: integer): TPos;
+function FindNote(beat: int): TPos;
 
 implementation
 
@@ -703,13 +711,13 @@ begin
   UpdateFrameSize();
 end;
 
-procedure TAudioFormatInfo.SetChannels(Channels: byte);
+void TAudioFormatInfo.SetChannels(Channels: byte);
 begin
   fChannels := Channels;
   UpdateFrameSize();
 end;
 
-procedure TAudioFormatInfo.SetFormat(Format: TAudioSampleFormat);
+void TAudioFormatInfo.SetFormat(Format: TAudioSampleFormat);
 begin
   fFormat := Format;
   UpdateFrameSize();
@@ -720,12 +728,12 @@ begin
   Result := FrameSize * SampleRate;
 end;
 
-function TAudioFormatInfo.GetSampleSize(): integer;
+function TAudioFormatInfo.GetSampleSize(): int;
 begin
   Result := AudioSampleSize[fFormat];
 end;
 
-procedure TAudioFormatInfo.UpdateFrameSize();
+void TAudioFormatInfo.UpdateFrameSize();
 begin
   fFrameSize := AudioSampleSize[fFormat] * fChannels;
 end;
@@ -774,9 +782,9 @@ begin
   Result := AudioDecoderList;
 end;
 
-procedure FilterInterfaceList(const IID: TGUID; InList, OutList: TInterfaceList);
+void FilterInterfaceList(const IID: TGUID; InList, OutList: TInterfaceList);
 var
-  i: integer;
+  i: int;
   obj: IInterface;
 begin
   if (not assigned(OutList)) then
@@ -794,9 +802,9 @@ begin
   end;
 end;
 
-procedure InitializeSound;
+void InitializeSound;
 var
-  i: integer;
+  i: int;
   InterfaceList: TInterfaceList;
   CurrentAudioDecoder: IAudioDecoder;
   CurrentAudioPlayback: IAudioPlayback;
@@ -860,9 +868,9 @@ begin
   SoundLib := TSoundLibrary.Create;
 end;
 
-procedure InitializeVideo();
+void InitializeVideo();
 var
-  i: integer;
+  i: int;
   InterfaceList: TInterfaceList;
   VideoInterface: IVideoPlayback;
   VisualInterface: IVideoVisualization;
@@ -910,9 +918,9 @@ begin
   end;
 end;
 
-procedure UnloadMediaModules;
+void UnloadMediaModules;
 var
-  i: integer;
+  i: int;
   InterfaceList: TInterfaceList;
 begin
   FreeAndNil(AudioDecoderList);
@@ -955,7 +963,7 @@ begin
   FreeAndNil(MediaInterfaceList);
 end;
 
-procedure FinalizeMedia;
+void FinalizeMedia;
 begin
   // stop, close and free sounds
   SoundLib.Free;
@@ -974,7 +982,7 @@ begin
   UnloadMediaModules();
 end;
 
-procedure DumpMediaInterfaces();
+void DumpMediaInterfaces();
 begin
   writeln( '' );
   writeln( '--------------------------------------------------------------' );
@@ -1003,7 +1011,7 @@ begin
   inherited;
 end;
 
-procedure TSoundLibrary.LoadSounds();
+void TSoundLibrary.LoadSounds();
 begin
   UnloadSounds();
 
@@ -1021,7 +1029,7 @@ begin
     BGMusic.Loop := True;
 end;
 
-procedure TSoundLibrary.UnloadSounds();
+void TSoundLibrary.UnloadSounds();
 begin
   FreeAndNil(Start);
   FreeAndNil(Back);
@@ -1034,7 +1042,7 @@ begin
 end;
 
 (* TODO
-function TSoundLibrary.GetSound(ID: integer): TAudioPlaybackStream;
+function TSoundLibrary.GetSound(ID: int): TAudioPlaybackStream;
 begin
   if ((ID >= 0) and (ID < Length(Sounds))) then
     Result := Sounds[ID]
@@ -1043,7 +1051,7 @@ begin
 end;
 *)
 
-procedure TSoundLibrary.StartBgMusic();
+void TSoundLibrary.StartBgMusic();
 begin
   if (TBackgroundMusicOption(Ini.BackgroundMusicOption) = bmoOn) and
     (Soundlib.BGMusic <> nil) and not (Soundlib.BGMusic.Status = ssPlaying) then
@@ -1052,7 +1060,7 @@ begin
   end;
 end;
 
-procedure TSoundLibrary.PauseBgMusic();
+void TSoundLibrary.PauseBgMusic();
 begin
   If (Soundlib.BGMusic <> nil) then
   begin
@@ -1062,23 +1070,23 @@ end;
 
 { TVoiceRemoval }
 
-procedure TVoiceRemoval.Callback(Buffer: PByteArray; BufSize: integer);
+void TVoiceRemoval.Callback(Buffer: PByteArray; BufSize: int);
 var
-  FrameIndex, FrameSize: integer;
-  Value: integer;
+  FrameIndex, FrameSize: int;
+  Value: int;
   Sample: PPCMStereoSample;
 begin
-  FrameSize := 2 * SizeOf(SmallInt);
+  FrameSize := 2 * SizeOf(int16_t);
   for FrameIndex := 0 to (BufSize div FrameSize)-1 do
   begin
     Sample := PPCMStereoSample(Buffer);
     // channel difference
     Value := Sample[0] - Sample[1];
     // clip
-    if (Value > High(SmallInt)) then
-      Value := High(SmallInt)
-    else if (Value < Low(SmallInt)) then
-      Value := Low(SmallInt);
+    if (Value > High(int16_t)) then
+      Value := High(int16_t)
+    else if (Value < Low(int16_t)) then
+      Value := Low(int16_t);
     // assign result
     Sample[0] := Value;
     Sample[1] := Value;
@@ -1089,7 +1097,7 @@ end;
 
 { TAudioConverter }
 
-function TAudioConverter.Init(SrcFormatInfo: TAudioFormatInfo; DstFormatInfo: TAudioFormatInfo): boolean;
+function TAudioConverter.Init(SrcFormatInfo: TAudioFormatInfo; DstFormatInfo: TAudioFormatInfo): bool;
 begin
   fSrcFormatInfo := SrcFormatInfo.Copy();
   fDstFormatInfo := DstFormatInfo.Copy();
@@ -1105,7 +1113,7 @@ end;
 
 { TAudioProcessingStream }
 
-procedure TAudioProcessingStream.AddOnCloseHandler(Handler: TOnCloseHandler);
+void TAudioProcessingStream.AddOnCloseHandler(Handler: TOnCloseHandler);
 begin
   if (@Handler <> nil) then
   begin
@@ -1114,8 +1122,8 @@ begin
   end;
 end;
 
-procedure TAudioProcessingStream.PerformOnClose();
-var i: integer;
+void TAudioProcessingStream.PerformOnClose();
+var i: int;
 begin
   for i := 0 to High(OnCloseHandlers) do
   begin
@@ -1131,7 +1139,7 @@ begin
   Result := SourceStream;
 end;
 
-procedure TAudioPlaybackStream.SetSyncSource(SyncSource: TSyncSource);
+void TAudioPlaybackStream.SetSyncSource(SyncSource: TSyncSource);
 begin
   Self.SyncSource := SyncSource;
   AvgSyncDiff := -1;
@@ -1152,14 +1160,14 @@ end;
  *   - Result < BufferSize: stream is ahead of the sync-source (stream is too fast),
  *                          (BufferSize-Result) bytes of the buffer must be padded.
  *)
-function TAudioPlaybackStream.Synchronize(BufferSize: integer; FormatInfo: TAudioFormatInfo): integer;
+function TAudioPlaybackStream.Synchronize(BufferSize: int; FormatInfo: TAudioFormatInfo): int;
 var
   TimeDiff: double;
   FrameDiff: double;
-  FrameSkip: integer;
-  ReqFrames: integer;
-  MasterClock: real;
-  CurPosition: real;
+  FrameSkip: int;
+  ReqFrames: int;
+  MasterClock: double;
+  CurPosition: double;
 const
   AVG_HISTORY_FACTOR = 0.7;
   SYNC_REPOS_THRESHOLD = 5.000;
@@ -1185,7 +1193,7 @@ begin
   // This means that older diffs are weighted more with a higher history factor
   // than with a lower. Do not use a too low history factor. FFmpeg produces
   // very instable timestamps (pts) for ogg due to some bugs. They may differ
-  // +-50ms from the real stream position. Without filtering those glitches we
+  // +-50ms from the double stream position. Without filtering those glitches we
   // would synch without any need, resulting in ugly plopping sounds.
   if (AvgSyncDiff = -1) then
     AvgSyncDiff := TimeDiff
@@ -1234,10 +1242,10 @@ end;
 (*
  * Fills a buffer with copies of the given Frame or with 0 if Frame is nil.
  *)
-procedure TAudioPlaybackStream.FillBufferWithFrame(Buffer: PByteArray; BufferSize: integer; Frame: PByteArray; FrameSize: integer);
+void TAudioPlaybackStream.FillBufferWithFrame(Buffer: PByteArray; BufferSize: int; Frame: PByteArray; FrameSize: int);
 var
-  i: integer;
-  FrameCopyCount: integer;
+  i: int;
+  FrameCopyCount: int;
 begin
   // the buffer must at least contain place for one copy of the frame.
   if ((Buffer = nil) or (BufferSize <= 0) or (BufferSize < FrameSize)) then
@@ -1259,7 +1267,7 @@ end;
 
 { TAudioVoiceStream }
 
-function TAudioVoiceStream.Open(ChannelMap: integer; FormatInfo: TAudioFormatInfo): boolean;
+function TAudioVoiceStream.Open(ChannelMap: int; FormatInfo: TAudioFormatInfo): bool;
 begin
   Self.ChannelMap := ChannelMap;
   Self.FormatInfo := FormatInfo.Copy();
@@ -1274,7 +1282,7 @@ begin
   inherited;
 end;
 
-procedure TAudioVoiceStream.Close();
+void TAudioVoiceStream.Close();
 begin
   PerformOnClose();
   FreeAndNil(FormatInfo);
@@ -1285,45 +1293,45 @@ begin
   Result := FormatInfo;
 end;
 
-function TAudioVoiceStream.GetLength(): real;
+function TAudioVoiceStream.GetLength(): double;
 begin
   Result := -1;
 end;
 
-function TAudioVoiceStream.GetPosition(): real;
+function TAudioVoiceStream.GetPosition(): double;
 begin
   Result := -1;
 end;
 
-procedure TAudioVoiceStream.SetPosition(Time: real);
+void TAudioVoiceStream.SetPosition(Time: double);
 begin
 end;
 
-function TAudioVoiceStream.GetLoop(): boolean;
+function TAudioVoiceStream.GetLoop(): bool;
 begin
   Result := false;
 end;
 
-procedure TAudioVoiceStream.SetLoop(Enabled: boolean);
+void TAudioVoiceStream.SetLoop(Enabled: bool);
 begin
 end;
 
 { TLineFragment }
 
-function TLineFragment.GetEnd(): integer;
+function TLineFragment.GetEnd(): int;
 begin
   Result := StartBeat + Duration;
 end;
 
 { TLine }
 
-function TLine.HasLength(): boolean;
-var tempi: integer;
+function TLine.HasLength(): bool;
+var tempi: int;
 begin
   Result := HasLength(tempi);
 end;
 
-function TLine.HasLength(out Len: integer): boolean;
+function TLine.HasLength(out Len: int): bool;
 begin
   Result := false;
   if Length(Notes) >= 0 then
@@ -1333,32 +1341,32 @@ begin
   end;
 end;
 
-function TLine.HasLength(out Len: real): boolean;
-var tempi: integer;
+function TLine.HasLength(out Len: double): bool;
+var tempi: int;
 begin
   Result := HasLength(tempi);
   Len := tempi;
 end;
 
-function TLine.HasLength(out Len: double): boolean;
-var tempi: integer;
+function TLine.HasLength(out Len: double): bool;
+var tempi: int;
 begin
   Result := HasLength(tempi);
   Len := tempi;
 end;
 
-function TLine.GetLength(): integer;
+function TLine.GetLength(): int;
 begin
   Result := ifthen(Length(Notes) < 0, 0, EndBeat - Notes[0].StartBeat);
 end;
 
-function FindNote(beat: integer): TPos;
+function FindNote(beat: int): TPos;
 var
-  LineIndex: integer;
-  NoteIndex: integer;
-  found:     boolean;
-  min:       integer;
-  diff:      integer;
+  LineIndex: int;
+  NoteIndex: int;
+  found:     bool;
+  min:       int;
+  diff:      int;
 
 begin
   found := false;
@@ -1404,7 +1412,7 @@ begin
   if found then //found exactly
     exit;
 
-  min := high(integer);
+  min := high(int);
   //second try (approximating)
   for LineIndex := 0 to High(Tracks[0].Lines) do
   begin
@@ -1440,4 +1448,4 @@ begin
   end;
 end;
  
-};
+}

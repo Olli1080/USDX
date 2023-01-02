@@ -77,7 +77,7 @@ bool TDLLMan::LoadWebsite(uint32_t No)
     }
     catch (...)
     {
-      ULog::Log.LogError("Could not load website \"" + WebsitePaths[No].string() + "\": Basic Procedures not found");
+      ULog::Log.LogError("Could not load website \"" + WebsitePaths[No].string() + "\": Basic voids not found");
     }
   }
   else

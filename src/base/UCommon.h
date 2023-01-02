@@ -88,6 +88,14 @@ struct TRGBA
   double A;
 };
 
+struct TTexCoords
+{
+    double X1;
+    double Y1;
+    double X2;
+    double Y2;
+};
+
 int HexToInt(std::string Hex);
 std::string RGBToHex(int R, int G, int B);
 TRGB HexToRGB(std::string Hex);
@@ -100,7 +108,7 @@ enum TMessageType
 void ShowMessage(const std::string msg, TMessageType msgType = mtInfo);
 /*
 {$IFDEF FPC}
-function RandomRange(aMin: integer; aMax: integer): integer;
+function RandomRange(aMin: int; aMax: int): int;
 {$ENDIF}
 */
 void DisableFloatingPointExceptions();
@@ -116,10 +124,10 @@ function MakeLong(a, b: word): longint;
 // A stable alternative to TList.Sort() (use TList.Sort() if applicable, see below)
 //void MergeSort(List: TList; CompareFunc: TListSortCompare);
 
-//function GetAlignedMem(Size: cardinal; Alignment: integer): pointer;
+//function GetAlignedMem(Size: uint32_t; Alignment: int): pointer;
 //void FreeAlignedMem(P: pointer);
 
-//function Equals(A, B: string; CaseSensitive: boolean = false): Boolean; overload;
+//function Equals(A, B: string; CaseSensitive: bool = false): bool; overload;
 
 int GetArrayIndex(const std::vector<std::string> SearchArray, std::string Value, bool CaseInsensitiv = false);
 int GetArrayIndex(const std::vector<int> SearchArray, int Value);
@@ -140,7 +148,7 @@ uses
 */
 
 /*
-function StringInArray(const Value: string; Strings: array of string): Boolean;
+function StringInArray(const Value: string; Strings: array of string): bool;
 var I: Integer;
 begin
   Result := True;
@@ -149,7 +157,7 @@ begin
   Result := False;
 end;
 
-function StringDeleteFromArray(var InArray: TIntegerDynArray; const InIndex: integer): Boolean;
+function StringDeleteFromArray(var InArray: TIntegerDynArray; const InIndex: int): bool;
 begin
   Result := false;
   if (InIndex >= 0) and (InIndex < Length(InArray)) then
@@ -160,9 +168,9 @@ begin
   end;
 end;
 
-function StringDeleteFromArray(var InStrings: TStringDynArray; const InIndex: integer): Boolean;
+function StringDeleteFromArray(var InStrings: TStringDynArray; const InIndex: int): bool;
 var
-  i: integer;
+  i: int;
 begin
   Result := false;
   if (InIndex >= 0) and (InIndex < Length(InStrings)) then
@@ -176,9 +184,9 @@ begin
   end;
 end;
 
-function StringDeleteFromArray(var InStrings: TUTF8StringDynArray; const InIndex: integer): Boolean;
+function StringDeleteFromArray(var InStrings: TUTF8StringDynArray; const InIndex: int): bool;
 var
-  i: integer;
+  i: int;
 begin
   Result := false;
   if (InIndex >= 0) and (InIndex < Length(InStrings)) then
@@ -192,10 +200,10 @@ begin
   end;
 end;
 
-function SplitString(const Str: string; MaxCount: integer; Separators: TSysCharSet; RemoveEmpty: boolean): TStringDynArray;
+function SplitString(const Str: string; MaxCount: int; Separators: TSysCharSet; RemoveEmpty: bool): TStringDynArray;
 
   // Adds Str[StartPos..Endpos-1] to the result array.
-  void AddSplit(StartPos, EndPos: integer);
+  void AddSplit(StartPos, EndPos: int);
   begin
     if (not RemoveEmpty) or (EndPos > StartPos) then
     begin
@@ -205,8 +213,8 @@ function SplitString(const Str: string; MaxCount: integer; Separators: TSysCharS
   end;
 
 var
-  I, Count: integer;
-  Start: integer;
+  I, Count: int;
+  Start: int;
 begin
   Start := 0;
   Count := 0;
@@ -233,7 +241,7 @@ const std::array<std::string, 43> NoAccents = { "c", "a", "e", "i", "o", "u", "y
 
 std::string GetStringWithNoAccents(std::string str)
 /*var
-  i: integer;
+  i: int;
   tmp: string;*/
 {
 	std::string tmp = str;//Utf8ToAnsi(str);
@@ -256,7 +264,7 @@ var
 const
   LC_NUMERIC  = 1;
 
-function setlocale(category: integer; locale: pchar): pchar; cdecl; external "c" name "setlocale";
+function setlocale(category: int; locale: pchar): pchar; cdecl; external "c" name "setlocale";
 
 {$IFEND}
 
@@ -338,7 +346,7 @@ end;
  * does not suffice to disable FPEs because the SSE FPEs are not disabled by this.
  * FPEs with SSE are a big problem with some libs because many linux distributions
  * optimize code for SSE or Pentium3 (for example: int(INF) which convert the
- * double value "infinity" to an integer might be automatically optimized by
+ * double value "infinity" to an int might be automatically optimized by
  * using SSE"s CVTSD2SI instruction). So SSE FPEs must be turned off in any case
  * to make USDX portable.
  *
@@ -381,7 +389,7 @@ end;
 {$ENDIF}
 
 {$IFDEF FPC}
-function RandomRange(aMin: integer; aMax: integer): integer;
+function RandomRange(aMin: int; aMax: int): int;
 begin
   RandomRange := Random(aMax - aMin) + aMin ;
 end;
@@ -395,7 +403,7 @@ var
   // Note: TRTLCriticalSection is defined in the units System and Libc, use System one
   ConsoleCriticalSection: System.TRTLCriticalSection;
   ConsoleEvent: PRTLEvent;
-  ConsoleQuit: boolean;
+  ConsoleQuit: bool;
 {$ENDIF}
 
 /*
@@ -404,8 +412,8 @@ var
  */
 function ConsoleHandlerFunc(param: pointer): PtrInt;
 var
-  i: integer;
-  quit: boolean;
+  i: int;
+  quit: bool;
 begin
   quit := false;
   while (not quit) do
@@ -490,7 +498,7 @@ end;
 
 void ShowMessage(const msg: String; msgType: TMessageType);
 {$IFDEF MSWINDOWS}
-var Flags: cardinal;
+var Flags: uint32_t;
 {$ENDIF}
 begin
 {$IF Defined(MSWINDOWS)}
@@ -512,13 +520,13 @@ end;
  * output-list. If we only had In- and OutList parameters we had to merge into
  * InList after the recursive calls and copy the data to the OutList afterwards.
  */
-void _MergeSort(InList, TempList, OutList: TList; StartPos, BlockSize: integer;
+void _MergeSort(InList, TempList, OutList: TList; StartPos, BlockSize: int;
                     CompareFunc: TListSortCompare);
 var
-  LeftSize, RightSize: integer; // number of elements in left/right block
-  LeftEnd,  RightEnd:  integer; // Index after last element in left/right block
-  MidPos: integer; // index of first element in right block
-  Pos: integer;    // position in output list
+  LeftSize, RightSize: int; // number of elements in left/right block
+  LeftEnd,  RightEnd:  int; // Index after last element in left/right block
+  MidPos: int; // index of first element in right block
+  Pos: int;    // position in output list
 begin
   LeftSize := BlockSize div 2;
   RightSize := BlockSize - LeftSize;
@@ -588,7 +596,7 @@ begin
   TempList.Free;
 end;
 
-function Equals(A,B: string; CaseSensitive: boolean = false): boolean;
+function Equals(A,B: string; CaseSensitive: bool = false): bool;
 begin
   if CaseSensitive then Result := A = B
   else Result := (CompareText(A, B) = 0);
@@ -599,9 +607,9 @@ end;
  * or -1 if Value is not in SearchArray.
  */
 function GetArrayIndex(const SearchArray: array of UTF8String; Value: string;
-    CaseInsensitiv: boolean = false): integer;
+    CaseInsensitiv: bool = false): int;
 var
-  i: integer;
+  i: int;
 begin
   Result := -1;
 
@@ -620,9 +628,9 @@ end;
  * Returns the index of Value in SearchArray
  * or -1 if Value is not in SearchArray.
  */
-function GetArrayIndex(const SearchArray: array of integer; Value: integer): integer;
+function GetArrayIndex(const SearchArray: array of int; Value: int): int;
 var
-  i: integer;
+  i: int;
 begin
   Result := -1;
 
@@ -656,7 +664,7 @@ type
  */
   /*
 {$WARNINGS OFF}
-function GetAlignedMem(Size: cardinal; Alignment: integer): pointer;
+function GetAlignedMem(Size: uint32_t; Alignment: int): pointer;
 var
   OrigPtr: pointer;
 const

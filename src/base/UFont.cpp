@@ -177,6 +177,16 @@ void TFont::Style(TFontStyle Style)
     fStyle = Style;
 }
 
+void TFont::AddStyle(FontStyles style)
+{
+    fStyle.emplace(style);
+}
+
+void TFont::RemoveStyle(FontStyles style)
+{
+    fStyle.erase(style);
+}
+
 TFontStyle TFont::Style() const
 {
     return fStyle;
@@ -232,13 +242,13 @@ void TFont::ReflectionPass(bool Enable)
  * TScalableFont
  */
 
-TScalableFont::TScalableFont(std::shared_ptr<TFont> Font, bool UseMipmaps) : TFont(Font->Filename())
-    /*var
-      MipmapLevel: int;*/
+TScalableFont::TScalableFont(std::shared_ptr<TFont> Font, bool UseMipmaps)
+	:
+	TFont(Font->Filename()),
+    fBaseFont(Font),
+    fUseMipmaps(UseMipmaps)
 {
-    fBaseFont = Font;
     fMipmapFonts[0] = Font;
-    fUseMipmaps = UseMipmaps;
     ResetIntern();
 
     // create mipmap fonts if requested
@@ -527,6 +537,20 @@ void TScalableFont::Style(TFontStyle Style)
     for (auto& font : fMipmapFonts)
         if (font)
             font->Style(Style);
+}
+
+void TScalableFont::AddStyle(FontStyles style)
+{
+    for (auto& font : fMipmapFonts)
+        if (font)
+            font->AddStyle(style);
+}
+
+void TScalableFont::RemoveStyle(FontStyles style)
+{
+    for (auto& font : fMipmapFonts)
+        if (font)
+            font->RemoveStyle(style);
 }
 
 TFontStyle TScalableFont::Style() const
@@ -918,7 +942,7 @@ TFTScalableFont::TFTScalableFont(const std::filesystem::path Filename,
     :
     TScalableFont
     (
-        std::make_shared<TFTFont>(Filename, Size, Size* OutsetAmount, PreCache, FT_LOAD_DEFAULT | (UseMipmaps ? FT_LOAD_NO_HINTING : 0)),
+        std::make_shared<TFTFont>(Filename, Size, Size * OutsetAmount, PreCache, FT_LOAD_DEFAULT | (UseMipmaps ? FT_LOAD_NO_HINTING : 0)),
         UseMipmaps
     )
 {
@@ -1712,21 +1736,22 @@ TBitmapFont::TBitmapFont(const std::filesystem::path Filename, int Outline,
  int Baseline, int Ascender, int Descender)
 	:
 	TFont(Filename),
-    fTex(Texture.LoadTexture(Filename, TEXTURE_TYPE_TRANSPARENT, 0)),
+    fTex(UTexture::Texture.LoadTexture(Filename, UTexture::TEXTURE_TYPE_TRANSPARENT, 0)),
     fTexSize(1024),
-fOutline(Outline),
-fBaseline(Baseline),
-fAscender(Ascender),
-fDescender(Descender)
+	fBaseline(Baseline),
+	fAscender(Ascender),
+	fDescender(Descender),
+	fOutline(Outline)
 {
-    LoadFontInfo(Filename.replace_extension(".dat"));
+    auto FilenameCopy = Filename;
+    LoadFontInfo(FilenameCopy.replace_extension(".dat"));
 
     ResetIntern();
 }
 
 TBitmapFont::~TBitmapFont()
 {
-    glDeleteTextures(1, &fTex.TexNum);
+    glDeleteTextures(1, &fTex->TexNum);
 }
 
 void TBitmapFont::ResetIntern()
@@ -1819,7 +1844,7 @@ void TBitmapFont::RenderChar(char32_t ch, double& AdvanceX)
     */
 
     glEnable(GL_TEXTURE_2D);
-    glBindTexture(GL_TEXTURE_2D, fTex.TexNum);
+    glBindTexture(GL_TEXTURE_2D, fTex->TexNum);
 
     if (!ReflectionPass)
     {

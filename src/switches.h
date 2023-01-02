@@ -1,4 +1,12 @@
 // prevent pasdoc from parsing this file
+#pragma once
+
+#include <chrono>
+
+
+typedef std::chrono::duration<double, std::milli> MiliSecDouble;
+typedef std::chrono::duration<double> SecDouble;
+typedef std::chrono::duration<double, std::ratio<60, 1>> MinDouble;
 #ifndef PASDOC
 
 // compiler/IDE dependent config
