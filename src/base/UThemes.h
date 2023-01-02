@@ -305,451 +305,444 @@ TThemeText TextCat;
 TThemeStatic StaticCat;
 
     //Cover Mod
-Cover: record
-Reflections : boolean;
-X: int;
-Y: int;
-Z: int;
-W: int;
-H: int;
-Rows: int;
-Cols: int;
-Padding: int;
-SelectX: int;
-SelectY: int;
-SelectW: int;
-SelectH: int;
-SelectReflection: boolean;
-SelectReflectionSpacing: int;
-ZoomThumbW: int;
-ZoomThumbH: int;
-ZoomThumbStyle: int;
-Tex: string;
-end;
+struct
+{
+    bool Reflections;
+    TThemePosition pos;
+    int Z;
+    int Rows;
+    int Cols;
+    int Padding;
+    TThemePosition Select;
+    bool SelectReflection;
+    int SelectReflectionSpacing;
+    int ZoomThumbW;
+    int ZoomThumbH;
+    int ZoomThumbStyle;
+    std::string Tex;
+} Cover;
 
 //Equalizer Mod
-Equalizer: TThemeEqualizer;
+TThemeEqualizer Equalizer;
 
 //List Song Mod
-ListCover: record
-X : int;
-Y: int;
-Z: int;
-W: int;
-H: int;
-Rows: int;
-Padding: int;
-Reflection: boolean;
-ReflectionSpacing: int;
-Typ:    TTextureType;
-Tex: string;
-DTex: string;
-Color:  string;
-DColor:  string;
-ColR, ColG, ColB: real;
-DColR, DColG, DColB: real;
-end;
+struct
+{
+    TThemePosition pos;
+    int Z;
+    int Rows;
+    int Padding;
+    bool Reflection;
+    int ReflectionSpacing;
+    UTexture::TTextureType Typ;
+    std::string Tex;
+    std::string DTex;
+    std::string Color;
+    std::string DColor;
+    UCommon::TRGB Col;
+    UCommon::TRGB DCol;
+} ListCover;
 
 
 //Party and Non Party specific Statics and Texts
-StaticParty:    AThemeStatic;
-TextParty:      AThemeText;
+AThemeStatic StaticParty;
+AThemeText TextParty;
 
-StaticNonParty: AThemeStatic;
-TextNonParty:   AThemeText;
+AThemeStatic StaticNonParty;
+AThemeText TextNonParty;
 
-InfoMessageText: TThemeText;
-InfoMessageBG:   TThemeStatic;
+TThemeText InfoMessageText;
+TThemeStatic InfoMessageBG;
 
 //Screen Song Scores
-TextScore:       TThemeText;
-TextMaxScore:    TThemeText;
-TextMediaScore:  TThemeText;
-TextMaxScore2:   TThemeText;
-TextMediaScore2: TThemeText;
-TextScoreUser:   TThemeText;
-TextMaxScoreLocal:   TThemeText;
-TextMediaScoreLocal: TThemeText;
-TextScoreUserLocal:  TThemeText;
+TThemeText TextScore;
+TThemeText TextMaxScore;
+TThemeText TextMediaScore;
+TThemeText TextMaxScore2;
+TThemeText TextMediaScore2;
+TThemeText TextScoreUser;
+TThemeText TextMaxScoreLocal;
+TThemeText TextMediaScoreLocal;
+TThemeText TextScoreUserLocal;
 
 //Party Mode
-StaticTeam1Joker1: TThemeStatic;
-StaticTeam1Joker2: TThemeStatic;
-StaticTeam1Joker3: TThemeStatic;
-StaticTeam1Joker4: TThemeStatic;
-StaticTeam1Joker5: TThemeStatic;
-StaticTeam2Joker1: TThemeStatic;
-StaticTeam2Joker2: TThemeStatic;
-StaticTeam2Joker3: TThemeStatic;
-StaticTeam2Joker4: TThemeStatic;
-StaticTeam2Joker5: TThemeStatic;
-StaticTeam3Joker1: TThemeStatic;
-StaticTeam3Joker2: TThemeStatic;
-StaticTeam3Joker3: TThemeStatic;
-StaticTeam3Joker4: TThemeStatic;
-StaticTeam3Joker5: TThemeStatic;
+TThemeStatic StaticTeam1Joker1;
+TThemeStatic StaticTeam1Joker2;
+TThemeStatic StaticTeam1Joker3;
+TThemeStatic StaticTeam1Joker4;
+TThemeStatic StaticTeam1Joker5;
+TThemeStatic StaticTeam2Joker1;
+TThemeStatic StaticTeam2Joker2;
+TThemeStatic StaticTeam2Joker3;
+TThemeStatic StaticTeam2Joker4;
+TThemeStatic StaticTeam2Joker5;
+TThemeStatic StaticTeam3Joker1;
+TThemeStatic StaticTeam3Joker2;
+TThemeStatic StaticTeam3Joker3;
+TThemeStatic StaticTeam3Joker4;
+TThemeStatic StaticTeam3Joker5;
 
-TextPartyTime: TThemeText;
+TThemeText TextPartyTime;
 
-Static2PlayersDuetSingerP1: TThemeStatic;
-Static2PlayersDuetSingerP2: TThemeStatic;
+TThemeStatic Static2PlayersDuetSingerP1;
+TThemeStatic Static2PlayersDuetSingerP2;
 
-Static3PlayersDuetSingerP1: TThemeStatic;
-Static3PlayersDuetSingerP2: TThemeStatic;
-Static3PlayersDuetSingerP3: TThemeStatic;
+TThemeStatic Static3PlayersDuetSingerP1;
+TThemeStatic Static3PlayersDuetSingerP2;
+TThemeStatic Static3PlayersDuetSingerP3;
 
-Static4PlayersDuetSingerP3: TThemeStatic;
-Static4PlayersDuetSingerP4: TThemeStatic;
+TThemeStatic Static4PlayersDuetSingerP3;
+TThemeStatic Static4PlayersDuetSingerP4;
 
-Static6PlayersDuetSingerP4: TThemeStatic;
-Static6PlayersDuetSingerP5: TThemeStatic;
-Static6PlayersDuetSingerP6: TThemeStatic;
+TThemeStatic Static6PlayersDuetSingerP4;
+TThemeStatic Static6PlayersDuetSingerP5;
+TThemeStatic Static6PlayersDuetSingerP6;
 
-Text2PlayersDuetSingerP1:   TThemeText;
-Text2PlayersDuetSingerP2:   TThemeText;
+TThemeText Text2PlayersDuetSingerP1;
+TThemeText Text2PlayersDuetSingerP2;
 
-Text3PlayersDuetSingerP1:   TThemeText;
-Text3PlayersDuetSingerP2:   TThemeText;
-Text3PlayersDuetSingerP3:   TThemeText;
+TThemeText Text3PlayersDuetSingerP1;
+TThemeText Text3PlayersDuetSingerP2;
+TThemeText Text3PlayersDuetSingerP3;
 };
 
   TThemeSing == class(TThemeBasic)
-    StaticLyricsBar:       TThemeStatic;
-    StaticLyricsBarDuet:   TThemeStatic;
+    TThemeStatic StaticLyricsBar;
+    TThemeStatic StaticLyricsBarDuet;
 
     //TimeBar mod
-    StaticTimeBar:         TThemeStatic;
-    StaticTimeProgress:    TThemeStatic;
-    TextTimeLabelText:     TThemeText;
-    TextTimeText:          TThemeText;
+    TThemeStatic StaticTimeBar;
+    TThemeStatic StaticTimeProgress;
+    TThemeText TextTimeLabelText;
+    TThemeText TextTimeText;
     //eoa TimeBar mod
 
-    StaticP1:              TThemeStatic;
-    TextP1:                TThemeText;
-    StaticP1ScoreBG:       TThemeStatic; //Static for ScoreBG
-    TextP1Score:           TThemeText;
-    StaticP1Avatar:        TThemeStatic;
+    TThemeStatic StaticP1;
+    TThemeText TextP1;
+    TThemeStatic StaticP1ScoreBG; //Static for ScoreBG
+    TThemeText TextP1Score;
+    TThemeStatic StaticP1Avatar;
 
     //moveable singbar mod
-    StaticP1SingBar:       TThemeStatic;
-    StaticP1ThreePSingBar: TThemeStatic;
-    StaticP1TwoPSingBar:   TThemeStatic;
-    StaticP2RSingBar:      TThemeStatic;
-    StaticP2MSingBar:      TThemeStatic;
-    StaticP3SingBar:       TThemeStatic;
+    TThemeStatic StaticP1SingBar;
+    TThemeStatic StaticP1ThreePSingBar;
+    TThemeStatic StaticP1TwoPSingBar;
+    TThemeStatic StaticP2RSingBar;
+    TThemeStatic StaticP2MSingBar;
+    TThemeStatic StaticP3SingBar;
     //eoa moveable singbar
 
     //added for ps3 skin
     //game in 2/4 player modi
-    StaticP1TwoP:         TThemeStatic;
-    StaticP1TwoPAvatar:   TThemeStatic;
-    StaticP1TwoPScoreBG:  TThemeStatic; //Static for ScoreBG
-    TextP1TwoP:           TThemeText;
-    TextP1TwoPScore:      TThemeText;
+    TThemeStatic StaticP1TwoP;
+    TThemeStatic StaticP1TwoPAvatar;
+    TThemeStatic StaticP1TwoPScoreBG; //Static for ScoreBG
+    TThemeText TextP1TwoP;
+    TThemeText TextP1TwoPScore;
     //game in 3/6 player modi
-    StaticP1ThreeP:         TThemeStatic;
-    StaticP1ThreePAvatar:   TThemeStatic;
-    StaticP1ThreePScoreBG:  TThemeStatic; //Static for ScoreBG
-    TextP1ThreeP:           TThemeText;
-    TextP1ThreePScore:      TThemeText;
+    TThemeStatic StaticP1ThreeP;
+    TThemeStatic StaticP1ThreePAvatar;
+    TThemeStatic StaticP1ThreePScoreBG; //Static for ScoreBG
+    TThemeText TextP1ThreeP;
+    TThemeText TextP1ThreePScore;
     //eoa
 
-    StaticP2R:        TThemeStatic;
-    StaticP2RAvatar:  TThemeStatic;
-    StaticP2RScoreBG: TThemeStatic; //Static for ScoreBG
-    TextP2R:          TThemeText;
-    TextP2RScore:     TThemeText;
+    TThemeStatic StaticP2R;
+    TThemeStatic StaticP2RAvatar;
+    TThemeStatic StaticP2RScoreBG; //Static for ScoreBG
+    TThemeText TextP2R;
+    TThemeText TextP2RScore;
 
-    StaticP2M:        TThemeStatic;
-    StaticP2MAvatar:  TThemeStatic;
-    StaticP2MScoreBG: TThemeStatic; //Static for ScoreBG
-    TextP2M:          TThemeText;
-    TextP2MScore:     TThemeText;
+    TThemeStatic StaticP2M;
+    TThemeStatic StaticP2MAvatar;
+    TThemeStatic StaticP2MScoreBG; //Static for ScoreBG
+    TThemeText TextP2M;
+    TThemeText TextP2MScore;
 
-    StaticP3R:        TThemeStatic;
-    StaticP3RAvatar:  TThemeStatic;
-    StaticP3RScoreBG: TThemeStatic; //Static for ScoreBG
-    TextP3R:          TThemeText;
-    TextP3RScore:     TThemeText;
+    TThemeStatic StaticP3R;
+    TThemeStatic StaticP3RAvatar;
+    TThemeStatic StaticP3RScoreBG; //Static for ScoreBG
+    TThemeText TextP3R;
+    TThemeText TextP3RScore;
 
-    StaticDuetP1ThreeP:        TThemeStatic;
-    StaticDuetP1ThreePAvatar:  TThemeStatic;
-    TextDuetP1ThreeP:          TThemeText;
-    StaticDuetP1ThreePScoreBG: TThemeStatic;
-    TextDuetP1ThreePScore:     TThemeText;
+    TThemeStatic StaticDuetP1ThreeP;
+    TThemeStatic StaticDuetP1ThreePAvatar;
+    TThemeText TextDuetP1ThreeP;
+    TThemeStatic StaticDuetP1ThreePScoreBG;
+    TThemeText TextDuetP1ThreePScore;
 
-    StaticDuetP2M:        TThemeStatic;
-    StaticDuetP2MAvatar:  TThemeStatic;
-    TextDuetP2M:          TThemeText;
-    StaticDuetP2MScoreBG: TThemeStatic;
-    TextDuetP2MScore:     TThemeText;
+    TThemeStatic StaticDuetP2M;
+    TThemeStatic StaticDuetP2MAvatar;
+    TThemeText TextDuetP2M;
+    TThemeStatic StaticDuetP2MScoreBG;
+    TThemeText TextDuetP2MScore;
 
-    StaticDuetP3R:        TThemeStatic;
-    StaticDuetP3RAvatar:  TThemeStatic;
-    TextDuetP3R:          TThemeText;
-    StaticDuetP3RScoreBG: TThemeStatic;
-    TextDuetP3RScore:     TThemeText;
+    TThemeStatic StaticDuetP3R;
+    TThemeStatic StaticDuetP3RAvatar;
+    TThemeText TextDuetP3R;
+    TThemeStatic StaticDuetP3RScoreBG;
+    TThemeText TextDuetP3RScore;
 
-    StaticDuetP1ThreePSingBar: TThemeStatic;
-    StaticDuetP2MSingBar:      TThemeStatic;
-    StaticDuetP3RSingBar:       TThemeStatic;
+    TThemeStatic StaticDuetP1ThreePSingBar;
+    TThemeStatic StaticDuetP2MSingBar;
+    TThemeStatic StaticDuetP3RSingBar;
 
     //game in 4/6 player modi in 1 Screen
-    StaticP1FourPSingBar: TThemeStatic;
-    StaticP1FourP:        TThemeStatic;
-    StaticP1FourPAvatar:  TThemeStatic;
-    StaticP1FourPScoreBG: TThemeStatic; //Static for ScoreBG
-    TextP1FourP:          TThemeText;
-    TextP1FourPScore:     TThemeText;
+    TThemeStatic StaticP1FourPSingBar;
+    TThemeStatic StaticP1FourP;
+    TThemeStatic StaticP1FourPAvatar;
+    TThemeStatic StaticP1FourPScoreBG; //Static for ScoreBG
+    TThemeText TextP1FourP;
+    TThemeText TextP1FourPScore;
 
-    StaticP2FourPSingBar: TThemeStatic;
-    StaticP2FourP:        TThemeStatic;
-    StaticP2FourPAvatar:  TThemeStatic;
-    StaticP2FourPScoreBG: TThemeStatic; //Static for ScoreBG
-    TextP2FourP:          TThemeText;
-    TextP2FourPScore:     TThemeText;
+    TThemeStatic StaticP2FourPSingBar;
+    TThemeStatic StaticP2FourP;
+    TThemeStatic StaticP2FourPAvatar;
+    TThemeStatic StaticP2FourPScoreBG; //Static for ScoreBG
+    TThemeText TextP2FourP;
+    TThemeText TextP2FourPScore;
 
-    StaticP3FourPSingBar: TThemeStatic;
-    StaticP3FourP:        TThemeStatic;
-    StaticP3FourPAvatar:  TThemeStatic;
-    StaticP3FourPScoreBG: TThemeStatic; //Static for ScoreBG
-    TextP3FourP:          TThemeText;
-    TextP3FourPScore:     TThemeText;
+    TThemeStatic StaticP3FourPSingBar;
+    TThemeStatic StaticP3FourP;
+    TThemeStatic StaticP3FourPAvatar;
+    TThemeStatic StaticP3FourPScoreBG; //Static for ScoreBG
+    TThemeText TextP3FourP;
+    TThemeText TextP3FourPScore;
 
-    StaticP4FourPSingBar: TThemeStatic;
-    StaticP4FourP:        TThemeStatic;
-    StaticP4FourPAvatar:  TThemeStatic;
-    StaticP4FourPScoreBG: TThemeStatic; //Static for ScoreBG
-    TextP4FourP:          TThemeText;
-    TextP4FourPScore:     TThemeText;
+    TThemeStatic StaticP4FourPSingBar;
+    TThemeStatic StaticP4FourP;
+    TThemeStatic StaticP4FourPAvatar;
+    TThemeStatic StaticP4FourPScoreBG; //Static for ScoreBG
+    TThemeText TextP4FourP;
+    TThemeText TextP4FourPScore;
 
-    StaticP1SixPSingBar: TThemeStatic;
-    StaticP1SixP:        TThemeStatic;
-    StaticP1SixPAvatar:  TThemeStatic;
-    StaticP1SixPScoreBG: TThemeStatic; //Static for ScoreBG
-    TextP1SixP:          TThemeText;
-    TextP1SixPScore:     TThemeText;
+    TThemeStatic StaticP1SixPSingBar;
+    TThemeStatic StaticP1SixP;
+    TThemeStatic StaticP1SixPAvatar;
+    TThemeStatic StaticP1SixPScoreBG; //Static for ScoreBG
+    TThemeText TextP1SixP;
+    TThemeText TextP1SixPScore;
 
-    StaticP2SixPSingBar: TThemeStatic;
-    StaticP2SixP:        TThemeStatic;
-    StaticP2SixPAvatar:  TThemeStatic;
-    StaticP2SixPScoreBG: TThemeStatic; //Static for ScoreBG
-    TextP2SixP:          TThemeText;
-    TextP2SixPScore:     TThemeText;
+    TThemeStatic StaticP2SixPSingBar;
+    TThemeStatic StaticP2SixP;
+    TThemeStatic StaticP2SixPAvatar;
+    TThemeStatic StaticP2SixPScoreBG; //Static for ScoreBG
+    TThemeText TextP2SixP;
+    TThemeText TextP2SixPScore;
 
-    StaticP3SixPSingBar: TThemeStatic;
-    StaticP3SixP:        TThemeStatic;
-    StaticP3SixPAvatar:  TThemeStatic;
-    StaticP3SixPScoreBG: TThemeStatic; //Static for ScoreBG
-    TextP3SixP:          TThemeText;
-    TextP3SixPScore:     TThemeText;
+    TThemeStatic StaticP3SixPSingBar;
+    TThemeStatic StaticP3SixP;
+    TThemeStatic StaticP3SixPAvatar;
+    TThemeStatic StaticP3SixPScoreBG; //Static for ScoreBG
+    TThemeText TextP3SixP;
+    TThemeText TextP3SixPScore;
 
-    StaticP4SixPSingBar: TThemeStatic;
-    StaticP4SixP:        TThemeStatic;
-    StaticP4SixPAvatar:  TThemeStatic;
-    StaticP4SixPScoreBG: TThemeStatic; //Static for ScoreBG
-    TextP4SixP:          TThemeText;
-    TextP4SixPScore:     TThemeText;
+    TThemeStatic StaticP4SixPSingBar;
+    TThemeStatic StaticP4SixP;
+    TThemeStatic StaticP4SixPAvatar;
+    TThemeStatic StaticP4SixPScoreBG; //Static for ScoreBG
+    TThemeText TextP4SixP;
+    TThemeText TextP4SixPScore;
 
-    StaticP5SixPSingBar: TThemeStatic;
-    StaticP5SixP:        TThemeStatic;
-    StaticP5SixPAvatar:  TThemeStatic;
-    StaticP5SixPScoreBG: TThemeStatic; //Static for ScoreBG
-    TextP5SixP:          TThemeText;
-    TextP5SixPScore:     TThemeText;
+    TThemeStatic StaticP5SixPSingBar;
+    TThemeStatic StaticP5SixP;
+    TThemeStatic StaticP5SixPAvatar;
+    TThemeStatic StaticP5SixPScoreBG; //Static for ScoreBG
+    TThemeText TextP5SixP;
+    TThemeText TextP5SixPScore;
 
-    StaticP6SixPSingBar: TThemeStatic;
-    StaticP6SixP:        TThemeStatic;
-    StaticP6SixPAvatar:  TThemeStatic;
-    StaticP6SixPScoreBG: TThemeStatic; //Static for ScoreBG
-    TextP6SixP:          TThemeText;
-    TextP6SixPScore:     TThemeText;
+    TThemeStatic StaticP6SixPSingBar;
+    TThemeStatic StaticP6SixP;
+    TThemeStatic StaticP6SixPAvatar;
+    TThemeStatic StaticP6SixPScoreBG; //Static for ScoreBG
+    TThemeText TextP6SixP;
+    TThemeText TextP6SixPScore;
 
     // duet 4/6 players in one screen
-    StaticP1DuetFourPSingBar: TThemeStatic;
-    StaticP1DuetFourP:        TThemeStatic;
-    StaticP1DuetFourPAvatar:  TThemeStatic;
-    StaticP1DuetFourPScoreBG: TThemeStatic; //Static for ScoreBG
-    TextP1DuetFourP:          TThemeText;
-    TextP1DuetFourPScore:     TThemeText;
+    TThemeStatic StaticP1DuetFourPSingBar;
+    TThemeStatic StaticP1DuetFourP;
+    TThemeStatic StaticP1DuetFourPAvatar;
+    TThemeStatic StaticP1DuetFourPScoreBG; //Static for ScoreBG
+    TThemeText TextP1DuetFourP;
+    TThemeText TextP1DuetFourPScore;
 
-    StaticP2DuetFourPSingBar: TThemeStatic;
-    StaticP2DuetFourP:        TThemeStatic;
-    StaticP2DuetFourPAvatar:  TThemeStatic;
-    StaticP2DuetFourPScoreBG: TThemeStatic; //Static for ScoreBG
-    TextP2DuetFourP:          TThemeText;
-    TextP2DuetFourPScore:     TThemeText;
+    TThemeStatic StaticP2DuetFourPSingBar;
+    TThemeStatic StaticP2DuetFourP;
+    TThemeStatic StaticP2DuetFourPAvatar;
+    TThemeStatic StaticP2DuetFourPScoreBG; //Static for ScoreBG
+    TThemeText TextP2DuetFourP;
+    TThemeText TextP2DuetFourPScore;
 
-    StaticP3DuetFourPSingBar: TThemeStatic;
-    StaticP3DuetFourP:        TThemeStatic;
-    StaticP3DuetFourPAvatar:  TThemeStatic;
-    StaticP3DuetFourPScoreBG: TThemeStatic; //Static for ScoreBG
-    TextP3DuetFourP:          TThemeText;
-    TextP3DuetFourPScore:     TThemeText;
+    TThemeStatic StaticP3DuetFourPSingBar;
+    TThemeStatic StaticP3DuetFourP;
+    TThemeStatic StaticP3DuetFourPAvatar;
+    TThemeStatic StaticP3DuetFourPScoreBG; //Static for ScoreBG
+    TThemeText TextP3DuetFourP;
+    TThemeText TextP3DuetFourPScore;
 
-    StaticP4DuetFourPSingBar: TThemeStatic;
-    StaticP4DuetFourP:        TThemeStatic;
-    StaticP4DuetFourPAvatar:  TThemeStatic;
-    StaticP4DuetFourPScoreBG: TThemeStatic; //Static for ScoreBG
-    TextP4DuetFourP:          TThemeText;
-    TextP4DuetFourPScore:     TThemeText;
+    TThemeStatic StaticP4DuetFourPSingBar;
+    TThemeStatic StaticP4DuetFourP;
+    TThemeStatic StaticP4DuetFourPAvatar;
+    TThemeStatic StaticP4DuetFourPScoreBG; //Static for ScoreBG
+    TThemeText TextP4DuetFourP;
+    TThemeText TextP4DuetFourPScore;
 
-    StaticP1DuetSixPSingBar: TThemeStatic;
-    StaticP1DuetSixP:        TThemeStatic;
-    StaticP1DuetSixPAvatar:  TThemeStatic;
-    StaticP1DuetSixPScoreBG: TThemeStatic; //Static for ScoreBG
-    TextP1DuetSixP:          TThemeText;
-    TextP1DuetSixPScore:     TThemeText;
+    TThemeStatic StaticP1DuetSixPSingBar;
+    TThemeStatic StaticP1DuetSixP;
+    TThemeStatic StaticP1DuetSixPAvatar;
+    TThemeStatic StaticP1DuetSixPScoreBG; //Static for ScoreBG
+    TThemeText TextP1DuetSixP;
+    TThemeText TextP1DuetSixPScore;
 
-    StaticP2DuetSixPSingBar: TThemeStatic;
-    StaticP2DuetSixP:        TThemeStatic;
-    StaticP2DuetSixPAvatar:  TThemeStatic;
-    StaticP2DuetSixPScoreBG: TThemeStatic; //Static for ScoreBG
-    TextP2DuetSixP:          TThemeText;
-    TextP2DuetSixPScore:     TThemeText;
+    TThemeStatic StaticP2DuetSixPSingBar;
+    TThemeStatic StaticP2DuetSixP;
+    TThemeStatic StaticP2DuetSixPAvatar;
+    TThemeStatic StaticP2DuetSixPScoreBG; //Static for ScoreBG
+    TThemeText TextP2DuetSixP;
+    TThemeText TextP2DuetSixPScore;
 
-    StaticP3DuetSixPSingBar: TThemeStatic;
-    StaticP3DuetSixP:        TThemeStatic;
-    StaticP3DuetSixPAvatar:  TThemeStatic;
-    StaticP3DuetSixPScoreBG: TThemeStatic; //Static for ScoreBG
-    TextP3DuetSixP:          TThemeText;
-    TextP3DuetSixPScore:     TThemeText;
+    TThemeStatic StaticP3DuetSixPSingBar;
+    TThemeStatic StaticP3DuetSixP;
+    TThemeStatic StaticP3DuetSixPAvatar;
+    TThemeStatic StaticP3DuetSixPScoreBG; //Static for ScoreBG
+    TThemeText TextP3DuetSixP;
+    TThemeText TextP3DuetSixPScore;
 
-    StaticP4DuetSixPSingBar: TThemeStatic;
-    StaticP4DuetSixP:        TThemeStatic;
-    StaticP4DuetSixPAvatar:  TThemeStatic;
-    StaticP4DuetSixPScoreBG: TThemeStatic; //Static for ScoreBG
-    TextP4DuetSixP:          TThemeText;
-    TextP4DuetSixPScore:     TThemeText;
+    TThemeStatic StaticP4DuetSixPSingBar;
+    TThemeStatic StaticP4DuetSixP;
+    TThemeStatic StaticP4DuetSixPAvatar;
+    TThemeStatic StaticP4DuetSixPScoreBG; //Static for ScoreBG
+    TThemeText TextP4DuetSixP;
+    TThemeText TextP4DuetSixPScore;
 
-    StaticP5DuetSixPSingBar: TThemeStatic;
-    StaticP5DuetSixP:        TThemeStatic;
-    StaticP5DuetSixPAvatar:  TThemeStatic;
-    StaticP5DuetSixPScoreBG: TThemeStatic; //Static for ScoreBG
-    TextP5DuetSixP:          TThemeText;
-    TextP5DuetSixPScore:     TThemeText;
+    TThemeStatic StaticP5DuetSixPSingBar;
+    TThemeStatic StaticP5DuetSixP;
+    TThemeStatic StaticP5DuetSixPAvatar;
+    TThemeStatic StaticP5DuetSixPScoreBG; //Static for ScoreBG
+    TThemeText TextP5DuetSixP;
+    TThemeText TextP5DuetSixPScore;
 
-    StaticP6DuetSixPSingBar: TThemeStatic;
-    StaticP6DuetSixP:        TThemeStatic;
-    StaticP6DuetSixPAvatar:  TThemeStatic;
-    StaticP6DuetSixPScoreBG: TThemeStatic; //Static for ScoreBG
-    TextP6DuetSixP:          TThemeText;
-    TextP6DuetSixPScore:     TThemeText;
+    TThemeStatic StaticP6DuetSixPSingBar;
+    TThemeStatic StaticP6DuetSixP;
+    TThemeStatic StaticP6DuetSixPAvatar;
+    TThemeStatic StaticP6DuetSixPScoreBG; //Static for ScoreBG
+    TThemeText TextP6DuetSixP;
+    TThemeText TextP6DuetSixPScore;
 
-    SingP1Oscilloscope:           TThemePosition;
-    SingP1TwoPOscilloscope:       TThemePosition;
-    SingP2ROscilloscope:          TThemePosition;
-    SingP1ThreePOscilloscope:     TThemePosition;
-    SingP2MOscilloscope:          TThemePosition;
-    SingP3ROscilloscope:          TThemePosition;
-    SingDuetP1ThreePOscilloscope: TThemePosition;
-    SingDuetP2MOscilloscope:      TThemePosition;
-    SingDuetP3ROscilloscope:      TThemePosition;
-    SingP1FourPOscilloscope:      TThemePosition;
-    SingP2FourPOscilloscope:      TThemePosition;
-    SingP3FourPOscilloscope:      TThemePosition;
-    SingP4FourPOscilloscope:      TThemePosition;
-    SingP1SixPOscilloscope:       TThemePosition;
-    SingP2SixPOscilloscope:       TThemePosition;
-    SingP3SixPOscilloscope:       TThemePosition;
-    SingP4SixPOscilloscope:       TThemePosition;
-    SingP5SixPOscilloscope:       TThemePosition;
-    SingP6SixPOscilloscope:       TThemePosition;
-    SingP1DuetFourPOscilloscope:  TThemePosition;
-    SingP2DuetFourPOscilloscope:  TThemePosition;
-    SingP3DuetFourPOscilloscope:  TThemePosition;
-    SingP4DuetFourPOscilloscope:  TThemePosition;
-    SingP1DuetSixPOscilloscope:   TThemePosition;
-    SingP2DuetSixPOscilloscope:   TThemePosition;
-    SingP3DuetSixPOscilloscope:   TThemePosition;
-    SingP4DuetSixPOscilloscope:   TThemePosition;
-    SingP5DuetSixPOscilloscope:   TThemePosition;
-    SingP6DuetSixPOscilloscope:   TThemePosition;
+    TThemePosition SingP1Oscilloscope;
+    TThemePosition SingP1TwoPOscilloscope;
+    TThemePosition SingP2ROscilloscope;
+    TThemePosition SingP1ThreePOscilloscope;
+    TThemePosition SingP2MOscilloscope;
+    TThemePosition SingP3ROscilloscope;
+    TThemePosition SingDuetP1ThreePOscilloscope;
+    TThemePosition SingDuetP2MOscilloscope;
+    TThemePosition SingDuetP3ROscilloscope;
+    TThemePosition SingP1FourPOscilloscope;
+    TThemePosition SingP2FourPOscilloscope;
+    TThemePosition SingP3FourPOscilloscope;
+    TThemePosition SingP4FourPOscilloscope;
+    TThemePosition SingP1SixPOscilloscope;
+    TThemePosition SingP2SixPOscilloscope;
+    TThemePosition SingP3SixPOscilloscope;
+    TThemePosition SingP4SixPOscilloscope;
+    TThemePosition SingP5SixPOscilloscope;
+    TThemePosition SingP6SixPOscilloscope;
+    TThemePosition SingP1DuetFourPOscilloscope;
+    TThemePosition SingP2DuetFourPOscilloscope;
+    TThemePosition SingP3DuetFourPOscilloscope;
+    TThemePosition SingP4DuetFourPOscilloscope;
+    TThemePosition SingP1DuetSixPOscilloscope;
+    TThemePosition SingP2DuetSixPOscilloscope;
+    TThemePosition SingP3DuetSixPOscilloscope;
+    TThemePosition SingP4DuetSixPOscilloscope;
+    TThemePosition SingP5DuetSixPOscilloscope;
+    TThemePosition SingP6DuetSixPOscilloscope;
 
-    StaticSongName:   TThemeStatic;
-    TextSongName:     TThemeText;
+    TThemeStatic StaticSongName;
+    TThemeText TextSongName;
 
     //Linebonus Translations
     LineBonusText:    array [0..8] of UTF8String;
 
     //Pause Popup
-    PausePopUp:      TThemeStatic;
+    TThemeStatic PausePopUp;
 
-    InfoMessageText: TThemeText;
-    InfoMessageBG:   TThemeStatic;
+    TThemeText InfoMessageText;
+    TThemeStatic InfoMessageBG;
   end;
 
   TThemeJukebox == class(TThemeBasic)
-    StaticTimeProgress:   TThemeStatic;
-    StaticTimeBackground: TThemeStatic;
-    StaticSongBackground: TThemeStatic;
-    StaticSongListBackground: TThemeStatic;
-    TextTimeText:         TThemeText;
-    TextSongText:         TThemeText;
-    SongDescription:      TThemeButton;
-    FindSong:             TThemeButton;
-    RepeatSongList:       TThemeButton;
-    SongListOrder:        TThemeButton;
-    RandomSongList:       TThemeButton;
-    Lyric:                TThemeButton;
-    Options:              TThemeButton;
-    SongListClose:        TThemeButton;
-    SongListFixPin:       TThemeButton;
-    TextListText:         TThemeText;
-    TextCountText:        TThemeText;
-    SongCover:            TThemeStatic;
-    SongListPlayPause:    TThemeButton;
+    TThemeStatic StaticTimeProgress;
+    TThemeStatic StaticTimeBackground;
+    TThemeStatic StaticSongBackground;
+    TThemeStatic StaticSongListBackground;
+    TThemeText TextTimeText;
+    TThemeText TextSongText;
+    TThemeButton SongDescription;
+    TThemeButton FindSong;
+    TThemeButton RepeatSongList;
+    TThemeButton SongListOrder;
+    TThemeButton RandomSongList;
+    TThemeButton Lyric;
+    TThemeButton Options;
+    TThemeButton SongListClose;
+    TThemeButton SongListFixPin;
+    TThemeText TextListText;
+    TThemeText TextCountText;
+    TThemeStatic SongCover;
+    TThemeButton SongListPlayPause;
 
-    StaticActualSongStatics:    AThemeStatic;
-    StaticActualSongCover:      TThemeStatic;
-    TextActualSongArtist:       TThemeText;
-    TextActualSongTitle:        TThemeText;
+    AThemeStatic StaticActualSongStatics;
+    TThemeStatic StaticActualSongCover;
+    TThemeText TextActualSongArtist;
+    TThemeText TextActualSongTitle;
 
-    SongListUp:   TThemeButton;
-    SongListDown: TThemeButton;
+    TThemeButton SongListUp;
+    TThemeButton SongListDown;
 
     //Jukebox SongMenu
-    StaticSongMenuBackground:     TThemeStatic;
-    SongMenuPlayPause:     TThemeButton;
-    StaticSongMenuTimeProgress:   TThemeStatic;
-    StaticSongMenuTimeBackground: TThemeStatic;
-    SongMenuNext:          TThemeButton;
-    SongMenuPrevious:      TThemeButton;
-    SongMenuPlaylist:      TThemeButton;
-    SongMenuTextTime:      TThemeText;
-    SongMenuOptions:       TThemeButton;
+    TThemeStatic StaticSongMenuBackground;
+    TThemeButton SongMenuPlayPause;
+    TThemeStatic StaticSongMenuTimeProgress;
+    TThemeStatic StaticSongMenuTimeBackground;
+    TThemeButton SongMenuNext;
+    TThemeButton SongMenuPrevious;
+    TThemeButton SongMenuPlaylist;
+    TThemeText SongMenuTextTime;
+    TThemeButton SongMenuOptions;
 
     //Jukebox SongOptions
-    SongOptionsTextSaved:        TThemeText;
-    StaticSongOptionsBackground: TThemeStatic;
-    SongOptionsClose:            TThemeButton;
-    SongOptionsSave:             TThemeButton;
-    SongOptionsDefault:          TThemeButton;
-    SongOptionsVideoText:        TThemeText;
-    SongOptionsLyricText:        TThemeText;
-    SongOptionsVideoAspectSlide: TThemeSelectSlide;
-    SongOptionsVideoWidthSlide:  TThemeSelectSlide;
-    SongOptionsVideoHeightSlide: TThemeSelectSlide;
-    SongOptionsLyricSizeSlide:       TThemeSelectSlide;
-    SongOptionsLyricPositionSlide:   TThemeSelectSlide;
-    SongOptionsLyricColorSlide:      TThemeSelectSlide;
-    SongOptionsLyricLineSlide:       TThemeSelectSlide;
-    SongOptionsLyricPropertySlide:   TThemeSelectSlide;
-    SongOptionsLyricAlphaSlide:      TThemeSelectSlide;
-    SelectR:            TThemeSelectSlide;
-    SelectG:            TThemeSelectSlide;
-    SelectB:            TThemeSelectSlide;
-    TexR:               TThemeStatic;
-    TexG:               TThemeStatic;
-    TexB:               TThemeStatic;
-    PointerR:           TThemeStatic;
-    PointerG:           TThemeStatic;
-    PointerB:           TThemeStatic;
+    TThemeText SongOptionsTextSaved;
+    TThemeStatic StaticSongOptionsBackground;
+    TThemeButton SongOptionsClose;
+    TThemeButton SongOptionsSave;
+    TThemeButton SongOptionsDefault;
+    TThemeText SongOptionsVideoText;
+    TThemeText SongOptionsLyricText;
+    TThemeSelectSlide SongOptionsVideoAspectSlide;
+    TThemeSelectSlide SongOptionsVideoWidthSlide;
+    TThemeSelectSlide SongOptionsVideoHeightSlide;
+    TThemeSelectSlide SongOptionsLyricSizeSlide;
+    TThemeSelectSlide SongOptionsLyricPositionSlide;
+    TThemeSelectSlide SongOptionsLyricColorSlide;
+    TThemeSelectSlide SongOptionsLyricLineSlide;
+    TThemeSelectSlide SongOptionsLyricPropertySlide;
+    TThemeSelectSlide SongOptionsLyricAlphaSlide;
+    TThemeSelectSlide SelectR;
+    TThemeSelectSlide SelectG;
+    TThemeSelectSlide SelectB;
+    TThemeStatic TexR;
+    TThemeStatic TexG;
+    TThemeStatic TexB;
+    TThemeStatic PointerR;
+    TThemeStatic PointerG;
+    TThemeStatic PointerB;
   end;
 
   TThemeJukeboxPlaylist == class(TThemeBasic)
-    SelectPlayList: TThemeSelectSlide;
-    SelectPlayList2: TThemeSelectSlide;
+    TThemeSelectSlide SelectPlayList;
+    TThemeSelectSlide SelectPlayList2;
   end;
 
   TThemeLyricBar == record
@@ -758,10 +751,10 @@ Text3PlayersDuetSingerP3:   TThemeText;
   end;
 
   TThemeScore == class(TThemeBasic)
-    TextArtist:       TThemeText;
-    TextTitle:        TThemeText;
+    TThemeText TextArtist;
+    TThemeText TextTitle;
 
-    TextArtistTitle:  TThemeText;
+    TThemeText TextArtistTitle;
 
     PlayerStatic:     array[1..UIni.IMaxPlayerCount] of AThemeStatic;
     PlayerTexts:      array[1..UIni.IMaxPlayerCount] of AThemeText;
@@ -793,581 +786,581 @@ Text3PlayersDuetSingerP3:   TThemeText;
 
     ButtonSend:  array[1..UIni.IMaxPlayerCount] of TThemeButton;
 
-    StaticNavigate:   TThemeStatic;
-    TextNavigate:     TThemeText;
+    TThemeStatic StaticNavigate;
+    TThemeText TextNavigate;
   end;
 
   TThemeTop5 == class(TThemeBasic)
-    TextLevel:        TThemeText;
-    TextArtistTitle:  TThemeText;
+    TThemeText TextLevel;
+    TThemeText TextArtistTitle;
 
-    StaticNumber:     AThemeStatic;
-    TextNumber:       AThemeText;
-    TextName:         AThemeText;
-    TextScore:        AThemeText;
-    TextDate:         AThemeText;
+    AThemeStatic StaticNumber;
+    AThemeText TextNumber;
+    AThemeText TextName;
+    AThemeText TextScore;
+    AThemeText TextDate;
   end;
 
   TThemeOptions == class(TThemeBasic)
-    ButtonGame:       TThemeButton;
-    ButtonGraphics:   TThemeButton;
-    ButtonSound:      TThemeButton;
-    ButtonInput:      TThemeButton;
-    ButtonLyrics:     TThemeButton;
-    ButtonThemes:     TThemeButton;
-    ButtonRecord:     TThemeButton;
-    ButtonAdvanced:   TThemeButton;
-    ButtonNetwork:    TThemeButton;
-    ButtonWebcam:     TThemeButton;
-    ButtonJukebox:    TThemeButton;
-    ButtonExit:       TThemeButton;
+    TThemeButton ButtonGame;
+    TThemeButton ButtonGraphics;
+    TThemeButton ButtonSound;
+    TThemeButton ButtonInput;
+    TThemeButton ButtonLyrics;
+    TThemeButton ButtonThemes;
+    TThemeButton ButtonRecord;
+    TThemeButton ButtonAdvanced;
+    TThemeButton ButtonNetwork;
+    TThemeButton ButtonWebcam;
+    TThemeButton ButtonJukebox;
+    TThemeButton ButtonExit;
 
-    TextDescription:      TThemeText;
+    TThemeText TextDescription;
     Description:          array[0..11] of UTF8String;
   end;
 
   TThemeOptionsGame == class(TThemeBasic)
-    SelectLanguage:     TThemeSelectSlide;
-    SelectSongMenu:     TThemeSelectSlide;
-    SelectSorting:      TThemeSelectSlide;
-    SelectTabs:         TThemeSelectSlide;
-    SelectShowScores:   TThemeSelectSlide;
-    SelectDebug:        TThemeSelectSlide;
-    SelectAVDelay:      TThemeSelectSlide;
-    SelectMicDelay:     TThemeSelectSlide;
-    ButtonExit:         TThemeButton;
+    TThemeSelectSlide SelectLanguage;
+    TThemeSelectSlide SelectSongMenu;
+    TThemeSelectSlide SelectSorting;
+    TThemeSelectSlide SelectTabs;
+    TThemeSelectSlide SelectShowScores;
+    TThemeSelectSlide SelectDebug;
+    TThemeSelectSlide SelectAVDelay;
+    TThemeSelectSlide SelectMicDelay;
+    TThemeButton ButtonExit;
   end;
 
   TThemeOptionsGraphics == class(TThemeBasic)
-    SelectFullscreen:       TThemeSelectSlide;
-    SelectResolution:       TThemeSelectSlide;
-    SelectDepth:            TThemeSelectSlide;
-    SelectVisualizer:       TThemeSelectSlide;
-    SelectOscilloscope:     TThemeSelectSlide;
-    SelectLineBonus:        TThemeSelectSlide;
-    SelectMovieSize:        TThemeSelectSlide;
-    ButtonExit:             TThemeButton;
+    TThemeSelectSlide SelectFullscreen;
+    TThemeSelectSlide SelectResolution;
+    TThemeSelectSlide SelectDepth;
+    TThemeSelectSlide SelectVisualizer;
+    TThemeSelectSlide SelectOscilloscope;
+    TThemeSelectSlide SelectLineBonus;
+    TThemeSelectSlide SelectMovieSize;
+    TThemeButton ButtonExit;
   end;
 
   TThemeOptionsSound == class(TThemeBasic)
-    SelectBackgroundMusic:       TThemeSelectSlide;
-    SelectClickAssist:           TThemeSelectSlide;
-    SelectBeatClick:             TThemeSelectSlide;
-    SelectSlidePreviewVolume:    TThemeSelectSlide;
-    SelectSlidePreviewFading:    TThemeSelectSlide;
-    SelectSlideVoicePassthrough: TThemeSelectSlide;
-    SelectSlideMusicAutoGain:    TThemeSelectSlide;
-    ButtonExit:                  TThemeButton;
+    TThemeSelectSlide SelectBackgroundMusic;
+    TThemeSelectSlide SelectClickAssist;
+    TThemeSelectSlide SelectBeatClick;
+    TThemeSelectSlide SelectSlidePreviewVolume;
+    TThemeSelectSlide SelectSlidePreviewFading;
+    TThemeSelectSlide SelectSlideVoicePassthrough;
+    TThemeSelectSlide SelectSlideMusicAutoGain;
+    TThemeButton ButtonExit;
   end;
 
   TThemeOptionsInput == class(TThemeBasic)
-    SelectMouse:        TThemeSelectSlide;
-    SelectJoypad:       TThemeSelectSlide;
-    ButtonExit:         TThemeButton;
+    TThemeSelectSlide SelectMouse;
+    TThemeSelectSlide SelectJoypad;
+    TThemeButton ButtonExit;
   end;
 
   TThemeOptionsLyrics == class(TThemeBasic)
-    SelectLyricsFont:   TThemeSelectSlide;
-    SelectLyricsStyle:  TThemeSelectSlide;
-    SelectLyricsEffect: TThemeSelectSlide;
-//    SelectSolmization:  TThemeSelectSlide;
-    SelectNoteLines:    TThemeSelectSlide;
-    ButtonExit:         TThemeButton;
+    TThemeSelectSlide SelectLyricsFont;
+    TThemeSelectSlide SelectLyricsStyle;
+    TThemeSelectSlide SelectLyricsEffect;
+//    TThemeSelectSlide SelectSolmization;
+    TThemeSelectSlide SelectNoteLines;
+    TThemeButton ButtonExit;
     UpperX, UpperW, UpperY, UpperH,
     LowerX, LowerW, LowerY, LowerH  : int;
   end;
 
   TThemeOptionsThemes == class(TThemeBasic)
-    SelectTheme:        TThemeSelectSlide;
-    SelectSkin:         TThemeSelectSlide;
-    SelectColor:        TThemeSelectSlide;
-    ButtonExit:         TThemeButton;
+    TThemeSelectSlide SelectTheme;
+    TThemeSelectSlide SelectSkin;
+    TThemeSelectSlide SelectColor;
+    TThemeButton ButtonExit;
   end;
 
   TThemeOptionsRecord == class(TThemeBasic)
-    SelectSlideCard:       TThemeSelectSlide;
-    SelectSlideInput:      TThemeSelectSlide;
-    SelectChannel:         TThemeSelectSlide;
-    SelectAssignee:        TThemeSelectSlide;
-    SelectThreshold:       TThemeSelectSlide;
-    SelectMicBoost:        TThemeSelectSlide;
-    ButtonExit:            TThemeButton;
+    TThemeSelectSlide SelectSlideCard;
+    TThemeSelectSlide SelectSlideInput;
+    TThemeSelectSlide SelectChannel;
+    TThemeSelectSlide SelectAssignee;
+    TThemeSelectSlide SelectThreshold;
+    TThemeSelectSlide SelectMicBoost;
+    TThemeButton ButtonExit;
   end;
 
   TThemeOptionsAdvanced == class(TThemeBasic)
-    SelectLoadAnimation:  TThemeSelectSlide;
-    SelectEffectSing:     TThemeSelectSlide;
-    SelectScreenFade:     TThemeSelectSlide;
-    SelectLineBonus:      TThemeSelectSlide;
-    SelectAskbeforeDel:   TThemeSelectSlide;
-    SelectOnSongClick:    TThemeSelectSlide;
-    SelectPartyPopup:     TThemeSelectSlide;
-    SelectSingScores:     TThemeSelectSlide;
-    SelectTopScores:      TThemeSelectSlide;
-    ButtonExit:           TThemeButton;
+    TThemeSelectSlide SelectLoadAnimation;
+    TThemeSelectSlide SelectEffectSing;
+    TThemeSelectSlide SelectScreenFade;
+    TThemeSelectSlide SelectLineBonus;
+    TThemeSelectSlide SelectAskbeforeDel;
+    TThemeSelectSlide SelectOnSongClick;
+    TThemeSelectSlide SelectPartyPopup;
+    TThemeSelectSlide SelectSingScores;
+    TThemeSelectSlide SelectTopScores;
+    TThemeButton ButtonExit;
   end;
 
   TThemeOptionsNetwork == class(TThemeBasic)
-    SelectWebsite:        TThemeSelectSlide;
-    SelectUsername:       TThemeSelectSlide;
-    SelectSendName:       TThemeSelectSlide;
-    SelectAutoMode:       TThemeSelectSlide;
-    SelectAutoPlayer:     TThemeSelectSlide;
-    SelectAutoScoreEasy:   TThemeSelectSlide;
-    SelectAutoScoreMedium: TThemeSelectSlide;
-    SelectAutoScoreHard:   TThemeSelectSlide;
-    TextInsertUser:       TThemeText;
-    ButtonInsert:         TThemeButton;
-    ButtonExit:           TThemeButton;
+    TThemeSelectSlide SelectWebsite;
+    TThemeSelectSlide SelectUsername;
+    TThemeSelectSlide SelectSendName;
+    TThemeSelectSlide SelectAutoMode;
+    TThemeSelectSlide SelectAutoPlayer;
+    TThemeSelectSlide SelectAutoScoreEasy;
+    TThemeSelectSlide SelectAutoScoreMedium;
+    TThemeSelectSlide SelectAutoScoreHard;
+    TThemeText TextInsertUser;
+    TThemeButton ButtonInsert;
+    TThemeButton ButtonExit;
   end;
 
   TThemeOptionsWebcam == class(TThemeBasic)
-    SelectWebcam:         TThemeSelectSlide;
-    SelectResolution:     TThemeSelectSlide;
-    SelectFPS:            TThemeSelectSlide;
-    SelectFlip:           TThemeSelectSlide;
-    SelectBrightness:     TThemeSelectSlide;
-    SelectSaturation:     TThemeSelectSlide;
-    SelectHue:            TThemeSelectSlide;
-    SelectEffect:         TThemeSelectSlide;
+    TThemeSelectSlide SelectWebcam;
+    TThemeSelectSlide SelectResolution;
+    TThemeSelectSlide SelectFPS;
+    TThemeSelectSlide SelectFlip;
+    TThemeSelectSlide SelectBrightness;
+    TThemeSelectSlide SelectSaturation;
+    TThemeSelectSlide SelectHue;
+    TThemeSelectSlide SelectEffect;
 
-    ButtonPreVisualization: TThemeButton;
-    ButtonExit:           TThemeButton;
+    TThemeButton ButtonPreVisualization;
+    TThemeButton ButtonExit;
   end;
 
   TThemeOptionsJukebox == class(TThemeBasic)
-    SelectLyricsFont:   TThemeSelectSlide;
-    SelectLyricsStyle:  TThemeSelectSlide;
-    SelectLyricsEffect: TThemeSelectSlide;
-    SelectLyricsAlpha:  TThemeSelectSlide;
-    SelectLine:         TThemeSelectSlide;
-    SelectProperty:     TThemeSelectSlide;
-    SelectColor:        TThemeSelectSlide;
-    SelectR:            TThemeSelectSlide;
-    SelectG:            TThemeSelectSlide;
-    SelectB:            TThemeSelectSlide;
-    TexR:               TThemeStatic;
-    TexG:               TThemeStatic;
-    TexB:               TThemeStatic;
-    TexColor:           TThemeStatic;
-    PointerR:           TThemeStatic;
-    PointerG:           TThemeStatic;
-    PointerB:           TThemeStatic;
-    ButtonExit:         TThemeButton;
+    TThemeSelectSlide SelectLyricsFont;
+    TThemeSelectSlide SelectLyricsStyle;
+    TThemeSelectSlide SelectLyricsEffect;
+    TThemeSelectSlide SelectLyricsAlpha;
+    TThemeSelectSlide SelectLine;
+    TThemeSelectSlide SelectProperty;
+    TThemeSelectSlide SelectColor;
+    TThemeSelectSlide SelectR;
+    TThemeSelectSlide SelectG;
+    TThemeSelectSlide SelectB;
+    TThemeStatic TexR;
+    TThemeStatic TexG;
+    TThemeStatic TexB;
+    TThemeStatic TexColor;
+    TThemeStatic PointerR;
+    TThemeStatic PointerG;
+    TThemeStatic PointerB;
+    TThemeButton ButtonExit;
     UpperX, UpperW, UpperY, UpperH,
     LowerX, LowerW, LowerY, LowerH  : int;
   end;
 
   TThemeEdit == class(TThemeBasic)
-    ButtonConvert:        TThemeButton;
-    ButtonExit:           TThemeButton;
+    TThemeButton ButtonConvert;
+    TThemeButton ButtonExit;
 
-    TextDescription:      TThemeText;
-    TextDescriptionLong:  TThemeText;
+    TThemeText TextDescription;
+    TThemeText TextDescriptionLong;
     Description:          array[0..5] of UTF8string;
     DescriptionLong:      array[0..5] of UTF8string;
   end;
 
   TThemeEditConvert == class(TThemeBasic)
-    ButtonOpen:           TThemeButton;
-    ButtonPlay:           TThemeButton;
-    ButtonPlaySelected:   TThemeButton;
-    ButtonStop:           TThemeButton;
-    ButtonSave:           TThemeButton;
+    TThemeButton ButtonOpen;
+    TThemeButton ButtonPlay;
+    TThemeButton ButtonPlaySelected;
+    TThemeButton ButtonStop;
+    TThemeButton ButtonSave;
 
-    TextDescription:      TThemeText;
-    TextDescriptionLong:  TThemeText;
+    TThemeText TextDescription;
+    TThemeText TextDescriptionLong;
     Description:          array[0..5] of UTF8string;
     DescriptionLong:      array[0..5] of UTF8string;
   end;
 
   TThemeEditOpen == class(TThemeBasic)
-    ButtonFileName:       TThemeButton;
-    ButtonLoad:           TThemeButton;
-    ButtonBack:           TThemeButton;
+    TThemeButton ButtonFileName;
+    TThemeButton ButtonLoad;
+    TThemeButton ButtonBack;
 
-    TextDescription:      TThemeText;
-    TextDescriptionLong:  TThemeText;
+    TThemeText TextDescription;
+    TThemeText TextDescriptionLong;
     Description:          array[0..5] of UTF8string;
     DescriptionLong:      array[0..5] of UTF8string;
   end;
 
   TThemeEditSub == class(TThemeBasic)
       // statics
-      BackgroundImage:              TThemeStatic;
-      HeaderBackground:             TThemeStatic;
-      CurrentNoteInfoBackground:    TThemeStatic;
-      VolumeSliderBackground:       TThemeStatic;
-      NotesBackground:              TThemeStatic;
-      P1InfoBarBackground:          TThemeStatic;
-      P2InfoBarBackground:          TThemeStatic;
-      SentenceBackground:           TThemeStatic;
+      TThemeStatic BackgroundImage;
+      TThemeStatic HeaderBackground;
+      TThemeStatic CurrentNoteInfoBackground;
+      TThemeStatic VolumeSliderBackground;
+      TThemeStatic NotesBackground;
+      TThemeStatic P1InfoBarBackground;
+      TThemeStatic P2InfoBarBackground;
+      TThemeStatic SentenceBackground;
 
       // buttons
-      ButtonCurrentLine:   TThemeButton;
-      ButtonCurrentNote:   TThemeButton;
-      PlayOnly:            TThemeButton;
-      PlayWithNote:        TThemeButton;
-      PlayNote:            TThemeButton;
-      previousseq:         TThemeButton;
-      nextseq:             TThemeButton;
-      undo:                TThemeButton;
-      gold:                TThemeButton;
-      freestyle:           TThemeButton;
+      TThemeButton ButtonCurrentLine;
+      TThemeButton ButtonCurrentNote;
+      TThemeButton PlayOnly;
+      TThemeButton PlayWithNote;
+      TThemeButton PlayNote;
+      TThemeButton previousseq;
+      TThemeButton nextseq;
+      TThemeButton undo;
+      TThemeButton gold;
+      TThemeButton freestyle;
 
       // sliders
-      SlideTitle:          TThemeSelectSlide;
-      SlideArtist:         TThemeSelectSlide;
-      SlideLanguage:       TThemeSelectSlide;
-      SlideEdition:        TThemeSelectSlide;
-      SlideGenre:          TThemeSelectSlide;
-      SlideYear:           TThemeSelectSlide;
-      SlideCreator:        TThemeSelectSlide;
-      SlideMP3:            TThemeSelectSlide;
-      SlideCover:          TThemeSelectSlide;
-      SlideBackground:     TThemeSelectSlide;
-      SlideVideo:          TThemeSelectSlide;
-      SlideBPM:            TThemeSelectSlide;
-      SlideGAP:            TThemeSelectSlide;
-      SlideStartTag:       TThemeSelectSlide;
-      SlideEndTag:         TThemeSelectSlide;
-      SlideMedleyStart:    TThemeSelectSlide;
-      SlideMedleyEnd:      TThemeSelectSlide;
-      SlidePreviewStart:   TThemeSelectSlide;
-      SlideRelative:       TThemeSelectSlide;
-      SlideStart:          TThemeSelectSlide;
-      SlideDuration:       TThemeSelectSlide;
-      SlideTone:           TThemeSelectSlide;
-      SlideLyric:          TThemeSelectSlide;
-      SelectVolAudio:      TThemeSelectSlide;
-      SelectVolMidi:       TThemeSelectSlide;
-      SelectVolClick:      TThemeSelectSlide;
-      SlideVideoGap:       TThemeSelectSlide;
+      TThemeSelectSlide SlideTitle;
+      TThemeSelectSlide SlideArtist;
+      TThemeSelectSlide SlideLanguage;
+      TThemeSelectSlide SlideEdition;
+      TThemeSelectSlide SlideGenre;
+      TThemeSelectSlide SlideYear;
+      TThemeSelectSlide SlideCreator;
+      TThemeSelectSlide SlideMP3;
+      TThemeSelectSlide SlideCover;
+      TThemeSelectSlide SlideBackground;
+      TThemeSelectSlide SlideVideo;
+      TThemeSelectSlide SlideBPM;
+      TThemeSelectSlide SlideGAP;
+      TThemeSelectSlide SlideStartTag;
+      TThemeSelectSlide SlideEndTag;
+      TThemeSelectSlide SlideMedleyStart;
+      TThemeSelectSlide SlideMedleyEnd;
+      TThemeSelectSlide SlidePreviewStart;
+      TThemeSelectSlide SlideRelative;
+      TThemeSelectSlide SlideStart;
+      TThemeSelectSlide SlideDuration;
+      TThemeSelectSlide SlideTone;
+      TThemeSelectSlide SlideLyric;
+      TThemeSelectSlide SelectVolAudio;
+      TThemeSelectSlide SelectVolMidi;
+      TThemeSelectSlide SelectVolClick;
+      TThemeSelectSlide SlideVideoGap;
 
       // texts
-      TextInfo:            TThemeText;
-      TextSentence:        TThemeText;
-      TextCurrentTone:     TThemeText;
+      TThemeText TextInfo;
+      TThemeText TextSentence;
+      TThemeText TextCurrentTone;
   end;
 
   //Error- and Check-Popup
   TThemeError == class(TThemeBasic)
-    Button1: TThemeButton;
-    TextError: TThemeText;
+    TThemeButton Button1;
+    TThemeText TextError;
   end;
 
   TThemeCheck == class(TThemeBasic)
-    Button1: TThemeButton;
-    Button2: TThemeButton;
-    TextCheck: TThemeText;
+    TThemeButton Button1;
+    TThemeButton Button2;
+    TThemeText TextCheck;
   end;
 
   //Help-Popup
   TThemeHelp == class(TThemeBasic)
-    Button1:    TThemeButton;
+    TThemeButton Button1;
   end;
 
   TThemeInsertUser == class(TThemeBasic)
-    TextInsertUser: TThemeText;
-    ButtonUsername: TThemeButton;
-    ButtonPassword: TThemeButton;
-    Button1: TThemeButton;
-    Button2: TThemeButton;
+    TThemeText TextInsertUser;
+    TThemeButton ButtonUsername;
+    TThemeButton ButtonPassword;
+    TThemeButton Button1;
+    TThemeButton Button2;
   end;
 
   TThemeSendScore == class(TThemeBasic)
-    SelectSlide1: TThemeSelectSlide;
-    SelectSlide2: TThemeSelectSlide;
-    SelectSlide3: TThemeSelectSlide;
-    ButtonUsername: TThemeButton;
-    ButtonPassword: TThemeButton;
-    Button1:  TThemeButton;
-    Button2:  TThemeButton;
+    TThemeSelectSlide SelectSlide1;
+    TThemeSelectSlide SelectSlide2;
+    TThemeSelectSlide SelectSlide3;
+    TThemeButton ButtonUsername;
+    TThemeButton ButtonPassword;
+    TThemeButton Button1;
+    TThemeButton Button2;
   end;
 
   TThemeScoreDownload == class(TThemeBasic)
-    Button1: TThemeButton;
-    TextSongScoreDownload: TThemeText;
-    TextWebScoreDownload: TThemeText;
-    DownloadProgressSong: TThemeStatic;
-    DownloadProgressWeb: TThemeStatic;
+    TThemeButton Button1;
+    TThemeText TextSongScoreDownload;
+    TThemeText TextWebScoreDownload;
+    TThemeStatic DownloadProgressSong;
+    TThemeStatic DownloadProgressWeb;
   end;
 
   //ScreenSong Menu
   TThemeSongMenu == class(TThemeBasic)
-    Button1: TThemeButton;
-    Button2: TThemeButton;
-    Button3: TThemeButton;
-    Button4: TThemeButton;
-    Button5: TThemeButton;
+    TThemeButton Button1;
+    TThemeButton Button2;
+    TThemeButton Button3;
+    TThemeButton Button4;
+    TThemeButton Button5;
 
-    SelectSlide1: TThemeSelectSlide;
-    SelectSlide2: TThemeSelectSlide;
-    SelectSlide3: TThemeSelectSlide;
+    TThemeSelectSlide SelectSlide1;
+    TThemeSelectSlide SelectSlide2;
+    TThemeSelectSlide SelectSlide3;
 
-    TextMenu: TThemeText;
+    TThemeText TextMenu;
   end;
 
   TThemeSongJumpTo == class(TThemeBasic)
-    ButtonSearchText: TThemeButton;
-    SelectSlideType:  TThemeSelectSlide;
-    TextFound:        TThemeText;
+    TThemeButton ButtonSearchText;
+    TThemeSelectSlide SelectSlideType;
+    TThemeText TextFound;
 
     //Translated Texts
-    Songsfound:       UTF8String;
-    NoSongsfound:     UTF8String;
-    CatText:          UTF8String;
+    UTF8String Songsfound;
+    UTF8String NoSongsfound;
+    UTF8String CatText;
     IType:            array [0..7] of UTF8String;
   end;
 
   //Party Screens
   TThemePartyNewRound == class(TThemeBasic)
-    TextRound1:        TThemeText;
-    TextRound2:        TThemeText;
-    TextRound3:        TThemeText;
-    TextRound4:        TThemeText;
-    TextRound5:        TThemeText;
-    TextRound6:        TThemeText;
-    TextRound7:        TThemeText;
-    TextWinner1:       TThemeText;
-    TextWinner2:       TThemeText;
-    TextWinner3:       TThemeText;
-    TextWinner4:       TThemeText;
-    TextWinner5:       TThemeText;
-    TextWinner6:       TThemeText;
-    TextWinner7:       TThemeText;
-    TextNextRound:     TThemeText;
-    TextNextRoundNo:   TThemeText;
-    TextNextPlayer1:   TThemeText;
-    TextNextPlayer2:   TThemeText;
-    TextNextPlayer3:   TThemeText;
+    TThemeText TextRound1;
+    TThemeText TextRound2;
+    TThemeText TextRound3;
+    TThemeText TextRound4;
+    TThemeText TextRound5;
+    TThemeText TextRound6;
+    TThemeText TextRound7;
+    TThemeText TextWinner1;
+    TThemeText TextWinner2;
+    TThemeText TextWinner3;
+    TThemeText TextWinner4;
+    TThemeText TextWinner5;
+    TThemeText TextWinner6;
+    TThemeText TextWinner7;
+    TThemeText TextNextRound;
+    TThemeText TextNextRoundNo;
+    TThemeText TextNextPlayer1;
+    TThemeText TextNextPlayer2;
+    TThemeText TextNextPlayer3;
 
-    StaticRound1:      TThemeStatic;
-    StaticRound2:      TThemeStatic;
-    StaticRound3:      TThemeStatic;
-    StaticRound4:      TThemeStatic;
-    StaticRound5:      TThemeStatic;
-    StaticRound6:      TThemeStatic;
-    StaticRound7:      TThemeStatic;
+    TThemeStatic StaticRound1;
+    TThemeStatic StaticRound2;
+    TThemeStatic StaticRound3;
+    TThemeStatic StaticRound4;
+    TThemeStatic StaticRound5;
+    TThemeStatic StaticRound6;
+    TThemeStatic StaticRound7;
 
-    TextScoreTeam1:    TThemeText;
-    TextScoreTeam2:    TThemeText;
-    TextScoreTeam3:    TThemeText;
-    TextNameTeam1:     TThemeText;
-    TextNameTeam2:     TThemeText;
-    TextNameTeam3:     TThemeText;
-    TextTeam1Players:  TThemeText;
-    TextTeam2Players:  TThemeText;
-    TextTeam3Players:  TThemeText;
+    TThemeText TextScoreTeam1;
+    TThemeText TextScoreTeam2;
+    TThemeText TextScoreTeam3;
+    TThemeText TextNameTeam1;
+    TThemeText TextNameTeam2;
+    TThemeText TextNameTeam3;
+    TThemeText TextTeam1Players;
+    TThemeText TextTeam2Players;
+    TThemeText TextTeam3Players;
 
-    StaticTeam1:       TThemeStatic;
-    StaticTeam2:       TThemeStatic;
-    StaticTeam3:       TThemeStatic;
-    StaticNextPlayer1: TThemeStatic;
-    StaticNextPlayer2: TThemeStatic;
-    StaticNextPlayer3: TThemeStatic;
+    TThemeStatic StaticTeam1;
+    TThemeStatic StaticTeam2;
+    TThemeStatic StaticTeam3;
+    TThemeStatic StaticNextPlayer1;
+    TThemeStatic StaticNextPlayer2;
+    TThemeStatic StaticNextPlayer3;
   end;
 
   TThemePartyScore == class(TThemeBasic)
-    TextScoreTeam1:    TThemeText;
-    TextScoreTeam2:    TThemeText;
-    TextScoreTeam3:    TThemeText;
-    TextNameTeam1:     TThemeText;
-    TextNameTeam2:     TThemeText;
-    TextNameTeam3:     TThemeText;
-    StaticTeam1:       TThemeStatic;
-    StaticTeam1BG:     TThemeStatic;
-    StaticTeam1Deco:   TThemeStatic;
-    StaticTeam2:       TThemeStatic;
-    StaticTeam2BG:     TThemeStatic;
-    StaticTeam2Deco:   TThemeStatic;
-    StaticTeam3:       TThemeStatic;
-    StaticTeam3BG:     TThemeStatic;
-    StaticTeam3Deco:   TThemeStatic;
+    TThemeText TextScoreTeam1;
+    TThemeText TextScoreTeam2;
+    TThemeText TextScoreTeam3;
+    TThemeText TextNameTeam1;
+    TThemeText TextNameTeam2;
+    TThemeText TextNameTeam3;
+    TThemeStatic StaticTeam1;
+    TThemeStatic StaticTeam1BG;
+    TThemeStatic StaticTeam1Deco;
+    TThemeStatic StaticTeam2;
+    TThemeStatic StaticTeam2BG;
+    TThemeStatic StaticTeam2Deco;
+    TThemeStatic StaticTeam3;
+    TThemeStatic StaticTeam3BG;
+    TThemeStatic StaticTeam3Deco;
 
     DecoTextures:      record
-      ChangeTextures:  boolean;
+      boolean ChangeTextures;
 
-      FirstTexture:    string;
-      FirstTyp:        TTextureType;
-      FirstColor:      string;
+      string FirstTexture;
+      TTextureType FirstTyp;
+      string FirstColor;
 
-      SecondTexture:   string;
-      SecondTyp:       TTextureType;
-      SecondColor:     string;
+      string SecondTexture;
+      TTextureType SecondTyp;
+      string SecondColor;
 
-      ThirdTexture:    string;
-      ThirdTyp:        TTextureType;
-      ThirdColor:      string;
+      string ThirdTexture;
+      TTextureType ThirdTyp;
+      string ThirdColor;
     end;
 
 
-    TextWinner:        TThemeText;
+    TThemeText TextWinner;
   end;
 
   TThemePartyWin == class(TThemeBasic)
-    TextScoreTeam1:    TThemeText;
-    TextScoreTeam2:    TThemeText;
-    TextScoreTeam3:    TThemeText;
-    TextNameTeam1:     TThemeText;
-    TextNameTeam2:     TThemeText;
-    TextNameTeam3:     TThemeText;
-    StaticTeam1:       TThemeStatic;
-    StaticTeam1BG:     TThemeStatic;
-    StaticTeam1Deco:   TThemeStatic;
-    StaticTeam2:       TThemeStatic;
-    StaticTeam2BG:     TThemeStatic;
-    StaticTeam2Deco:   TThemeStatic;
-    StaticTeam3:       TThemeStatic;
-    StaticTeam3BG:     TThemeStatic;
-    StaticTeam3Deco:   TThemeStatic;
+    TThemeText TextScoreTeam1;
+    TThemeText TextScoreTeam2;
+    TThemeText TextScoreTeam3;
+    TThemeText TextNameTeam1;
+    TThemeText TextNameTeam2;
+    TThemeText TextNameTeam3;
+    TThemeStatic StaticTeam1;
+    TThemeStatic StaticTeam1BG;
+    TThemeStatic StaticTeam1Deco;
+    TThemeStatic StaticTeam2;
+    TThemeStatic StaticTeam2BG;
+    TThemeStatic StaticTeam2Deco;
+    TThemeStatic StaticTeam3;
+    TThemeStatic StaticTeam3BG;
+    TThemeStatic StaticTeam3Deco;
 
-    TextWinner:        TThemeText;
+    TThemeText TextWinner;
   end;
 
   TThemePartyOptions == class(TThemeBasic)
-    SelectMode:  TThemeSelectSlide;
-    SelectLevel: TThemeSelectSlide;
-    SelectPlayList: TThemeSelectSlide;
-    SelectPlayList2: TThemeSelectSlide;
+    TThemeSelectSlide SelectMode;
+    TThemeSelectSlide SelectLevel;
+    TThemeSelectSlide SelectPlayList;
+    TThemeSelectSlide SelectPlayList2;
 
-    {ButtonNext: TThemeButton;
-    ButtonPrev: TThemeButton;}
+    /*{ButtonNext: TThemeButton;
+    ButtonPrev: TThemeButton;}*/
   end;
 
   TThemePartyPlayer == class(TThemeBasic)
-    SelectTeams: TThemeSelectSlide;
-    SelectPlayers1: TThemeSelectSlide;
-    SelectPlayers2: TThemeSelectSlide;
-    SelectPlayers3: TThemeSelectSlide;
+    TThemeSelectSlide SelectTeams;
+    TThemeSelectSlide SelectPlayers1;
+    TThemeSelectSlide SelectPlayers2;
+    TThemeSelectSlide SelectPlayers3;
 
-    Team1Name: TThemeButton;
-    Player1Name: TThemeButton;
-    Player2Name: TThemeButton;
-    Player3Name: TThemeButton;
-    Player4Name: TThemeButton;
+    TThemeButton Team1Name;
+    TThemeButton Player1Name;
+    TThemeButton Player2Name;
+    TThemeButton Player3Name;
+    TThemeButton Player4Name;
 
-    Team2Name: TThemeButton;
-    Player5Name: TThemeButton;
-    Player6Name: TThemeButton;
-    Player7Name: TThemeButton;
-    Player8Name: TThemeButton;
+    TThemeButton Team2Name;
+    TThemeButton Player5Name;
+    TThemeButton Player6Name;
+    TThemeButton Player7Name;
+    TThemeButton Player8Name;
 
-    Team3Name: TThemeButton;
-    Player9Name: TThemeButton;
-    Player10Name: TThemeButton;
-    Player11Name: TThemeButton;
-    Player12Name: TThemeButton;
+    TThemeButton Team3Name;
+    TThemeButton Player9Name;
+    TThemeButton Player10Name;
+    TThemeButton Player11Name;
+    TThemeButton Player12Name;
 
-    {ButtonNext: TThemeButton;
-    ButtonPrev: TThemeButton;}
+    TThemeButton {ButtonNext;
+    TThemeButton ButtonPrev;}
   end;
 
   TThemePartyRounds == class(TThemeBasic)
-    SelectRoundCount: TThemeSelectSlide;
+    TThemeSelectSlide SelectRoundCount;
     SelectRound: array [0..6] of TThemeSelectSlide;
   end;
 
   TThemePartyTournamentPlayer == class(TThemeBasic)
-    SelectPlayers: TThemeSelectSlide;
+    TThemeSelectSlide SelectPlayers;
 
-    Player1Name: TThemeButton;
-    Player2Name: TThemeButton;
-    Player3Name: TThemeButton;
-    Player4Name: TThemeButton;
-    Player5Name: TThemeButton;
-    Player6Name: TThemeButton;
-    Player7Name: TThemeButton;
-    Player8Name: TThemeButton;
-    Player9Name: TThemeButton;
-    Player10Name: TThemeButton;
-    Player11Name: TThemeButton;
-    Player12Name: TThemeButton;
-    Player13Name: TThemeButton;
-    Player14Name: TThemeButton;
-    Player15Name: TThemeButton;
-    Player16Name: TThemeButton;
+    TThemeButton Player1Name;
+    TThemeButton Player2Name;
+    TThemeButton Player3Name;
+    TThemeButton Player4Name;
+    TThemeButton Player5Name;
+    TThemeButton Player6Name;
+    TThemeButton Player7Name;
+    TThemeButton Player8Name;
+    TThemeButton Player9Name;
+    TThemeButton Player10Name;
+    TThemeButton Player11Name;
+    TThemeButton Player12Name;
+    TThemeButton Player13Name;
+    TThemeButton Player14Name;
+    TThemeButton Player15Name;
+    TThemeButton Player16Name;
   end;
 
   TThemePartyTournamentOptions == class(TThemeBasic)
-    SelectRoundsFinal:  TThemeSelectSlide;
-    SelectRounds2Final: TThemeSelectSlide;
-    SelectRounds4Final: TThemeSelectSlide;
-    SelectRounds8Final: TThemeSelectSlide;
+    TThemeSelectSlide SelectRoundsFinal;
+    TThemeSelectSlide SelectRounds2Final;
+    TThemeSelectSlide SelectRounds4Final;
+    TThemeSelectSlide SelectRounds8Final;
   end;
 
   TThemePartyTournamentRounds == class(TThemeBasic)
     TextNamePlayer: array[0..1, 0..7] of TThemeButton;
-    TextWinner: TThemeText;
-    TextResult: TThemeText;
-    NextPlayers: TThemeText;
+    TThemeText TextWinner;
+    TThemeText TextResult;
+    TThemeText NextPlayers;
   end;
 
   TThemePartyTournamentWin == class(TThemeBasic)
-    TextScorePlayer1:    TThemeText;
-    TextScorePlayer2:    TThemeText;
-    TextNamePlayer1:     TThemeText;
-    TextNamePlayer2:     TThemeText;
-    StaticBGPlayer1:     TThemeStatic;
-    StaticBGPlayer2:     TThemeStatic;
+    TThemeText TextScorePlayer1;
+    TThemeText TextScorePlayer2;
+    TThemeText TextNamePlayer1;
+    TThemeText TextNamePlayer2;
+    TThemeStatic StaticBGPlayer1;
+    TThemeStatic StaticBGPlayer2;
   end;
 
   //About
   TThemeAboutMain == class(TThemeBasic)
-    ButtonCredits:    TThemeButton;
-    ButtonExit:       TThemeButton;
+    TThemeButton ButtonCredits;
+    TThemeButton ButtonExit;
 
-    TextOverview:     TThemeText;
+    TThemeText TextOverview;
   end;
 
   //Stats Screens
   TThemeStatMain == class(TThemeBasic)
-    ButtonScores:     TThemeButton;
-    ButtonSingers:    TThemeButton;
-    ButtonSongs:      TThemeButton;
-    ButtonBands:      TThemeButton;
-    ButtonExit:       TThemeButton;
+    TThemeButton ButtonScores;
+    TThemeButton ButtonSingers;
+    TThemeButton ButtonSongs;
+    TThemeButton ButtonBands;
+    TThemeButton ButtonExit;
 
-    TextOverview:     TThemeText;
+    TThemeText TextOverview;
   end;
 
   TThemeStatDetail == class(TThemeBasic)
-    ButtonNext:       TThemeButton;
-    ButtonPrev:       TThemeButton;
-    ButtonReverse:    TThemeButton;
-    ButtonExit:       TThemeButton;
+    TThemeButton ButtonNext;
+    TThemeButton ButtonPrev;
+    TThemeButton ButtonReverse;
+    TThemeButton ButtonExit;
 
-    TextDescription:  TThemeText;
-    TextPage:         TThemeText;
-    TextList:         AThemeText;
+    TThemeText TextDescription;
+    TThemeText TextPage;
+    AThemeText TextList;
 
     Description:      array[0..3] of UTF8String;
     DescriptionR:     array[0..3] of UTF8String;
     FormatStr:        array[0..3] of UTF8String;
-    PageStr:          UTF8String;
+    UTF8String PageStr;
   end;
 
   //Playlist Translations
   TThemePlaylist == record
-    CatText:    UTF8String;
+    UTF8String CatText;
   end;
 
   TThemeEntry == record
-    Name: string;
-    Filename: IPath;
-    DefaultSkin: int;
-    Creator: string;
+    string Name;
+    IPath Filename;
+    int DefaultSkin;
+    string Creator;
   end;
 
   TTheme == class
   private
     {$IFDEF THEMESAVE}
-    ThemeIni:         TIniFile;
+    TIniFile ThemeIni;
     {$ELSE}
-    ThemeIni:         TMemIniFile;
+    TMemIniFile ThemeIni;
     {$ENDIF}
 
-    LastThemeBasic:   TThemeBasic;
+    TThemeBasic LastThemeBasic;
     procedure CreateThemeObjects();
     procedure LoadHeader(FileName: IPath);
   public
