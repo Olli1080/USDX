@@ -1,4 +1,5 @@
-{* UltraStar Deluxe - Karaoke Game
+#pragma once
+/** UltraStar Deluxe - Karaoke Game
  *
  * UltraStar Deluxe is the legal property of its developers, whose names
  * are too numerous to list here. Please refer to the COPYRIGHT
@@ -21,64 +22,63 @@
  *
  * $URL: https://ultrastardx.svn.sourceforge.net/svnroot/ultrastardx/trunk/src/base/UFiles.pas $
  * $Id: UFiles.pas 2510 2010-06-13 09:03:10Z tobigun $
- *}
+ **/
 
-unit UFiles;
+#include "../switches.h"
 
-interface
+#include <vector>
 
-{$IFDEF FPC}
-  {$MODE Delphi}
-{$ENDIF}
-{$I switches.inc}
+#include "USong.h"
 
-uses
+namespace UFiles
+{
+/*uses
   SysUtils,
   Classes,
   ULog,
   UMusic,
   USongs,
   USong,
-  UPath;
+  UPath;*/
 
-procedure ResetSingTemp;
+void ResetSingTemp();
 
-type
-  TSaveSongResult = (ssrOK, ssrFileError, ssrEncodingError);
+enum TSaveSongResult
+{
+    ssrOK, ssrFileError, ssrEncodingError
+};
 
-{**
+/***
  * Throws a TEncodingException if the song's fields cannot be encoded in the
  * requested encoding.
- *}
-function SaveSong(const Song: TSong; const Tracks: array of TLines; const Name: IPath; Relative: boolean): TSaveSongResult;
+ **/
+TSaveSongResult SaveSong(const USong::TSong Song, const std::vector<TLines> Tracks, const std::filesystem::path Name, bool Relative);
 
-implementation
-
-uses
+/*uses
   TextGL,
   UIni,
   UNote,
   UPlatform,
   UUnicodeUtils,
-  UTextEncoding;
+  UTextEncoding;*/
 
 //--------------------
 // Resets the temporary Sentence Arrays for each Player and some other Variables
 //--------------------
-procedure ResetSingTemp;
-var
-  Count:  integer;
-begin
-  SetLength(Tracks, Length(Player));
-  for Count := 0 to High(Player) do begin
-    SetLength(Tracks[Count].Lines, 1);
+void ResetSingTemp()
+/*var
+  Count:  integer;*/
+{
+    SetLength(Tracks, Length(Player));
+    for Count := 0 to High(Player) do begin
+        SetLength(Tracks[Count].Lines, 1);
     SetLength(Tracks[Count].Lines[0].Notes, 0);
-    Tracks[Count].Lines[0].Lyric := '';
-    Player[Count].Score := 0;
-    Player[Count].LengthNote := 0;
-    Player[Count].HighNote := -1;
-  end;
-end;
+    Tracks[Count].Lines[0].Lyric = '';
+    Player[Count].Score = 0;
+    Player[Count].LengthNote = 0;
+    Player[Count].HighNote = -1;
+    end;
+}
 
 //--------------------
 // Saves a Song
@@ -103,7 +103,7 @@ var
       SaveSong := ssrEncodingError;
   end;
 
-  procedure WriteCustomTags;
+  void WriteCustomTags;
     var
       I: integer;
       Line: RawByteString;
@@ -237,5 +237,4 @@ begin
   end;
 end;
 
-end.
-
+}

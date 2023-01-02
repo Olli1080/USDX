@@ -1,4 +1,5 @@
-﻿/* UltraStar Deluxe - Karaoke Game
+﻿#pragma once
+/* UltraStar Deluxe - Karaoke Game
  *
  * UltraStar Deluxe is the legal property of its developers, whose names
  * are too numerous to list here. Please refer to the COPYRIGHT
@@ -23,9 +24,10 @@
  * $Id: UCommon.pas 2241 2010-04-15 17:57:15Z whiteshark0 $
  */
 
-#include "switches.h"
+#include "../switches.h"
 
 #include <vector>
+#include <array>
 #include <string>
 
 namespace UCommon
@@ -66,8 +68,8 @@ TStringDynArray SplitString(const std::string Str, int MaxCount = 0, TSysCharSet
 bool StringInArray(const std::string Value, std::vector<std::string> Strings);
 
 bool StringDeleteFromArray(TIntegerDynArray& InArray, const int InIndex);
-bool StringDeleteFromArray(TStringDynArray& InStrings, const InIndex);
-bool StringDeleteFromArray(TUTF8StringDynArray& InStrings, const InIndex);
+bool StringDeleteFromArray(TStringDynArray& InStrings, const int InIndex);
+bool StringDeleteFromArray(TUTF8StringDynArray& InStrings, const int InIndex);
 
 std::string GetStringWithNoAccents(std::string str);
 
@@ -95,30 +97,29 @@ enum TMessageType
   mtInfo, mtError
 };
 
-void ShowMessage(const msg: string; msgType: TMessageType = mtInfo);
-
-void ConsoleWriteLn(const msg: string);
-
+void ShowMessage(const std::string msg, TMessageType msgType = mtInfo);
+/*
 {$IFDEF FPC}
 function RandomRange(aMin: integer; aMax: integer): integer;
 {$ENDIF}
-
+*/
 void DisableFloatingPointExceptions();
 void SetDefaultNumericLocale();
 void RestoreNumericLocale();
 
+/*
 {$IFNDEF MSWINDOWS}
 void ZeroMemory(Destination: pointer; Length: dword);
 function MakeLong(a, b: word): longint;
 {$ENDIF}
-
+*/
 // A stable alternative to TList.Sort() (use TList.Sort() if applicable, see below)
-void MergeSort(List: TList; CompareFunc: TListSortCompare);
+//void MergeSort(List: TList; CompareFunc: TListSortCompare);
 
-function GetAlignedMem(Size: cardinal; Alignment: integer): pointer;
-void FreeAlignedMem(P: pointer);
+//function GetAlignedMem(Size: cardinal; Alignment: integer): pointer;
+//void FreeAlignedMem(P: pointer);
 
-function Equals(A, B: string; CaseSensitive: boolean = false): Boolean; overload;
+//function Equals(A, B: string; CaseSensitive: boolean = false): Boolean; overload;
 
 int GetArrayIndex(const std::vector<std::string> SearchArray, std::string Value, bool CaseInsensitiv = false);
 int GetArrayIndex(const std::vector<int> SearchArray, int Value);
@@ -126,7 +127,6 @@ int GetArrayIndex(const std::vector<int> SearchArray, int Value);
 bool ParseResolutionString(const std::string ResolutionString, int& x, int& y);
 std::string BuildResolutionString(int x, int y);
 
-implementation
 /*
 uses
   Math,
@@ -138,6 +138,8 @@ uses
   UMain,
   UUnicodeUtils;
 */
+
+/*
 function StringInArray(const Value: string; Strings: array of string): Boolean;
 var I: Integer;
 begin
@@ -225,25 +227,23 @@ begin
   if (Start < Length(Str)+1) then
     AddSplit(Start+1, Length(Str)+1);
 end;
+*/
+const std::array<std::string, 43> Accents = { "ç", "á", "é", "í", "ó", "ú", "ý", "à", "è", "ì", "ò", "ù", "ã", "õ", "ñ", "ä", "ë", "ï", "ö", "ü", "ÿ", "â", "ê", "î", "ô", "û", "ą", "ć", "ł", "ś", "ź", "!", "¡", "\"", "&", "(", ")", "?", "¿", ",", ".", ":", ";" };
+const std::array<std::string, 43> NoAccents = { "c", "a", "e", "i", "o", "u", "y", "a", "e", "i", "o", "u", "a", "o", "n", "a", "e", "i", "o", "u", "y", "a", "e", "i", "o", "u", "a", "c", "l", "s", "z", "", "", "", "", "", "", "", "", "", "", "", "" };
 
-const
-  Accents: array [0..42] of String = ("ç", "á", "é", "í", "ó", "ú", "ý", "à", "è", "ì", "ò", "ù", "ã", "õ", "ñ", "ä", "ë", "ï", "ö", "ü", "ÿ", "â", "ê", "î", "ô", "û", "ą", "ć", "ł", "ś", "ź", "!", "¡", """, "&", "(", ")", "?", "¿", ",", ".", ":", ";");
-  NoAccents: array [0..42] of String = ("c", "a", "e", "i", "o", "u", "y", "a", "e", "i", "o", "u", "a", "o", "n", "a", "e", "i", "o", "u", "y", "a", "e", "i", "o", "u", "a", "c", "l", "s", "z", "", "", "", "", "", "", "", "", "", "", "", "");
-
-function GetStringWithNoAccents(str: String):String;
-var
+std::string GetStringWithNoAccents(std::string str)
+/*var
   i: integer;
-  tmp: string;
-begin
-  tmp := str;//Utf8ToAnsi(str);
+  tmp: string;*/
+{
+	std::string tmp = str;//Utf8ToAnsi(str);
+    for i : = 0 to High(Accents) do
+        begin
+        str : = StringReplace(str, Accents[i], NoAccents[i], [rfReplaceAll, rfIgnoreCase]);
+    end;
 
-  for i := 0 to High(Accents) do
-  begin
-    str := StringReplace(str, Accents[i], NoAccents[i], [rfReplaceAll, rfIgnoreCase]);
-  end;
-
-  Result := str;
-end;
+Result: = str;
+}
 
 
 
@@ -398,29 +398,6 @@ var
   ConsoleQuit: boolean;
 {$ENDIF}
 
-/*
- * Write to console if one is available.
- * It checks if a console is available before output so it will not
- * crash on windows if none is available.
- * Do not use this function directly because it is not thread-safe,
- * use ConsoleWriteLn() instead.
- */
-void _ConsoleWriteLn(const aString: string); {$IFDEF HasInline}inline;{$ENDIF}
-begin
-  if Log != nil then
-    Log.LogConsole(aString);
-  {$IFDEF MSWINDOWS}
-  // sanity check to avoid crashes with writeln()
-  if IsConsole and HasConsole then
-  begin
-  {$ENDIF}
-    Writeln(aString);
-  {$IFDEF MSWINDOWS}
-  end;
-  {$ENDIF}
-end;
-
-{$IFDEF FPC}
 /*
  * The console-handlers main-function.
  * TODO: create a quit-event on closing.
@@ -677,6 +654,7 @@ type
  * supports an alignment "x" of up to 8 bytes only whereas FPC supports
  * alignments on 16 and 32 byte boundaries too.
  */
+  /*
 {$WARNINGS OFF}
 function GetAlignedMem(Size: cardinal; Alignment: integer): pointer;
 var
@@ -725,5 +703,5 @@ initialization
 finalization
   FinalizeConsoleOutput();
 
-end.
+end.*/
 };

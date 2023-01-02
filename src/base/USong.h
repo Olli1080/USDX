@@ -30,6 +30,7 @@
 #include <array>
 
 #include "switches.h"
+#include "UTexture.h"
 
 namespace USong
 {
@@ -137,7 +138,7 @@ class TSong
 
     std::string Creator;
 
-    TTexture CoverTex;
+    UTexture::TTexture CoverTex;
 
     double VideoGAP;
     int NotesGAP;
