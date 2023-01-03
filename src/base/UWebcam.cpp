@@ -1,5 +1,7 @@
 #include "UWebcam.h"
 
+#include "UIni.h"
+
 namespace UWebcam
 {
     //----------
@@ -24,7 +26,7 @@ TWebcam::~TWebcam()
 
 void TWebcam::Start()
 {
-    if (UIni::Ini.WebcamID == 0)
+    if (UIni::Ini.webcam.ID == 0)
         return;
     try
     {
@@ -132,7 +134,7 @@ void TWebcam::GetWebcamFrame()
         WebcamFrame = FrameAdjust(WebcamFrame);
         WebcamFrame = FrameEffect(UIni::Ini.WebcamEffect, WebcamFrame);
 
-        TextureCam = Texture.CreateTexture(WebcamFrame.data, nullptr, WebcamFrame.cols, WebcamFrame.rows);
+        TextureCam = UTexture::Texture.CreateTexture(WebcamFrame.data, nullptr, WebcamFrame.cols, WebcamFrame.rows);
 
         WebcamFrame.deallocate();
     }
@@ -149,28 +151,28 @@ void TWebcam::GetWebcamFrame()
 // 8  -> GAUSSIAN BLUR
 // 9  -> EQUALIZED
 // 10 -> ERODE
-cv::Mat TWebcam::FrameEffect(int Nr_Effect, cv::Mat Frame)
+cv::Mat TWebcam::FrameEffect(Effect effect, cv::Mat Frame)
 {
     int CamEffectParam;
     // params values
-    switch (Nr_Effect)
+    switch (effect)
     {
-    case 4:
+    case Effect::BINARY_IMAGE:
         CamEffectParam = 20; // binary image
         break;
-    case 5:
+    case Effect::DILATE:
         CamEffectParam = 2;  // dilate
         break;
-    case 6:
+    case Effect::THRESHOLD:
         CamEffectParam = 60; // threshold
         break;
-    case 7:
+    case Effect::EDGES:
         CamEffectParam = 70; // edges
         break;
-    case 8:
+    case Effect::GAUSSIAN_BLUR:
         CamEffectParam = 11; // gaussian blur
         break;
-    case 10:
+    case Effect::ERODE:
         CamEffectParam = 2; // erode
         break;
     default:
@@ -186,28 +188,28 @@ cv::Mat TWebcam::FrameEffect(int Nr_Effect, cv::Mat Frame)
 
     cv::Mat ImageFrame, EffectFrame, RGBFrame;
 
-    switch (Nr_Effect)
+    switch (effect)
     {
-    case 1:
+    case Effect::GRAYSCALE:
     { // Grayscale
         cv::cvtColor(Frame, EffectFrame, cv::COLOR_BGR2GRAY);
         cv::cvtColor(EffectFrame, RGBFrame, cv::COLOR_GRAY2RGB);
         break;
     }
-    case 2:
+    case Effect::BLACK_AND_WHITE:
     { // Black & White
         cv::cvtColor(Frame, ImageFrame, cv::COLOR_BGR2GRAY);
         cv::threshold(ImageFrame, EffectFrame, 128, 255, cv::THRESH_OTSU);
         cv::cvtColor(EffectFrame, RGBFrame, cv::COLOR_GRAY2RGB);
         break;
     }
-    case 3:
+    case Effect::NEGATIVE:
     { // Negative
         cv::cvtColor(Frame, RGBFrame, cv::COLOR_BGR2RGB);
         cv::bitwise_not(RGBFrame, RGBFrame);
         break;
     }
-    case 4:
+    case Effect::BINARY_IMAGE:
     {
         cv::Mat DiffFrame;
         // Binary Image
@@ -231,40 +233,40 @@ cv::Mat TWebcam::FrameEffect(int Nr_Effect, cv::Mat Frame)
         cv::cvtColor(EffectFrame, RGBFrame, cv::COLOR_GRAY2RGB);
         break;
     }
-    case 5:
+    case Effect::DILATE:
     { // Dilate
         cv::dilate(Frame, Frame, cv::Mat(), cv::Point(-1, -1), CamEffectParam);
         cv::cvtColor(Frame, RGBFrame, cv::COLOR_BGR2RGB);
         break;
     }
-    case 6:
+    case Effect::THRESHOLD:
     { //threshold
         cv::cvtColor(Frame, ImageFrame, cv::COLOR_BGR2GRAY);
         cv::threshold(ImageFrame, EffectFrame, CamEffectParam, 100, 3);
         cv::cvtColor(EffectFrame, RGBFrame, cv::COLOR_GRAY2RGB);
         break;
     }
-    case 7:
+    case Effect::EDGES:
     { // Edges
         cv::cvtColor(Frame, ImageFrame, cv::COLOR_BGR2GRAY);
         cv::Canny(ImageFrame, EffectFrame, CamEffectParam, CamEffectParam, 3);
         cv::cvtColor(EffectFrame, RGBFrame, cv::COLOR_GRAY2RGB);
         break;
     }
-    case 8:
+    case Effect::GAUSSIAN_BLUR:
     { // Gaussian Blur
         cv::blur(Frame, Frame, cv::Size(CamEffectParam, CamEffectParam));
         cv::cvtColor(Frame, RGBFrame, cv::COLOR_BGR2RGB);
         break;
     }
-    case 9:
+    case Effect::EQUALIZED:
     { // Equalized
         cv::cvtColor(Frame, ImageFrame, cv::COLOR_BGR2GRAY);
         cv::equalizeHist(ImageFrame, EffectFrame);
         cv::cvtColor(EffectFrame, RGBFrame, cv::COLOR_GRAY2RGB);
         break;
     }
-    case 10:
+    case Effect::ERODE:
     { // Erode
         cv::erode(Frame, Frame, cv::Mat(), cv::Point(-1, -1), CamEffectParam);
         cv::cvtColor(Frame, RGBFrame, cv::COLOR_BGR2RGB);

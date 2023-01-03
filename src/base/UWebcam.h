@@ -41,10 +41,25 @@
 #include <opencv2/imgproc.hpp>
 #include <SDL2/SDL.h>
 
-#include "UIni.h"
+#include "UTexture.h"
 
 namespace UWebcam
 {
+enum class Effect
+{
+    NORMAL,
+    GRAYSCALE,
+    BLACK_AND_WHITE,
+    NEGATIVE,
+    BINARY_IMAGE,
+    DILATE,
+    THRESHOLD,
+    EDGES,
+    GAUSSIAN_BLUR,
+    EQUALIZED,
+    ERODE,
+};
+
 class TWebcam
 {
 private:
@@ -65,7 +80,7 @@ private:
 
 public:
     std::unique_ptr<cv::VideoCapture> Capture;
-    TTexture TextureCam;
+    UTexture::TTexture TextureCam;
 
     TWebcam();
     virtual ~TWebcam();
@@ -74,7 +89,7 @@ public:
     void Release();
     void Restart();
     void GetWebcamFrame();
-    cv::Mat FrameEffect(int Nr_Effect, cv::Mat Frame);
+    cv::Mat FrameEffect(Effect effect, cv::Mat Frame);
     cv::Mat FrameAdjust(cv::Mat Frame);
 };
 
