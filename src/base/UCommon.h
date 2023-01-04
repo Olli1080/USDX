@@ -73,11 +73,21 @@ bool StringDeleteFromArray(TUTF8StringDynArray& InStrings, const int InIndex);
 
 std::string GetStringWithNoAccents(std::string str);
 
+template<typename T>
 struct TRGB
 {
-  double R;
-  double G;
-  double B;
+    T R;
+    T G;
+    T B;
+
+    bool operator<(const TRGB<T>& rhs) const
+    {
+        if (R > rhs.R)
+            return false;
+        if (G > rhs.G)
+            return false;
+        return B < rhs.B;
+    }
 };
 
 struct TRGBA
@@ -96,9 +106,11 @@ struct TTexCoords
     double Y2;
 };
 
-int HexToInt(std::string Hex);
+uint8_t HexToInt(std::string Hex);
 std::string RGBToHex(int R, int G, int B);
-TRGB HexToRGB(std::string Hex);
+
+template<typename T>
+TRGB<T> HexToRGB(std::string Hex);
 
 enum TMessageType 
 {

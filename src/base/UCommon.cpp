@@ -5,7 +5,7 @@
 
 namespace UCommon
 {
-    int HexToInt(std::string Hex)
+    uint8_t HexToInt(std::string Hex)
     {
         std::stringstream ststr;
         uint8_t out;
@@ -15,7 +15,8 @@ namespace UCommon
         return out;
     }
 
-    TRGB HexToRGB(std::string Hex)
+    template<typename T>
+    TRGB<T> HexToRGB(std::string Hex)
     {
         TRGB Col;
         Col.R = HexToInt(Hex.substr(0, 2));

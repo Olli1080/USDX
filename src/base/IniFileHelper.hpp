@@ -50,6 +50,9 @@ public:
 
     float ReadFloat(std::string, std::string, float def)
     {}
+
+    void ReadSectionValues(std::string, std::list<std::string>&)
+    {}
 };
 
 class TIniFile : public TCustomIniFile
@@ -62,6 +65,13 @@ public:
 class TMemIniFile : public TIniFile
 {
 
+};
+
+class TUnicodeMemIniFile : public TMemIniFile
+{
+public:
+    TUnicodeMemIniFile(std::filesystem::path p) : TMemIniFile()
+    {};
 };
 
 class TEncoding

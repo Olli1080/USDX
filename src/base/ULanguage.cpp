@@ -1,5 +1,10 @@
 #include "ULanguage.h"
 
+#include <boost/algorithm/string/case_conv.hpp>
+
+#include "ULog.h"
+#include "UPathUtils.h"
+
 namespace ULanguage
 {
 /**
@@ -7,73 +12,68 @@ namespace ULanguage
  */
 TLanguage::TLanguage()
 {
-  bool DefaultLanguageFound = false;
-  
-  //Load list of available translations (*.ini files in LanguagesPath)
-  LoadList();
+    bool DefaultLanguageFound = false;
 
-  //Set Implode Glues for Backward Compatibility
-  Implode_Glue1 = ", ";
-  Implode_Glue2 = " and ";
+    //Load list of available translations (*.ini files in LanguagesPath)
+    LoadList();
 
-  //If no translations are found, abort loading
-  if (List.empty())
-    Log.CriticalError("Could not load any language file");
+    //Set Implode Glues for Backward Compatibility
+    Implode_Glue1 = ", ";
+    Implode_Glue2 = " and ";
 
-  UIni::ILanguageTranslated.resize(UIni::ILanguage.size());
+    //If no translations are found, abort loading
+    if (List.empty())
+        ULog::Log.CriticalError("Could not load any language file");
 
-  //Load each translation and store the native language name
-  for (int i = 0; i < List.size(); ++i)
-  {
-    ChangeLanguage(List[i].Name);
-    UIni::ILanguageTranslated[i] = Translate("LANGUAGE");
+    UIni::ILanguageTranslated.resize(UIni::ILanguage.size());
 
-    //If currently loaded translation is English, use this translation as default (for incomplete translation files)
-    if (Uppercase(List[i].Name) == "ENGLISH")
+    //Load each translation and store the native language name
+    auto it = List.begin();
+    for (int i = 0; i < List.size(); ++i, ++it)
     {
-      EntryDefault.resize(Entry.size());
-      for (int j = 0; j < Entry.size(); ++j)
-        EntryDefault[j] = Entry[j];
+        ChangeLanguage(it->Name);
+        UIni::ILanguageTranslated[i] = Translate("LANGUAGE");
 
-      Entry.resize(0);
-      DefaultLanguageFound = true;
+        //If currently loaded translation is English, use this translation as default (for incomplete translation files)
+        if (boost::algorithm::to_upper_copy(it->Name) == "ENGLISH")
+        {
+            EntryDefault.resize(Entry.size());
+            for (int j = 0; j < Entry.size(); ++j)
+                EntryDefault[j] = Entry[j];
+
+            Entry.resize(0);
+            DefaultLanguageFound = true;
+        }
     }
-  }
 
-  //Log an error if English language file was not found and therefore no default translation is available
-  if (DefaultLanguageFound)
-    Log.LogStatus("Load Default Language English", "Initialization");
-  else
-    Log.LogError("English language file missing! No default translation loaded");
+    //Log an error if English language file was not found and therefore no default translation is available
+    if (DefaultLanguageFound)
+        ULog::Log.LogStatus("Load Default Language English", "Initialization");
+    else
+        ULog::Log.LogError("English language file missing! No default translation loaded");
 }
 
 /**
- * Parse the Language Dir searching Translations
- */
+* Parse the Language Dir searching Translations
+*/
 void TLanguage::LoadList()
 {
-  IFileIterator Iter;
-  TFileInfo IniInfo;
+    std::filesystem::directory_iterator it();
+    std::string LangName;
 
-  std::filesystem::directory_iterator it();
-  std::string LangName;
-  
-  List.resize(0);
-  UIni::ILanguage.resize(0);
+    List.resize(0);
+    UIni::ILanguage.resize(0);
 
-  Iter = FileSystem.FileFind(LanguagesPath.Append("*.ini"), 0);
-  while(Iter.HasNext)
-  {
-    IniInfo = Iter.Next;
+    for (const auto& entry : std::filesystem::directory_iterator(UPathUtils::LanguagesPath))
+    {
+        if (!entry.is_regular_file() || entry.path().extension() != ".ini")
+            continue;
 
-    LangName = IniInfo.Name.SetExtension("").ToUTF8;
+        auto filename = entry.path().filename().string();
 
-    SetLength(List, Length(List)+1);
-    List[High(List)].Name = LangName;
-
-    SetLength(ILanguage, Length(ILanguage)+1);
-    ILanguage[High(ILanguage)] = LangName;
-  }
+        List.emplace_back(filename);
+        UIni::ILanguage.emplace_back(filename);
+    }
 }
 
 /**
@@ -88,15 +88,13 @@ void TLanguage::ChangeLanguage(const std::string Language)
   S:          TStringList;
   */
   Entry.resize(0);
-  IniFile = TUnicodeMemIniFile.Create(LanguagesPath.Append(Language + ".ini"));
-  S = TStringList.Create;
+  auto IniFile = TUnicodeMemIniFile((UPathUtils::LanguagesPath / Language).concat(".ini"));
+  std::list<std::string> S;
 
   IniFile.ReadSectionValues("Text", S);
-  SetLength(Entry, S.Count);
-
   for (int E = 0; E < Entry.size(); ++E)
   {
-    if (S.Names[E] = "IMPLODE_GLUE1")
+    if (S.Names[E] == "IMPLODE_GLUE1")
       Implode_Glue1 = S.ValueFromIndex[E]+ " ";
     else if (S.Names[E] = "IMPLODE_GLUE2")
       Implode_Glue2 = " " + S.ValueFromIndex[E] + " ";
@@ -104,9 +102,6 @@ void TLanguage::ChangeLanguage(const std::string Language)
     Entry[E].ID = S.Names[E];
     Entry[E].Text = S.ValueFromIndex[E];
   }
-
-  S.Free;
-  IniFile.Free;
 }
 
 /**
@@ -134,7 +129,7 @@ int TLanguage::FindID(const std::string ID, const std::vector<TLanguageEntry> En
 std::string TLanguage::Translate(const std::string Text)
 {
   // normalize ID case
-  std::string ID = UpperCase(Text);
+  std::string ID = boost::algorithm::to_upper_copy(Text);
 
   // Check if ID exists
 
@@ -172,9 +167,9 @@ void TLanguage::ChangeConst(const std::string ID, const std::string Text)
 {
   for (int i = 0; i < EntryConst.size(); ++i)
   {
-    if (EntryConst[I].ID = ID)
+    if (EntryConst[i].ID == ID)
     {
-      EntryConst[I].Text = Text;
+      EntryConst[i].Text = Text;
       return;
     }
   }

@@ -1,3 +1,4 @@
+#pragma once
 /* UltraStar Deluxe - Karaoke Game
  *
  * UltraStar Deluxe is the legal property of its developers, whose names
@@ -22,66 +23,69 @@
  * $URL: https://ultrastardx.svn.sourceforge.net/svnroot/ultrastardx/trunk/src/base/ULanguage.pas $
  * $Id: ULanguage.pas 1939 2009-11-09 00:27:55Z s_alexander $
  */
+
+#include "../switches.h"
+
 #include <string>
 #include <vector>
 #include <list>
 
-#include "switches.h"
 #include "UIni.h"
 
 namespace ULanguage
 {
 
-//uses
- // UUnicodeUtils;
+	//uses
+	 // UUnicodeUtils;
 
-struct TLanguageEntry
-{
-  std::string ID;  //**< identifier (ASCII)
-  std::string Text;  //**< translation (UTF-8)
-};
+	struct TLanguageEntry
+	{
+		std::string ID;  //**< identifier (ASCII)
+		std::string Text;  //**< translation (UTF-8)
+	};
 
-struct TLanguageList
-{
-  std::string Name;  //**< language name (ASCII)
-};
+	struct TLanguageList
+	{
+		std::string Name;  //**< language name (ASCII)
+	};
 
-class TLanguage
-{
-private:
+	class TLanguage
+	{
+	private:
 
-  std::vector<TLanguageList> List;
+		std::vector<TLanguageList> List;
 
-  std::vector<TLanguageEntry> Entry; //**< Entrys of Chosen Language
-  std::vector<TLanguageEntry> EntryDefault; //**< Entrys of Standard Language
-  std::vector<TLanguageEntry> EntryConst; //**< Constant Entrys e.g. Version
+		std::vector<TLanguageEntry> Entry; //**< Entrys of Chosen Language
+		std::vector<TLanguageEntry> EntryDefault; //**< Entrys of Standard Language
+		std::vector<TLanguageEntry> EntryConst; //**< Constant Entrys e.g. Version
 
-  std::string Implode_Glue1, Implode_Glue2;
+		std::string Implode_Glue1, Implode_Glue2;
 
-  void LoadList();
-  int FindID(const std::string ID, const std::vector<TLanguageEntry> EntryList);
+		void LoadList();
+		int FindID(const std::string ID, const std::vector<TLanguageEntry> EntryList);
 
-public:
+	public:
 
-  TLanguage();
-  std::string Translate(const std::string Text);
-  void ChangeLanguage(const std::string Language);
-  void AddConst(const std::string ID, const std::string Text);
-  void ChangeConst(const std::string ID, const std::string Text);
-  std::string Implode(const std::vector<std::string> Pieces);
-};
+		TLanguage();
 
-TLanguage Language;
-/*
-uses
-  UMain,
-  UIni,
-  IniFiles,
-  Classes,
-  SysUtils,
-  ULog,
-  UPath,
-  UFilesystem,
-  UPathUtils;
-*/
-};
+		std::string Translate(const std::string Text);
+		void ChangeLanguage(const std::string Language);
+		void AddConst(const std::string ID, const std::string Text);
+		void ChangeConst(const std::string ID, const std::string Text);
+		std::string Implode(const std::vector<std::string> Pieces);
+	};
+
+	TLanguage Language;
+	/*
+	uses
+	  UMain,
+	  UIni,
+	  IniFiles,
+	  Classes,
+	  SysUtils,
+	  ULog,
+	  UPath,
+	  UFilesystem,
+	  UPathUtils;
+	*/
+}
