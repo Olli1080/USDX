@@ -88,7 +88,30 @@ struct TRGB
             return false;
         return B < rhs.B;
     }
+
+    template<typename S>
+    friend TRGB<T> operator/(const TRGB& lhs<T>, S scalar)
+    {
+        return { lhs.R / scalar, lhs.G / scalar, lhs.B / scalar };
+    }
+
+    template<typename K = T>
+    TRGB<K> sqrt() const
+    {
+        return { std::sqrt(R), std::sqrt(G), std::sqrt(B) };
+    }
 };
+
+template <typename T> requires std::floating_point<T>
+TRGB<T> convertNormalized(const TRGB<uint8_t>& in)
+{
+    return (TRGB<T>
+    {
+        in.R,
+        in.G,
+        in.B
+    }) / 255.0;
+}
 
 struct TRGBA
 {

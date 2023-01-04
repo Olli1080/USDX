@@ -123,8 +123,8 @@ struct TThemeText
     double Z;
     std::string Color;
     std::string DColor;
-    UCommon::TRGB Col;
-    UCommon::TRG DCol;
+    UCommon::TRGB<double> Col;
+    UCommon::TRGB<double> DCol;
     int Font;
     int Style;
     int Size;
@@ -143,10 +143,10 @@ struct TThemeButton
     TThemePosition pos;
     double Z;
     std::string Color;
-    UCommon::TRGB Col;
+    UCommon::TRGB<double> Col;
     double Int;
     std::string DColor;
-    UCommon::TRGB DCol;
+    UCommon::TRGB<double> DCol;
     double DInt;
     std::string Tex;
     UTexture::TTextureType Typ;
@@ -195,13 +195,13 @@ struct TThemeSelectSlide
     bool oneItemOnly;
 
     std::string Text;
-    UCommon::TRGB Col; double Int;
-    UCommon::TRGB DCol; double DInt;
-    UCommon::TRGB TCol; double TInt;
-    UCommon::TRGB SBGCol; double SBGInt;
-    UCommon::TRGB SBGDCol; double SBGDInt;
-    UCommon::TRGB STCol; double STInt;
-    UCommon::TRGB STDCol; double STDInt;
+    UCommon::TRGB<double> Col; double Int;
+    UCommon::TRGB<double> DCol; double DInt;
+    UCommon::TRGB<double> TCol; double TInt;
+    UCommon::TRGB<double> SBGCol; double SBGInt;
+    UCommon::TRGB<double> SBGDCol; double SBGDInt;
+    UCommon::TRGB<double> STCol; double STInt;
+    UCommon::TRGB<double> STDCol; double STDInt;
     int SkipX;
 };
 
@@ -351,8 +351,8 @@ struct TThemeSong : public TThemeBasic
         std::string DTex;
         std::string Color;
         std::string DColor;
-        UCommon::TRGB Col;
-        UCommon::TRGB DCol;
+        UCommon::TRGB<double> Col;
+        UCommon::TRGB<double> DCol;
     } ListCover;
 
 
@@ -1528,29 +1528,29 @@ public:
 struct TColor
 {
 	std::string Name;
-	UCommon::TRGB RGB;
+	UCommon::TRGB<double> RGB;
 };
 
-void glColorRGB(UCommon::TRGB Color);
-void glColorRGB(UCommon::TRGB Color, real Alpha);
+void glColorRGB(UCommon::TRGB<double> Color);
+void glColorRGB(UCommon::TRGB<double> Color, double Alpha);
 void glColorRGB(UCommon::TRGBA Color);
-void glColorRGB(UCommon::TRGBA Color, real Alpha);
+void glColorRGB(UCommon::TRGBA Color, double Alpha);
 
 int ColorExists(std::string Name);
 void LoadColor(double& R, double& G, double& B, std::string ColorName);
-UCommon::TRGB GetSystemColor(int Color);
-UCommon::TRGB ColorSqrt(UCommon::TRGB RGB);
+UCommon::TRGB<double> GetSystemColor(int Color);
+//UCommon::TRGB<double> ColorSqrt(UCommon::TRGB<double> RGB);
 
-UCommon::TRGB GetJukeboxLyricOtherColor(int Line);
-UCommon::TRGB GetJukeboxLyricOtherOutlineColor(int Line);
-UCommon::TRGB GetLyricColor(int Color);
-UCommon::TRGB GetLyricGrayColor(int Color);
-UCommon::TRGB GetLyricOutlineColor(int Color);
-UCommon::TRGB GetLyricBarColor(int Color);
+UCommon::TRGB<double> GetJukeboxLyricOtherColor(int Line);
+UCommon::TRGB<double> GetJukeboxLyricOtherOutlineColor(int Line);
+UCommon::TRGB<double> GetLyricColor(int Color);
+UCommon::TRGB<double> GetLyricGrayColor(int Color);
+UCommon::TRGB<double> GetLyricOutlineColor(int Color);
+UCommon::TRGB<double> GetLyricBarColor(int Color);
 
-UCommon::TRGB GetPlayerColor(int Color);
-UCommon::TRGB GetPlayerLightColor(int Color);
-UCommon::TRGB GetPlayerLightColorV2(int Color);
+UCommon::TRGB<double> GetPlayerColor(int Color);
+UCommon::TRGB<double> GetPlayerLightColor(int Color);
+UCommon::TRGB<double> GetPlayerLightColorV2(int Color);
 void LoadPlayersColors();
 void LoadTeamsColors();
 
@@ -1572,12 +1572,12 @@ inline int LastC;
 //-----------
 //Helper procs to use TRGB in Opengl ...maybe this should be somewhere else
 //-----------
-void glColorRGB(UCommon::TRGB Color)
+void glColorRGB(UCommon::TRGB<double> Color)
 {
   glColor3f(Color.R, Color.G, Color.B);
 }
 
-void glColorRGB(UCommon::TRGB Color, double Alpha)
+void glColorRGB(UCommon::TRGB<double> Color, double Alpha)
 {
   glColor4f(Color.R, Color.G, Color.B, Alpha);
 }
@@ -3216,11 +3216,11 @@ var
 
   C = C+1;
   Color[C].Name = "ColorLight";
-  Color[C].RGB = ColorSqrt(Color[C-1].RGB);
+  Color[C].RGB = Color[C-1].RGB.sqrt();
 
   C = C+1;
   Color[C].Name = "ColorLightest";
-  Color[C].RGB = ColorSqrt(Color[C-1].RGB);
+  Color[C].RGB = Color[C-1].RGB.sqrt();
 
   LastC = C;
 
@@ -3391,667 +3391,553 @@ var
   };
 };
 
-UCommon::TRGB GetSystemColor(int Color)
+UCommon::TRGB<double> GetSystemColor(int Color)
 {
-  case Color of
+    switch (Color)
     {
-    {
- 0          // blue
-          Result.R = 71/255;
-          Result.G = 175/255;
-          Result.B = 247/255;
-        };
-    {
- 1          // green
-          Result.R = 63/255;
-          Result.G = 191/255;
-          Result.B = 63/255;
-        };
-    {
- 2          // pink
-          Result.R = 255/255;
-{          Result.G = 63/255;
-          Result.B = 192/255;}
-          Result.G = 175/255;
-          Result.B = 247/255;
-        };
-    {
- 3          // red
-          Result.R = 247/255;
-          Result.G = 71/255;
-          Result.B = 71/255;
-        };
-        //"Violet", "Orange", "Yellow", "Brown", "Black"
-        //New Theme-Color Patch
-    {
- 4          // violet
-          Result.R = 212/255;
-          Result.G = 71/255;
-          Result.B = 247/255;
-        };
-    {
- 5          // orange
-          Result.R = 247/255;
-          Result.G = 144/255;
-          Result.B = 71/255;
-        };
-    {
- 6          // yellow
-          Result.R = 230/255;
-          Result.G = 230/255;
-          Result.B = 95/255;
-        };
-    {
- 7          // brown
-          Result.R = 192/255;
-          Result.G = 127/255;
-          Result.B = 31/255;
-        };
-    {
- 8          // black
-          Result.R = 0;
-          Result.G = 0;
-          Result.B = 0;
-        };
-    else
-        {
-          // blue
-          Result.R = 71/255;
-          Result.G = 175/255;
-          Result.B = 247/255;
-        };
-    //New Theme-Color Patch End
+    case 0: {
+        // blue
+        return (UCommon::TRGB<double> { 71, 175, 247 }) / 255.0;
+    }
+    case 1:
+    {          // green
+        return (UCommon::TRGB<double> { 63, 191, 63 }) / 255.0;
+    }
+    case 2:
+    {          // pink
+        return (UCommon::TRGB<double> { 255, 175, 247 }) / 255.0;
 
-    };
-};
-
-UCommon::TRGB GetPlayerColor(int Color)
-{
-  case (Color) of
+        /*{          Result.G = 63/255;
+                  Result.B = 192/255;}*/
+    }
+    case 3:
+    {          // red
+        return (UCommon::TRGB<double> { 247, 71, 71 }) / 255.0;
+    }
+    //"Violet", "Orange", "Yellow", "Brown", "Black"
+    //New Theme-Color Patch
+    case 4:
+    {          // violet
+        return (UCommon::TRGB<double> { 212, 71, 247 }) / 255.0;
+    }
+    case 5:
+    {          // orange
+        return (UCommon::TRGB<double> { 247, 144, 71 }) / 255.0;
+    }
+    case 6:
+    {          // yellow
+        return (UCommon::TRGB<double> { 230, 230, 95 }) / 255.0;
+    }
+    case 7:
+    {          // brown
+        return (UCommon::TRGB<double> { 192, 127, 31 }) / 255.0;
+    }
+    case 8:
+    {          // black
+        return (UCommon::TRGB<double> { 0, 0, 0 });
+    }
+    default:
     {
-    //blue
- 1    {
-      Result.R = 5/255;
-      Result.G = 153/255;
-      Result.B = 204/255;
-    };
-    //red
- 2    {
-      Result.R = 230/255;
-      Result.G = 0;
-      Result.B = 0;
-    };
-    //green
- 3    {
-      Result.R = 0;
-      Result.G = 190/255;
-      Result.B = 0;
-    };
-    //yellow
- 4    {
-      Result.R = 255/255;
-      Result.G = 255/255;
-      Result.B = 0;
-    };
-    //orange
- 5    {
-      Result.R = 255/255;
-      Result.G = 127/255;
-      Result.B = 0;
-    };
-    //pink
- 6    {
-      Result.R = 255/255;
-      Result.G = 110/255;
-      Result.B = 180/255;
-    };
-    //purple
- 7    {
-      Result.R = 175/255;
-      Result.G = 0;
-      Result.B = 210/255;
-    };
-    //gold
- 8    {
-      Result.R = 218/255;
-      Result.G = 165/255;
-      Result.B = 32/255;
-    };
-    //gray
- 9    {
-      Result.R = 150/255;
-      Result.G = 150/255;
-      Result.B = 150/255;
-    };
-    //dark blue
- 10    {
-      Result.R = 0;
-      Result.G = 0;
-      Result.B = 220/255;
-    };
-    //sky
- 11    {
-      Result.R = 0;
-      Result.G = 110/255;
-      Result.B = 210/255;
-    };
-    //cyan
- 12    {
-      Result.R = 0/255;
-      Result.G = 215/255;
-      Result.B = 215/255;
-    };
-    //flame
- 13    {
-      Result.R = 210/255;
-      Result.G = 70/255;
-      Result.B = 0/255;
-    };
-    //orchid
- 14    {
-      Result.R = 210/255;
-      Result.G = 0;
-      Result.B = 210/255;
-    };
-    //harlequin
- 15    {
-      Result.R = 110/255;
-      Result.G = 210/255;
-      Result.B = 0;
-    };
-    //lime
- 16    {
-      Result.R = 160/255;
-      Result.G = 210/255;
-      Result.B = 0;
-    };
-    else
-    {
-      Result.R = 5/255;
-      Result.G = 153/255;
-      Result.B = 204/255;
-    };
-  };
-};
-
-UCommon::TRGB GetPlayerLightColor(int Color)
-{
-  case (Color) of
-    {
-    //blue
- 1    {
-      Result.R = 145/255;
-      Result.G = 215/255;
-      Result.B = 240/255;
-    };
-    //red
- 2    {
-      Result.R = 245/255;
-      Result.G = 162/255;
-      Result.B = 162/255;
-    };
-    //green
- 3    {
-      Result.R = 152/255;
-      Result.G = 250/255;
-      Result.B = 153/255;
-    };
-    //yellow
- 4    {
-      Result.R = 255/255;
-      Result.G = 246/255;
-      Result.B = 143/255;
-    };
-    //orange
- 5    {
-      Result.R = 255/255;
-      Result.G = 204/255;
-      Result.B = 156/255;
-    };
-    //pink
- 6    {
-      Result.R = 255/255;
-      Result.G = 192/255;
-      Result.B = 205/255;
-    };
-    //purple
- 7    {
-      Result.R = 240/255;
-      Result.G = 170/255;
-      Result.B = 255/255;
-    };
-    //gold
- 8    {
-      Result.R = 255/255;
-      Result.G = 214/255;
-      Result.B = 118/255;
-    };
-    //gray
- 9    {
-      Result.R = 220/255;
-      Result.G = 220/255;
-      Result.B = 220/255;
-    };
-    else
-    {
-      Result.R = 145/255;
-      Result.G = 215/255;
-      Result.B = 240/255;
-    };
-  };
-};
-
-UCommon::TRGB GetPlayerLightColorV2(int Color)
-{
-  case (Color) of
-    {
-    //blue
- 1    {
-      Result.R = 145/255;
-      Result.G = 215/255;
-      Result.B = 240/255;
-    };
-    //red
- 2    {
-      Result.R = 245/255;
-      Result.G = 162/255;
-      Result.B = 162/255;
-    };
-    //green
- 3    {
-      Result.R = 152/255;
-      Result.G = 250/255;
-      Result.B = 153/255;
-    };
-    //yellow
- 4    {
-      Result.R = 255/255;
-      Result.G = 246/255;
-      Result.B = 143/255;
-    };
-    //orange
- 5    {
-      Result.R = 255/255;
-      Result.G = 204/255;
-      Result.B = 156/255;
-    };
-    //pink
- 6    {
-      Result.R = 255/255;
-      Result.G = 192/255;
-      Result.B = 205/255;
-    };
-    //violet
- 7    {
-      Result.R = 240/255;
-      Result.G = 170/255;
-      Result.B = 255/255;
-    };
-    //gold
- 8    {
-      Result.R = 255/255;
-      Result.G = 214/255;
-      Result.B = 118/255;
-    };
-    //gray
- 9    {
-      Result.R = 220/255;
-      Result.G = 220/255;
-      Result.B = 220/255;
-    };
-    //dark blue
- 10    {
-      Result.R = 90/255;
-      Result.G = 90/255;
-      Result.B = 255/255;
-    };
-    //sky
- 11    {
-      Result.R = 80/255;
-      Result.G = 160/255;
-      Result.B = 235/255;
-    };
-    //cyan
- 12    {
-      Result.R = 150/255;
-      Result.G = 230/255;
-      Result.B = 230/255;
-    };
-    //flame
- 13    {
-      Result.R = 230/255;
-      Result.G = 130/255;
-      Result.B = 80/255;
-    };
-    //orchid
- 14    {
-      Result.R = 230/255;
-      Result.G = 100/255;
-      Result.B = 230/255;
-    };
-    //harlequin
- 15    {
-      Result.R = 160/255;
-      Result.G = 230/255;
-      Result.B = 90/255;
-    };
-    //lime
- 16    {
-      Result.R = 190/255;
-      Result.G = 230/255;
-      Result.B = 100/255;
-    };
-    else
-    {
-      Result.R = 145/255;
-      Result.G = 215/255;
-      Result.B = 240/255;
-    };
-  };
-};
-
-UCommon::TRGB ColorSqrt(UCommon::TRGB RGB)
-{
-  Result.R = sqrt(RGB.R);
-  Result.G = sqrt(RGB.G);
-  Result.B = sqrt(RGB.B);
-};
-
-
-UCommon::TRGB GetJukeboxLyricOtherColor(int Line)
-{
-  case Line of
-    {
-    {
- 0         Result.R = Ini.JukeboxSingLineOtherColorR/255;
-         Result.G = Ini.JukeboxSingLineOtherColorG/255;
-         Result.B = Ini.JukeboxSingLineOtherColorB/255;
-       };
-    {
- 1         Result.R = Ini.JukeboxActualLineOtherColorR/255;
-         Result.G = Ini.JukeboxActualLineOtherColorG/255;
-         Result.B = Ini.JukeboxActualLineOtherColorB/255;
-       };
-    {
- 2         Result.R = Ini.JukeboxNextLineOtherColorR/255;
-         Result.G = Ini.JukeboxNextLineOtherColorG/255;
-         Result.B = Ini.JukeboxNextLineOtherColorB/255;
-       };
-    else {
-         Result.R = Ini.JukeboxSingLineOtherColorR/255;
-         Result.G = Ini.JukeboxSingLineOtherColorG/255;
-         Result.B = Ini.JukeboxSingLineOtherColorB/255;
-       };
-  };
-};
-
-UCommon::TRGB GetJukeboxLyricOtherOutlineColor(int Line)
-{
-  case Line of
-    {
-    {
- 0         Result.R = Ini.JukeboxSingLineOtherOColorR/255;
-         Result.G = Ini.JukeboxSingLineOtherOColorG/255;
-         Result.B = Ini.JukeboxSingLineOtherOColorB/255;
-       };
-    {
- 1         Result.R = Ini.JukeboxActualLineOtherOColorR/255;
-         Result.G = Ini.JukeboxActualLineOtherOColorG/255;
-         Result.B = Ini.JukeboxActualLineOtherOColorB/255;
-       };
-    {
- 2         Result.R = Ini.JukeboxNextLineOtherOColorR/255;
-         Result.G = Ini.JukeboxNextLineOtherOColorG/255;
-         Result.B = Ini.JukeboxNextLineOtherOColorB/255;
-       };
-    else {
-         Result.R = Ini.JukeboxSingLineOtherOColorR/255;
-         Result.G = Ini.JukeboxSingLineOtherOColorG/255;
-         Result.B = Ini.JukeboxSingLineOtherOColorB/255;
-       };
-  };
-};
-
-UCommon::TRGB GetLyricColor(int Color)
-{
-  case Color of
-    {
-    {
- 0          // blue
-          Result.R = 0;
-          Result.G = 150/255;
-          Result.B = 255/255;
-        };
-    {
- 1          // green
-          Result.R = 63/255;
-          Result.G = 191/255;
-          Result.B = 63/255;
-        };
-    {
- 2          // pink
-          Result.R = 255/255;
-          Result.G = 63/255;
-          Result.B = 192/255;{
-          Result.G = 175/255;
-          Result.B = 247/255; }
-        };
-    {
- 3          // red
-          Result.R = 220/255;
-          Result.G = 0;
-          Result.B = 0;
-        };
-        //"Violet", "Orange", "Yellow", "Brown", "Black"
-        //New Theme-Color Patch
-    {
- 4          // violet
-          Result.R = 180/255;
-          Result.G = 63/255;
-          Result.B = 230/255;
-        };
-    {
- 5          // orange
-          Result.R = 255/255;
-          Result.G = 144/255;
-          Result.B = 0;
-        };
-    {
- 6          // yellow
-          Result.R = 255/255;
-          Result.G = 255/255;
-          Result.B = 0;
-        };
-    {
- 7          // brown
-          Result.R = 192/255;
-          Result.G = 127/255;
-          Result.B = 31/255;
-        };
-    {
- 8          // black
-          Result.R = 0;
-          Result.G = 0;
-          Result.B = 0;
-        };
+        // blue
+        return (UCommon::TRGB<double> { 71, 175, 247 }) / 255.0;
+        }
         //New Theme-Color Patch End
-        // daniel20 colors
+    }
+}
+
+UCommon::TRGB<double> GetPlayerColor(int Color)
+{
+    switch (Color)
+    {
+        //blue
+    case 1:
+    {
+        return (UCommon::TRGB<double> { 5, 153, 204 }) / 255.0;
+    }
+    //red
+    case 2:
+    {
+        return (UCommon::TRGB<double> { 230, 0, 0 }) / 255.0;
+    }
+    //green
+    case 3:
+    {
+        return (UCommon::TRGB<double> { 0, 190, 0 }) / 255.0;
+    }
+    //yellow
+    case 4:
+    {
+        return (UCommon::TRGB<double> { 255, 255, 0 }) / 255.0;
+    }
+    //orange
+    case 5:
+    {
+        return (UCommon::TRGB<double> { 255, 127, 0 }) / 255.0;
+    }
+    //pink
+    case 6:
+    {
+        return (UCommon::TRGB<double> { 255, 110, 180 }) / 255.0;
+    }
+    //purple
+    case 7:
+    {
+        return (UCommon::TRGB<double> { 175, 0, 210 }) / 255.0;
+    }
+    //gold
+    case 8:
+    {
+        return (UCommon::TRGB<double> { 218, 165, 32 }) / 255.0;
+    }
+    //gray
+    case 9:
+    {
+        return (UCommon::TRGB<double> { 150, 150, 150 }) / 255.0;
+    }
+    //dark blue
+    case 10:
+    {
+        return (UCommon::TRGB<double> { 0, 0, 220 }) / 255.0;
+    }
+    //sky
+    case 11:
+    {
+        return (UCommon::TRGB<double> { 0, 110, 210 }) / 255.0;
+    }
+    //cyan
+    case 12:
+    {
+        return (UCommon::TRGB<double> { 0, 215, 215 }) / 255.0;
+    }
+    //flame
+    case 13:
+    {
+        return (UCommon::TRGB<double> { 210, 70, 0 }) / 255.0;
+    }
+    //orchid
+    case 14:
+    {
+        return (UCommon::TRGB<double> { 210, 0, 210 }) / 255.0;
+    }
+    //harlequin
+    case 15:
+    {
+        return (UCommon::TRGB<double> { 110, 210, 0 }) / 255.0;
+    }
+    //lime
+    case 16:
+    {
+        return (UCommon::TRGB<double> { 160, 210, 0 }) / 255.0;
+    }
+    default:
+    {
+        return (UCommon::TRGB<double> { 5, 153, 204 }) / 255.0;
+    }
+    }
+}
+
+UCommon::TRGB<double> GetPlayerLightColor(int Color)
+{
+    switch (Color)
+    {
+        //blue
+    case 1:
+    {
+        return (UCommon::TRGB<double> { 145, 215, 240 }) / 255.0;
+    }
+    //red
+    case 2:
+    {
+        return (UCommon::TRGB<double> { 245, 162, 162 }) / 255.0;
+    }
+    //green
+    case 3:
+    {
+        return (UCommon::TRGB<double> { 152, 250, 153 }) / 255.0;
+    }
+    //yellow
+    case 4:
+    {
+        return (UCommon::TRGB<double> { 255, 246, 143 }) / 255.0;
+    }
+    //orange
+    case 5:
+    {
+        return (UCommon::TRGB<double> { 255, 204, 156 }) / 255.0;
+    }
+    //pink
+    case 6:
+    {
+        return (UCommon::TRGB<double> { 255, 192, 205 }) / 255.0;
+    }
+    //purple
+    case 7:
+    {
+        return (UCommon::TRGB<double> { 240, 170, 255 }) / 255.0;
+    }
+    //gold
+    case 8:
+    {
+        return (UCommon::TRGB<double> { 255, 214, 118 }) / 255.0;
+    }
+    //gray
+    case 9:
+    {
+        return (UCommon::TRGB<double> { 220, 220, 220 }) / 255.0;
+    }
+    default:
+    {
+        return (UCommon::TRGB<double> { 145, 215, 240 }) / 255.0;
+    }
+    }
+}
+
+UCommon::TRGB<double> GetPlayerLightColorV2(int Color)
+{
+    switch (Color)
+    {
+        //blue
+    case 1:
+    {
+        return (UCommon::TRGB<double> { 145, 215, 240 }) / 255.0;
+    }
+    //red
+    case 2:
+    {
+        return (UCommon::TRGB<double> { 245, 162, 162 }) / 255.0;
+    }
+    //green
+    case 3:
+    {
+        return (UCommon::TRGB<double> { 152, 250, 153 }) / 255.0;
+    }
+    //yellow
+    case 4:
+    {
+        return (UCommon::TRGB<double> { 255, 246, 143 }) / 255.0;
+    }
+    //orange
+    case 5:
+    {
+        return (UCommon::TRGB<double> { 255, 204, 156 }) / 255.0;
+    }
+    //pink
+    case 6:
+    {
+        return (UCommon::TRGB<double> { 255, 192, 205 }) / 255.0;
+    }
+    //violet
+    case 7:
+    {
+        return (UCommon::TRGB<double> { 240, 170, 255 }) / 255.0;
+    }
+    //gold
+    case 8:
+    {
+        return (UCommon::TRGB<double> { 255, 214, 118 }) / 255.0;
+    }
+    //gray
+    case 9:
+    {
+        return (UCommon::TRGB<double> { 220, 220, 220 }) / 255.0;
+    }
+    //dark blue
+    case 10:
+    {
+        return (UCommon::TRGB<double> { 90, 90, 255 }) / 255.0;
+    }
+    //sky
+    case 11:
+    {
+        return (UCommon::TRGB<double> { 80, 160, 235 }) / 255.0;
+    }
+    //cyan
+    case 12:
+    {
+        return (UCommon::TRGB<double> { 150, 230, 230 }) / 255.0;
+    }
+    //flame
+    case 13:
+    {
+        return (UCommon::TRGB<double> { 230, 130, 80 }) / 255.0;
+    }
+    //orchid
+    case 14:
+    {
+        return (UCommon::TRGB<double> { 230, 100, 230 }) / 255.0;
+    }
+    //harlequin
+    case 15:
+    {
+        return (UCommon::TRGB<double> { 160, 230, 90 }) / 255.0;
+    }
+    //lime
+    case 16:
+    {
+        return (UCommon::TRGB<double> { 190, 230, 100 }) / 255.0;
+    }
+    default:
+    {
+        return (UCommon::TRGB<double> { 145, 215, 240 }) / 255.0;
+    }
+    }
+}
+
+UCommon::TRGB<double> GetJukeboxLyricOtherColor(int Line)
+{
+    switch (Line)
+    {
+    case 0:
+    {
+        Result.R = Ini.JukeboxSingLineOtherColorR / 255;
+        Result.G = Ini.JukeboxSingLineOtherColorG / 255;
+        Result.B = Ini.JukeboxSingLineOtherColorB / 255;
+    }
+    case 1:
+    {
+        Result.R = Ini.JukeboxActualLineOtherColorR / 255;
+        Result.G = Ini.JukeboxActualLineOtherColorG / 255;
+        Result.B = Ini.JukeboxActualLineOtherColorB / 255;
+    }
+    case 2:
+    {
+        Result.R = Ini.JukeboxNextLineOtherColorR / 255;
+        Result.G = Ini.JukeboxNextLineOtherColorG / 255;
+        Result.B = Ini.JukeboxNextLineOtherColorB / 255;
+    }
+    default:
+    {
+        Result.R = Ini.JukeboxSingLineOtherColorR / 255;
+        Result.G = Ini.JukeboxSingLineOtherColorG / 255;
+        Result.B = Ini.JukeboxSingLineOtherColorB / 255;
+    }
+    }
+}
+
+UCommon::TRGB<double> GetJukeboxLyricOtherOutlineColor(int Line)
+{
+    auto& jkCol = UIni::Ini.juke_box_fill_colors;
+    switch (Line)
+    {
+    case 0:
+    {
+        return UCommon::convertNormalized<double>()
+
+    		(UCommon::TRGB<double> { 0, 150, 255 }) / 255.0;
+    		Result.R = Ini.JukeboxSingLineOtherOColorR / 255;
+    Result.G = Ini.JukeboxSingLineOtherOColorG / 255;
+    Result.B = Ini.JukeboxSingLineOtherOColorB / 255;
+    }
+    case 1:
+    {
+        return (UCommon::TRGB<double> { 0, 150, 255 }) / 255.0;
+    		Result.R = Ini.JukeboxActualLineOtherOColorR / 255;
+    Result.G = Ini.JukeboxActualLineOtherOColorG / 255;
+    Result.B = Ini.JukeboxActualLineOtherOColorB / 255;
+    }
+    case 2:
+    {
+        return (UCommon::TRGB<double> { 0, 150, 255 }) / 255.0;
+    		Result.R = Ini.JukeboxNextLineOtherOColorR / 255;
+    Result.G = Ini.JukeboxNextLineOtherOColorG / 255;
+    Result.B = Ini.JukeboxNextLineOtherOColorB / 255;
+    }
+    default:
+    {
+        return (UCommon::TRGB<double> { 0, 150, 255 }) / 255.0;
+        Result.R = Ini.JukeboxSingLineOtherOColorR / 255;
+        Result.G = Ini.JukeboxSingLineOtherOColorG / 255;
+        Result.B = Ini.JukeboxSingLineOtherOColorB / 255;
+    }
+    }
+}
+
+UCommon::TRGB<double> GetLyricColor(int Color)
+{
+    switch (Color)
+    {
+    case 0:
+    {          // blue
+        return (UCommon::TRGB<double> { 0, 150, 255 }) / 255.0;
+    }
+    case 1:
+    {          // green
+        return (UCommon::TRGB<double> { 63, 191, 63 }) / 255.0;
+    }
+    case 2:
+    {          // pink
+        return (UCommon::TRGB<double> { 255, 63, 192 }) / 255.0;
+        /*{
+      Result.G = 175/255;
+      Result.B = 247/255; }*/
+    }
+    case 3:
+    {          // red
+        return (UCommon::TRGB<double> { 220, 0, 0 }) / 255.0;
+    }
+    //"Violet", "Orange", "Yellow", "Brown", "Black"
+    //New Theme-Color Patch
+    case 4:
+    {          // violet
+        return (UCommon::TRGB<double> { 180, 63, 230 }) / 255.0;
+    }
+    case 5:
+    {          // orange
+        return (UCommon::TRGB<double> { 255, 144, 0 }) / 255.0;
+    }
+    case 6:
+    {          // yellow
+        return (UCommon::TRGB<double> { 255, 255, 0 }) / 255.0;
+    }
+    case 7:
+    {          // brown
+        return (UCommon::TRGB<double> { 192, 127, 31 }) / 255.0;
+    }
+    case 8:
+    {          // black
+        return (UCommon::TRGB<double> { 0, 0, 0 });
+    }
+    //New Theme-Color Patch End
+    // daniel20 colors
     //Turquoise
- 9        {
-          Result.R = 0/255;
-          Result.G = 255/255;
-          Result.B = 230/255;
-        };
+    case 9:
+    {
+        return (UCommon::TRGB<double> { 0, 255, 230 }) / 255.0;
+    }
     //Salmon
- 10        {
-          Result.R = 255/255;
-          Result.G = 127/255;
-          Result.B = 102/255;
-        };
+    case 10:
+    {
+        return (UCommon::TRGB<double> { 255, 127, 102 }) / 255.0;
+    }
     //GreenYellow
- 11        {
-          Result.R = 153/255;
-          Result.G = 255/255;
-          Result.B = 102/255;
-        };
+    case 11:
+    {
+        return (UCommon::TRGB<double> { 153, 255, 102 }) / 255.0;
+    }
     //Lavender
- 12        {
-          Result.R = 204/255;
-          Result.G = 204/255;
-          Result.B = 255/255;
-        };
+    case 12:
+    {
+        return (UCommon::TRGB<double> { 204, 204, 255 }) / 255.0;
+    }
     //Beige
- 13        {
-          Result.R = 255/255;
-          Result.G = 230/255;
-          Result.B = 204/255;
-        };
+    case 13:
+    {
+        return (UCommon::TRGB<double> { 255, 230, 204 }) / 255.0;
+    }
     //Teal
- 14        {
-          Result.R = 51/255;
-          Result.G = 153/255;
-          Result.B = 153/255;
-        };
+    case 14:
+    {
+        return (UCommon::TRGB<double> { 51, 153, 153 }) / 255.0;
+    }
     //Orchid
- 15        {
-          Result.R = 153/255;
-          Result.G = 0;
-          Result.B = 204/255;
-        };
+    case 15:
+    {
+        return (UCommon::TRGB<double> { 153, 0, 204 }) / 255.0;
+    }
     //SteelBlue
- 16        {
-          Result.R = 51/255;
-          Result.G = 102/255;
-          Result.B = 153/255;
-        };
+    case 16:
+    {
+        return (UCommon::TRGB<double> { 51, 102, 153 }) / 255.0;
+    }
     //Plum
- 17        {
-          Result.R = 255/255;
-          Result.G = 153/255;
-          Result.B = 255/255;
-        };
+    case 17:
+    {
+        return (UCommon::TRGB<double> { 255, 153, 255 }) / 255.0;
+    }
     //Chocolate
- 18        {
-          Result.R = 138/255;
-          Result.G = 92/255;
-          Result.B = 46/255;
-        };
+    case 18:
+    {
+        return (UCommon::TRGB<double> { 138, 92, 46 }) / 255.0;
+    }
     //Gold
- 19        {
-          Result.R = 255/255;
-          Result.G = 204/255;
-          Result.B = 51/255;
-        };
-    else {
-          // blue
-          Result.R = 0;
-          Result.G = 150/255;
-          Result.B = 255/255;
-        };
-    };
-};
+    case 19:
+    {
+        return (UCommon::TRGB<double> { 255, 204, 51 }) / 255.0;
+    }
+    default:
+    {
+        // blue
+        return (UCommon::TRGB<double> { 0, 150, 255 }) / 255.0;
+    }
+    }
+}
 
-UCommon::TRGB GetLyricGrayColor(int Color)
+UCommon::TRGB<double> GetLyricGrayColor(int Color)
 {
-  case Color of
+    switch (Color)
     {
+    case 0:
+    {          // black
+        return (UCommon::TRGB<double> { 0, 0, 0 }) / 255.0;
+    }
+    case 1:
+    {          // gray +3
+        return (UCommon::TRGB<double> { 32, 32, 32 }) / 255.0;
+    }
+    case 2:
+    {          // gray +2
+        return (UCommon::TRGB<double> { 64, 64, 64 }) / 255.0;
+    }
+    case 3:
+    {          // gray +1
+        return (UCommon::TRGB<double> { 96, 96, 96 }) / 255.0;
+    }
+    case 4:
+    {          // gray
+        return (UCommon::TRGB<double> { 128, 128, 128 }) / 255.0;
+    }
+    case 5:
+    {          // gray -1
+        return (UCommon::TRGB<double> { 160, 160, 160 }) / 255.0;
+    }
+    case 6:
+    {          // gray -2
+        return (UCommon::TRGB<double> { 192, 192, 192 }) / 255.0;
+    }
+    case 7:
+    {          // gray -3
+        return (UCommon::TRGB<double> { 214, 214, 214 }) / 255.0;
+    }
+    case 8:
+    {          // white
+        return (UCommon::TRGB<double> { 1, 1, 1 }) / 255.0;
+    }
+    default:
     {
- 0          // black
-          Result.R = 0;
-          Result.G = 0;
-          Result.B = 0;
-        };
-    {
- 1          // gray +3
-          Result.R = 32/255;
-          Result.G = 32/255;
-          Result.B = 32/255;
-        };
-    {
- 2          // gray +2
-          Result.R = 64/255;
-          Result.G = 64/255;
-          Result.B = 64/255;
-        };
-    {
- 3          // gray +1
-          Result.R = 96/255;
-          Result.G = 96/255;
-          Result.B = 96/255;
-        };
-    {
- 4          // gray
-          Result.R = 128/255;
-          Result.G = 128/255;
-          Result.B = 128/255;
-        };
-    {
- 5          // gray -1
-          Result.R = 160/255;
-          Result.G = 160/255;
-          Result.B = 160/255;
-        };
-    {
- 6          // gray -2
-          Result.R = 192/255;
-          Result.G = 192/255;
-          Result.B = 192/255;
-        };
-    {
- 7          // gray -3
-          Result.R = 214/255;
-          Result.G = 214/255;
-          Result.B = 214/255;
-        };
-    {
- 8          // white
-          Result.R = 1;
-          Result.G = 1;
-          Result.B = 1;
-        };
-    else
-        {
-          // black
-          Result.R = 0;
-          Result.G = 0;
-          Result.B = 0;
-        };
+        // black
+        return (UCommon::TRGB<double> { 0, 0, 0 }) / 255.0;
+    }
+    }
+}
 
-    };
-};
-
-UCommon::TRGB GetLyricOutlineColor(int Color)
+UCommon::TRGB<double> GetLyricOutlineColor(int Color)
 {
-  case Color of
+    switch (Color)
     {
-    {
- 0          // black
-          Result.R = 0;
-          Result.G = 0;
-          Result.B = 0;
-        };
-    {
- 1          // white
-          Result.R = 1;
-          Result.G = 1;
-          Result.B = 1;
-        };
-  };
-};
+    case 0:
+    {          // black
+        return (UCommon::TRGB<double> { 0, 0, 0 });
+    }
+    case 1:
+    {          // white
+        return (UCommon::TRGB<double> { 1, 1, 1 });
+    }
+    }
+}
 
-UCommon::TRGB GetLyricBarColor(int Color)
+UCommon::TRGB<double> GetLyricBarColor(int Color)
 {
-  Result = GetPlayerColor(Color);
-};
+    return GetPlayerColor(Color);
+}
 
 void TTheme::ThemeSave(const std::string FileName)
 /*var
   int I;*/
 {
   #ifdef THEMESAVE
-  ThemeIni = TIniFile.Create(FileName);
+  ThemeIni = TIniFile(FileName);
   #else
-  ThemeIni = TMemIniFile.Create(FileName);
+  ThemeIni = TMemIniFile(FileName);
   #endif
 
   ThemeSaveBasic(Loading, "Loading");
@@ -4154,7 +4040,7 @@ void TTheme::ThemeSave(const std::string FileName)
   ThemeIni.Free;
 };
 
-void TTheme::ThemeSaveBasic(TThemeBasic Theme; const string Name)
+void TTheme::ThemeSaveBasic(TThemeBasic Theme, const std::string Name)
 {
   ThemeIni.WriteInteger(Name, "Texts", Length(Theme.Text));
 
@@ -4163,7 +4049,7 @@ void TTheme::ThemeSaveBasic(TThemeBasic Theme; const string Name)
   ThemeSaveTexts(Theme.Text, Name + "Text");
 };
 
-void TTheme::ThemeSaveBackground(TThemeBackground ThemeBackground; const string Name)
+void TTheme::ThemeSaveBackground(TThemeBackground ThemeBackground, const std::string Name)
 {
   if ThemeBackground.Tex != "" then
     ThemeIni.WriteString(Name, "Tex", ThemeBackground.Tex)
@@ -4173,7 +4059,7 @@ void TTheme::ThemeSaveBackground(TThemeBackground ThemeBackground; const string 
   };
 };
 
-void TTheme::ThemeSaveStatic(TThemeStatic ThemeStatic; const string Name)
+void TTheme::ThemeSaveStatic(TThemeStatic ThemeStatic, const std::string Name)
 {
   ThemeIni.WriteInteger(Name, "X", ThemeStatic.X);
   ThemeIni.WriteInteger(Name, "Y", ThemeStatic.Y);
@@ -4190,7 +4076,7 @@ void TTheme::ThemeSaveStatic(TThemeStatic ThemeStatic; const string Name)
   ThemeIni.WriteFloat(Name, "TexY2", ThemeStatic.TexY2);
 };
 
-void TTheme::ThemeSaveStatics(AThemeStatic ThemeStatic; const string Name)
+void TTheme::ThemeSaveStatics(AThemeStatic ThemeStatic, const std::string Name)
 var
   int S;
 {
@@ -4200,7 +4086,7 @@ var
   ThemeIni.EraseSection(Name + {"Static" + }std::to_string(S+1));
 };
 
-void TTheme::ThemeSaveText(TThemeText ThemeText; const string Name)
+void TTheme::ThemeSaveText(TThemeText ThemeText; const std::string Name)
 {
   ThemeIni.WriteInteger(Name, "X", ThemeText.X);
   ThemeIni.WriteInteger(Name, "Y", ThemeText.Y);
@@ -4217,7 +4103,7 @@ void TTheme::ThemeSaveText(TThemeText ThemeText; const string Name)
   ThemeIni.WriteFloat(Name, "ReflectionSpacing", ThemeText.ReflectionSpacing);
 };
 
-void TTheme::ThemeSaveTexts(AThemeText ThemeText; const string Name)
+void TTheme::ThemeSaveTexts(AThemeText ThemeText, const std::string Name)
 /*var
   int T;*/
 {
@@ -4227,7 +4113,7 @@ void TTheme::ThemeSaveTexts(AThemeText ThemeText; const string Name)
   ThemeIni.EraseSection(Name + {"Text" + }std::to_string(T+1));
 };
 
-void TTheme::ThemeSaveButton(TThemeButton ThemeButton; const string Name)
+void TTheme::ThemeSaveButton(TThemeButton ThemeButton, const std::string Name)
 /*var
   int T;*/
 {

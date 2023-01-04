@@ -30,17 +30,14 @@ namespace UCommon
     {
         return std::format("{0:x}{1:x}{2:x}", R, G, B);
     }
-
+    /*
     std::string BuildResolutionString(int x, int y)
     {
         return std::format("{}x{}", x, y);
     }
-
+    
     bool ParseResolutionString(const std::string ResolutionString, int& x, int& y)
-    {
-        /*var
-            Pieces: TStringDynArray;*/
-            
+    { 
         auto Pieces = SplitString(LowerCase(ResolutionString), 1, ["x"]);
         bool Result = false;
 
@@ -61,4 +58,5 @@ namespace UCommon
         // verify if resolution has proper values
         return (x > 0 && y > 0);
     }
+    */
 }

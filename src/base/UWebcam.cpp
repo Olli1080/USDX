@@ -124,7 +124,7 @@ void TWebcam::GetWebcamFrame()
     {
         if (TextureCam.TexNum > 0)
         {
-            glDeleteTextures(1, PGLuint(@TextureCam.TexNum));
+            glDeleteTextures(1, &TextureCam.TexNum);
             TextureCam.TexNum = 0;
         }
 
