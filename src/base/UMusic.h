@@ -278,34 +278,35 @@ type
   TAudioProcessingStream = class;
   TOnCloseHandler = void(Stream: TAudioProcessingStream);
 
-  TAudioProcessingStream = class
-    protected
-      OnCloseHandlers: array of TOnCloseHandler;
+  class TAudioProcessingStream
+  {
+  protected:
+      OnCloseHandlers : array of TOnCloseHandler;
 
-      function GetLength(): double;           virtual; abstract;
-      function GetPosition(): double;         virtual; abstract;
+      function GetLength() : double;           virtual; abstract;
+      function GetPosition() : double;         virtual; abstract;
       void SetPosition(Time: double);    virtual; abstract;
-      function GetLoop(): bool;          virtual; abstract;
+      function GetLoop() : bool;          virtual; abstract;
       void SetLoop(Enabled: bool);  virtual; abstract;
 
       void PerformOnClose();
-    public
-      function GetAudioFormatInfo(): TAudioFormatInfo; virtual; abstract;
+  public:
+      function GetAudioFormatInfo() : TAudioFormatInfo; virtual; abstract;
       void Close(); virtual; abstract;
 
-      (**
+      /**
        * Adds a new OnClose action handler.
        * The handlers are performed in the order they were added.
        * If not stated explicitely, member-variables might have been invalidated
        * already. So do not use any member (variable/method/...) if you are not
        * sure it is valid.
-       *)
+       */
       void AddOnCloseHandler(Handler: TOnCloseHandler);
 
       property Length: double read GetLength;
       property Position: double read GetPosition write SetPosition;
       property Loop: bool read GetLoop write SetLoop;
-  end;
+  };
 
   TAudioSourceStream = class(TAudioProcessingStream)
     protected
