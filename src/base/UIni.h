@@ -34,12 +34,19 @@
 #include <memory>
 #include <filesystem>
 #include <cstdint>
+#include <map>
+
+#include <yaml-cpp/node/node.h>
+#include <boost/bimap.hpp>
+#include <boost/assign.hpp>
 
 #include "IniFileHelper.hpp"
+#include "UCommon.h"
+#include "UWebcam.h"
 
 namespace UIni
 {
-static const int IMaxPlayerCount = 12;
+static constexpr int IMaxPlayerCount = 12;
 
 /**
  * TInputDeviceConfig stores the configuration for an input device.
@@ -70,16 +77,102 @@ typedef std::shared_ptr<TInputDeviceConfig> PInputDeviceConfig;
 
 enum TVisualizerOption
 {
-  voOff, voWhenNoVideo, voWhenNoVideoAndImage, voOn
+    voOff, voWhenNoVideo, voWhenNoVideoAndImage, voOn
 };
-enum TBackgroundMusicOption 
+enum TBackgroundMusicOption
 {
-  bmoOff, bmoOn
+    bmoOff, bmoOn
 };
 enum TSongMenuMode
 {
-  smRoulette, smChessboard, smCarousel, smSlotMachine, smSlide, smList, smMosaic
-}; 
+    smRoulette, smChessboard, smCarousel, smSlotMachine, smSlide, smList, smMosaic
+};
+
+enum class DepthMode
+{
+    BIT_16, BIT_32
+};
+
+enum class FullScreenMode
+{
+    OFF, ON, BORDERLESS
+};
+
+// Jukebox Lyric Fill Color
+struct JukeBoxFillColors
+{
+    UCommon::TRGB<uint8_t> SingLineColor;
+    UCommon::TRGB<uint8_t> ActualLineColor;
+    UCommon::TRGB<uint8_t> NextLineColor;
+
+    UCommon::TRGB<uint8_t> SingLineOutlineColor;
+    UCommon::TRGB<uint8_t> ActualLineOutlineColor;
+    UCommon::TRGB<uint8_t> NextLineOutlineColor;
+
+    /*
+    int CurrentSingLineOutlineColor;
+    int CurrentActualLineOutlineColor;
+    int CurrentNextLineOutlineColor;
+    */
+};
+
+// WebCam
+struct Webcam
+{
+    int ID;
+    struct 
+    {
+        int width;
+        int height;
+    } resolution;
+    int FPS;
+    bool Flip;
+    int Brightness;
+    int Saturation;
+    int Hue;
+    UWebcam::Effect Effect;
+};
+
+struct TResolution
+{
+    int width;
+    int height;
+
+    [[nodiscard]] bool isValid() const { return width > 0 && height > 0; }
+
+    [[nodiscard]] TResolution max(const TResolution& rhs) const
+    {
+        return { std::max(width, rhs.width), std::max(height, rhs.height) }
+    }
+
+    [[nodiscard]] bool contains(const TResolution& rhs) const
+    {
+        return width >= rhs.width && height >= rhs.height;
+    }
+
+    bool operator<(const TResolution& rhs) const
+    {
+        if (width > rhs.width)
+            return false;
+        return height < rhs.height;
+    }
+
+    [[nodiscard]] std::string to_string() const
+    {
+        return std::format("{}x{}", width, height);
+    }
+};
+
+struct ScreenInfo
+{
+    uint8_t MaxFramerate;
+    int Screens;
+    bool Split;
+    std::unique_ptr<TResolution> Resolution;             // Resolution for windowed mode
+    std::unique_ptr<TResolution> ResolutionFullscreen;   // Resolution for double fullscreen (changing Video mode)
+    DepthMode Depth;
+    FullScreenMode FullScreen;
+};
 
 class TIni
 {
@@ -87,7 +180,8 @@ private:
 
   int ExtractKeyIndex(const std::string Key, std::string Prefix, std::string Suffix);
   int GetMaxKeyIndex(std::list<std::string> Keys, const std::string Prefix, std::string Suffix);
-  
+
+/*
   int ReadArrayIndex(const std::vector<std::string>& SearchArray, const TCustomIniFile& IniFile,
       std::string IniSection, std::string IniProperty, int Default, bool CaseInsensitive = false);
 
@@ -101,28 +195,24 @@ private:
   template<std::size_t N>
   int ReadArrayIndex(const std::array<std::string, N>& SearchArray, const TCustomIniFile& IniFile,
       std::string IniSection, std::string IniProperty, int Default, std::string DefaultValue, bool CaseInsensitive = false);
-
+    */
   void LoadInputDeviceCfg(TMemIniFile IniFile);
   void SaveInputDeviceCfg(TIniFile IniFile);
   void LoadThemes(TCustomIniFile IniFile);
 
   void LoadPaths(TCustomIniFile IniFile);
   void LoadScreenModes(TCustomIniFile IniFile);
-  void LoadWebcamSettings(TCustomIniFile IniFile);
-
-  template<std::size_t N>
-  void AssignJukeboxColor(int JukeboxColor, std::array<std::string, N> LineColor, int R, int G, int B, TIniFile IniFile, std::string Key);
+  //void LoadWebcamSettings(TCustomIniFile IniFile);
 
 public:
   // Players or Teams colors
   std::array<int, IMaxPlayerCount> SingColor;
-  
-  std::array<std::string, 16> Name;
+  std::array<std::string, IMaxPlayerCount> Name;
   std::array<int, IMaxPlayerCount> PlayerColor;
-  std::array<int, 3> TeamColor;
-
   std::array<std::string, IMaxPlayerCount> PlayerAvatar;
   std::array<int, IMaxPlayerCount> PlayerLevel;
+
+  std::array<int, 3> TeamColor;
 
   // Templates for Names Mod
   std::array<std::string, 3> NameTeam;
@@ -146,15 +236,9 @@ public:
   int MicDelay;
 
   // Graphics
-  uint8_t MaxFramerate;
-  uint8_t MaxFramerateGet;
-  int Screens;
-  int Split;
-  int Resolution;             // Resolution for windowed mode
-  int ResolutionFullscreen;   // Resolution for double fullscreen (changing Video mode)
-  int Depth;
+  ScreenInfo screen_info;
+
   int VisualizerOption;
-  int FullScreen;
   int TextureSize;
   int SingWindow;
   int Oscilloscope;
@@ -215,15 +299,7 @@ public:
   int Joypad;
   int Mouse;
 
-  // WebCam
-  int WebcamID;
-  int WebcamResolution;
-  int WebcamFPS;
-  int WebcamFlip;
-  int WebcamBrightness;
-  int WebcamSaturation;
-  int WebcamHue;
-  int WebcamEffect;
+  Webcam webcam;
 
   // Jukebox
   int JukeboxSongMenu;
@@ -236,42 +312,7 @@ public:
   int JukeboxLine;
   int JukeboxProperty;
 
-  // Jukebox Lyric Fill Color
-  int JukeboxSingLineColor;
-  int JukeboxActualLineColor;
-  int JukeboxNextLineColor;
-
-  int JukeboxSingLineOutlineColor;
-  int JukeboxActualLineOutlineColor;
-  int JukeboxNextLineOutlineColor;
-
-  int CurrentJukeboxSingLineOutlineColor;
-  int CurrentJukeboxActualLineOutlineColor;
-  int CurrentJukeboxNextLineOutlineColor;
-
-  int JukeboxSingLineOtherColorR;
-  int JukeboxSingLineOtherColorG;
-  int JukeboxSingLineOtherColorB;
-
-  int JukeboxActualLineOtherColorR;
-  int JukeboxActualLineOtherColorG;
-  int JukeboxActualLineOtherColorB;
-
-  int JukeboxNextLineOtherColorR;
-  int JukeboxNextLineOtherColorG;
-  int JukeboxNextLineOtherColorB;
-
-  int JukeboxSingLineOtherOColorR;
-  int JukeboxSingLineOtherOColorG;
-  int JukeboxSingLineOtherOColorB;
-
-  int JukeboxActualLineOtherOColorR;
-  int JukeboxActualLineOtherOColorG;
-  int JukeboxActualLineOtherOColorB;
-
-  int JukeboxNextLineOtherOColorR;
-  int JukeboxNextLineOtherOColorG;
-  int JukeboxNextLineOtherOColorB;
+  JukeBoxFillColors juke_box_fill_colors;
 
 
   // default encoding for texts (lyrics, song-name, ...)
@@ -326,6 +367,7 @@ enum TSyncToType
 {
   stMusic, stLyrics, stOff
 };
+
 /*
 uses
   Classes,
@@ -342,16 +384,47 @@ uses
 /* Constants for TInputDeviceConfig */
 const int CHANNEL_OFF = 0;         // for field ChannelToPlayerMap
 const int LATENCY_AUTODETECT = -1; // for field Latency
-const std::string DEFAULT_RESOLUTION = "800x600";
+const TResolution DEFAULT_RESOLUTION = { 800, 600 };
 const std::string DEFAULT_THEME = "Modern";
 const std::vector<std::string> IPlayers = { "1", "2", "3", "4", "6", "8", "12" };
 const std::vector<int> IPlayersVals = { 1, 2, 3, 4, 6, 8, 12 };
 
 /* Variables */
 inline TIni Ini;
-std::vector<std::string> IResolution;
-std::vector<std::string> IResolutionFullScreen;
-std::vector<std::string> IResolutionCustom;
+std::set<TResolution> IResolution;
+std::set<TResolution> IResolutionFullScreen;
+std::set<TResolution> IResolutionCustom;
+const std::set<TResolution> IFallbackResolution =
+{
+    { 640, 480 }, // VGA
+    { 720, 480 }, // SDTV 480i, EDTV 480p [TV]
+    { 720, 576 }, // SDTV 576i, EDTV 576p [TV]
+    { 768, 576 }, // SDTV 576i, EDTV 576p [TV]
+    { 800, 600 }, // SVGA
+    { 960, 540 }, // Quarter FHD
+    { 1024, 768 }, // XGA
+    { 1152, 666 },
+    { 1152, 864 }, // XGA+
+    { 1280, 720 }, // WXGA-H
+    { 1280, 800 }, // WXGA
+    { 1280, 960 }, // WXGA
+    { 1280, 1024 }, // SXGA
+    { 1366, 768 }, // HD
+    { 1400, 1050 }, // SXGA+
+    { 1440, 900 }, // WXGA+
+    { 1600, 900 }, // HD+
+    { 1600, 1200 }, // UXGA
+    { 1680, 1050 }, // WSXGA+
+    { 1920, 1080 }, // FHD
+    { 1920, 1200 }, // WUXGA
+    { 2048, 1152 }, // QWXGA
+    { 2560, 1440 }, // WQHD
+    { 2560, 1600 }, // WQXGA
+    { 3840, 2160 }, // 4K UHD
+    { 4096, 2304 }, // 4K
+    { 4096, 3072 } // HXGA
+};
+
 std::vector<std::string> ILanguage;
 std::vector<std::string> ITheme;
 std::vector<std::string> ISkin;
@@ -370,8 +443,8 @@ const std::array<std::string, 3> IShowScores = { "Off", "When exists", "On" };
 
 const std::array<std::string, 2> IDebug = { "Off", "On" };
 
-const std::array<std::string, 12> IMaxFramerate = { "10", "20", "30", "40", "50", "60", "70", "80", "90", "100", "150", "200" };
-const std::array<std::string, 2> IScreens = { "1", "2" };
+const std::set<int> IMaxFramerate = { 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 150, 200 };
+int IScreens;
 const std::array<std::string, 2> ISplit = { "Off", "On" };
 const std::array<std::string, 3> IFullScreen = { "Off", "On", "Borderless" };
 const std::array<std::string, 2> IDepth = { "16 bit", "32 bit" };
@@ -443,10 +516,44 @@ std::array<std::string, 3> ISingLineOColor = { "Black", "White", "Other" };
 std::array<std::string, 3> IActualLineOColor = { "Black", "White", "Other" };
 std::array<std::string, 3> INextLineOColor = { "Black", "White", "Other" };
 
-std::array<std::string, 21> IHexSingColor = { "0096FF", "3FBF3F", "FF3FC0", "DC0000", "B43FE6", "FF9000", "FFFF00", "C07F1F", "000000", "00FFE6", "FF7F66",
-                                                "99FF66", "CCCCFF", "FFE6CC", "339999", "9900CC", "336699", "FF99FF", "8A5C2E", "FFCC33", "" };
-std::array<std::string, 10> IHexGrayColor = { "000000", "202020", "404040", "606060", "808080", "A0A0A0", "C0C0C0", "D6D6D6", "FFFFFF", "" };
-std::array<std::string, 3> IHexOColor = { "000000", "FFFFFF", "" };
+std::array<UCommon::TRGB<uint8_t>, 20> IHexSingColor = { 
+UCommon::TRGB<uint8_t>{0x00, 0x96, 0xFF}, 
+UCommon::TRGB<uint8_t>{0x3F, 0xBF, 0x3F}, 
+UCommon::TRGB<uint8_t>{0xFF, 0x3F, 0xC0}, 
+UCommon::TRGB<uint8_t>{0xDC, 0x00, 0x00}, 
+UCommon::TRGB<uint8_t>{0xB4, 0x3F, 0xE6}, 
+UCommon::TRGB<uint8_t>{0xFF, 0x90, 0x00}, 
+UCommon::TRGB<uint8_t>{0xFF, 0xFF, 0x00}, 
+UCommon::TRGB<uint8_t>{0xC0, 0x7F, 0x1F}, 
+UCommon::TRGB<uint8_t>{0x00, 0x00, 0x00}, 
+UCommon::TRGB<uint8_t>{0x00, 0xFF, 0xE6}, 
+UCommon::TRGB<uint8_t>{0xFF, 0x7F, 0x66},
+UCommon::TRGB<uint8_t>{0x99, 0xFF, 0x66}, 
+UCommon::TRGB<uint8_t>{0xCC, 0xCC, 0xFF}, 
+UCommon::TRGB<uint8_t>{0xFF, 0xE6, 0xCC}, 
+UCommon::TRGB<uint8_t>{0x33, 0x99, 0x99}, 
+UCommon::TRGB<uint8_t>{0x99, 0x00, 0xCC}, 
+UCommon::TRGB<uint8_t>{0x33, 0x66, 0x99}, 
+UCommon::TRGB<uint8_t>{0xFF, 0x99, 0xFF}, 
+UCommon::TRGB<uint8_t>{0x8A, 0x5C, 0x2E}, 
+UCommon::TRGB<uint8_t>{0xFF, 0xCC, 0x33}, 
+ };
+
+std::array<UCommon::TRGB<uint8_t>, 9> IHexGrayColor = {
+	UCommon::TRGB<uint8_t>{0x00, 0x00, 0x00}
+, UCommon::TRGB<uint8_t>{0x20, 0x20, 0x20}
+, UCommon::TRGB<uint8_t>{0x40, 0x40, 0x40}
+, UCommon::TRGB<uint8_t>{0x60, 0x60, 0x60}
+, UCommon::TRGB<uint8_t>{0x80, 0x80, 0x80}
+, UCommon::TRGB<uint8_t>{0xA0, 0xA0, 0xA0}
+, UCommon::TRGB<uint8_t>{0xC0, 0xC0, 0xC0}
+, UCommon::TRGB<uint8_t>{0xD6, 0xD6, 0xD6}
+, UCommon::TRGB<uint8_t>{0xFF, 0xFF, 0xFF}
+ };
+std::array<UCommon::TRGB<uint8_t>, 2> IHexOColor = {
+	UCommon::TRGB<uint8_t>{0x00, 0x00, 0x00}
+, UCommon::TRGB<uint8_t>{0xFF, 0xFF, 0xFF}
+ };
 
 std::array<std::string, 2> IJukeboxSongMenu = { "Off", "On" };
 
@@ -478,10 +585,10 @@ std::array<std::string, 3> IJukeboxTimebarMode = { "Current", "Remaining", "Tota
 std::array<std::string, 7> IChannelPlayer = { "Off", "1", "2", "3", "4", "5", "6" };
 std::array<std::string, 4> IMicBoost = { "Off", "+6dB", "+12dB", "+18dB" };
 
-  // Webcam
-std::array<std::string, 6> IWebcamResolution = { "160x120", "176x144", "320x240", "352x288", "640x480", "800x600" };
-std::array<std::string, 9> IWebcamFPS = { "10", "12", "15", "18", "20", "22", "25", "28", "30" };
-std::array<std::string, 2> IWebcamFlip = { "Off", "On" };
+// Webcam
+//std::array<std::string, 6> IWebcamResolution = { "160x120", "176x144", "320x240", "352x288", "640x480", "800x600" };
+//std::array<std::string, 9> IWebcamFPS = { "10", "12", "15", "18", "20", "22", "25", "28", "30" };
+//std::array<std::string, 2> IWebcamFlip = { "Off", "On" };
 
 /*
  * Translated options
@@ -532,9 +639,7 @@ std::array<std::string, 3> ISyncToTranslated = { "Music", "Lyrics", "Off" };
   // Song Preview
 std::array<std::string, 11> IPreviewVolumeTranslated = { "Off", "10%", "20%", "30%", "40%", "50%", "60%", "70%", "80%", "90%", "100%" };
 
-std::array<std::string, 10> IAudioOutputBufferSizeTranslated = { "Auto", "256", "512", "1024", "2048", "4096", "8192", "16384", "32768", "65536" };
-
-std::array<std::string, 10> IAudioInputBufferSizeTranslated = { "Auto", "256", "512", "1024", "2048", "4096", "8192", "16384", "32768", "65536" };
+std::array<std::string, 10> IAudioBufferSizeTranslated = { "Auto", "256", "512", "1024", "2048", "4096", "8192", "16384", "32768", "65536" };
 
 std::array<std::string, 6> IPreviewFadingTranslated = { "Off", "1 Sec", "2 Secs", "3 Secs", "4 Secs", "5 Secs" };
 
@@ -586,10 +691,13 @@ std::vector<std::string> IAutoScoreMediumTranslated;
 std::vector<std::string> IAutoScoreHardTranslated;
 
 // Webcam
+
 std::array<std::string, 2> IWebcamFlipTranslated = { "Off", "On" };
-std::array<std::string, 201> IWebcamBrightness;
-std::array<std::string, 201> IWebcamSaturation;
-std::array<std::string, 361> IWebcamHue;
+std::string GetWebcamFlipTranslated(bool flip) { return  IWebcamFlipTranslated[flip ? 1 : 0]; };
+std::string SetWebcamFlipTranslated(bool flip, const std::string& translation) { return  IWebcamFlipTranslated[flip ? 1 : 0] = translation; };
+//std::array<std::string, 201> IWebcamBrightness;
+//std::array<std::string, 201> IWebcamSaturation;
+//std::array<std::string, 361> IWebcamHue;
 std::array<std::string, 11> IWebcamEffectTranslated;
 
 // Name
@@ -615,6 +723,357 @@ uses
   UPathUtils,
   UUnicodeUtils;
 */
-const int IGNORE_INDEX = -1;
+//const int IGNORE_INDEX = -1;
 
+}
+
+namespace YAML {
+template<>
+struct convert<UIni::Webcam> {
+    typedef boost::bimap<UWebcam::Effect, std::string> bimapEffectType;
+
+    static inline boost::bimap<UWebcam::Effect, std::string> EffectMapping = 
+        boost::assign::list_of<bimapEffectType::relation>
+        (UWebcam::Effect::NORMAL, "NORMAL")
+        (UWebcam::Effect::GRAYSCALE, "GRAYSCALE")
+        (UWebcam::Effect::BLACK_AND_WHITE, "BLACK_AND_WHITE")
+        (UWebcam::Effect::NEGATIVE, "NEGATIVE")
+        (UWebcam::Effect::BINARY_IMAGE, "BINARY_IMAGE")
+        (UWebcam::Effect::DILATE, "DILATE")
+        (UWebcam::Effect::THRESHOLD, "THRESHOLD")
+        (UWebcam::Effect::EDGES, "EDGES")
+        (UWebcam::Effect::GAUSSIAN_BLUR, "GAUSSIAN_BLUR")
+        (UWebcam::Effect::EQUALIZED, "EQUALIZED")
+        (UWebcam::Effect::ERODE, "ERODE");
+
+    static Node encode(const UIni::Webcam& rhs) {
+        Node node;
+        node["ID"] = rhs.ID;
+        Node resolutionNode;
+        resolutionNode["Width"] = rhs.resolution.width;
+        resolutionNode["Height"] = rhs.resolution.height;
+        node["Resolution"] = resolutionNode;
+        node["FPS"] = rhs.FPS;
+        node["Flip"] = rhs.Flip;
+        node["Brightness"] = rhs.Brightness - 100;
+        node["Saturation"] = rhs.Saturation - 100;
+        node["Hue"] = rhs.Hue - 180;
+        node["Effect"] = rhs.Effect;
+        return node;
+    }
+
+    static bool decode(const Node& node, UIni::Webcam& rhs) {
+        if (!node.IsMap() || node["ID"].IsNull()) {
+            return false;
+        }
+        rhs.ID = node["ID"].as<int>(0);
+        auto& resNode = node["Resolution"];
+        if (resNode.IsDefined() && resNode.IsMap())
+        {
+            rhs.resolution.width = resNode["Width"].as<int>(800);
+            rhs.resolution.height = resNode["Height"].as<int>(600);
+        }
+        rhs.FPS = node["FPS"].as<int>(30);
+        rhs.Flip = node["Flip"].as<bool>(true);
+        rhs.Brightness = std::clamp(node["Brightness"].as<int>(0), -100, 100) + 100;
+        rhs.Saturation = std::clamp(node["Saturation"].as<int>(0), -100, 100) + 100;
+        rhs.Hue = std::clamp(node["Hue"].as<int>(0), -180, 180) + 180;
+
+        const std::string& effect = node["Effect"].as<std::string>("NORMAL");
+        const auto it = EffectMapping.right.find(effect);
+        if (it == EffectMapping.right.end())
+            rhs.Effect = UWebcam::Effect::NORMAL;
+        else
+            rhs.Effect = it->second;
+        
+        return true;
+    }
 };
+template<>
+struct convert<UCommon::TRGB<uint8_t>> {
+
+    static Node encode(const UCommon::TRGB<uint8_t>& rhs) {
+        Node node;
+        node["r"] = rhs.R;
+        node["g"] = rhs.G;
+        node["b"] = rhs.B;
+
+        return node;
+    }
+
+    static bool decode(const Node& node, UCommon::TRGB<uint8_t>& rhs) {
+        if (!node.IsMap()) {
+            return false;
+        }
+        auto r = node["r"];
+        auto g = node["g"];
+        auto b = node["b"];
+
+        if (r.IsNull() || g.IsNull() || b.IsNull())
+            return false;
+
+        rhs.R = r.as<uint8_t>();
+        rhs.G = g.as<uint8_t>();
+        rhs.B = b.as<uint8_t>();
+
+        return true;
+    }
+};
+/*
+struct convert<a> {
+
+    static Node encode(const a& rhs) {
+        Node node;
+        return node;
+    }
+
+    static bool decode(const Node& node, a& rhs) {
+        if (!node.IsMap()) {
+            return false;
+        }
+
+
+        return true;
+    }
+};
+*/
+template<>
+struct convert<UIni::JukeBoxFillColors> {
+
+    typedef UCommon::TRGB<uint8_t> Color;
+
+    static Node encode(const UIni::JukeBoxFillColors& rhs) {
+        Node node;
+
+        node["SingLineColor"] = rhs.SingLineColor;
+        node["ActualLineColor"] = rhs.ActualLineColor;
+        node["NextLineColor"] = rhs.NextLineColor;
+        node["SingLineOutlineColor"] = rhs.SingLineOutlineColor;
+        node["ActualLineOutlineColor"] = rhs.ActualLineOutlineColor;
+        node["NextLineOutlineColor"] = rhs.NextLineOutlineColor;
+
+        return node;
+    }
+
+    static bool decode(const Node& node, UIni::JukeBoxFillColors& rhs) {
+        if (!node.IsMap()) {
+            return false;
+        }
+        if (
+            !convert<Color>::decode(node["SingLineColor"], rhs.SingLineColor) ||
+            std::find(UIni::IHexSingColor.begin(), UIni::IHexSingColor.end(), rhs.SingLineColor) == UIni::IHexSingColor.end()
+            )
+            rhs.SingLineColor = UIni::IHexSingColor[0];
+
+        if (
+            !convert<Color>::decode(node["ActualLineColor"], rhs.ActualLineColor) ||
+            std::find(UIni::IHexGrayColor.begin(), UIni::IHexGrayColor.end(), rhs.ActualLineColor) == UIni::IHexGrayColor.end()
+            )
+            rhs.ActualLineColor = UIni::IHexGrayColor[8];
+
+        if (
+            !convert<Color>::decode(node["NextLineColor"], rhs.NextLineColor) ||
+            std::find(UIni::IHexGrayColor.begin(), UIni::IHexGrayColor.end(), rhs.NextLineColor) == UIni::IHexGrayColor.end()
+            )
+            rhs.NextLineColor = UIni::IHexGrayColor[6];
+        
+        if (
+            !convert<Color>::decode(node["SingLineOutlineColor"], rhs.SingLineOutlineColor) ||
+            std::find(UIni::IHexOColor.begin(), UIni::IHexOColor.end(), rhs.SingLineOutlineColor) == UIni::IHexOColor.end()
+            )
+            rhs.SingLineOutlineColor = UIni::IHexOColor[0];
+
+        if (
+            !convert<Color>::decode(node["ActualLineOutlineColor"], rhs.ActualLineOutlineColor) ||
+            std::find(UIni::IHexOColor.begin(), UIni::IHexOColor.end(), rhs.ActualLineOutlineColor) == UIni::IHexOColor.end()
+            )
+            rhs.ActualLineOutlineColor = UIni::IHexOColor[0];
+
+        if (
+            !convert<Color>::decode(node["NextLineOutlineColor"], rhs.NextLineOutlineColor) ||
+            std::find(UIni::IHexOColor.begin(), UIni::IHexOColor.end(), rhs.NextLineOutlineColor) == UIni::IHexOColor.end()
+            )
+            rhs.NextLineOutlineColor = UIni::IHexOColor[0];
+
+        return true;
+    }
+};
+template<>
+struct convert<UIni::TResolution> {
+
+    static Node encode(const UIni::TResolution& rhs) {
+        Node node;
+
+        node["width"] = rhs.width;
+        node["height"] = rhs.height;
+
+        return node;
+    }
+
+    static bool decode(const Node& node, UIni::TResolution& rhs) {
+        if (!node.IsMap()) {
+            return false;
+        }
+        const auto width = node["width"];
+        const auto height = node["height"];
+
+        if (width.IsNull() || height.IsNull())
+            return false;
+
+        rhs.width = width.as<int>();
+        rhs.height = height.as<int>();
+
+        return true;
+    }
+};
+template<>
+struct convert<UIni::ScreenInfo> {
+
+    typedef boost::bimap<UIni::FullScreenMode, std::string> bimapFullScreenType;
+
+    static inline bimapFullScreenType FullScreenMapping =
+        boost::assign::list_of<bimapFullScreenType::relation>
+        (UIni::FullScreenMode::OFF, "OFF")
+        (UIni::FullScreenMode::ON, "ON")
+        (UIni::FullScreenMode::BORDERLESS, "BORDERLESS");
+
+    static Node encode(const UIni::ScreenInfo& rhs) {
+        Node node;
+        return node;
+    }
+
+    static bool decode(const Node& node, UIni::ScreenInfo& rhs) {
+        if (!node.IsMap()) {
+            return false;
+        }
+        
+        auto it = UIni::IMaxFramerate.lower_bound(node["MaxFrameRate"].as<int>(60));
+        if (it == UIni::IMaxFramerate.end())
+            --it;
+        rhs.MaxFramerate = *it;
+        rhs.Screens = std::clamp<uint8_t>(node["Screens"].as<uint8_t>(1), 1, 2);
+        rhs.Split = node["Split"].as<bool>(false);
+        const auto& fullscreenString = node["FullScreen"].as<std::string>("BORDERLESS");
+
+        const auto it2 = FullScreenMapping.right.find(fullscreenString);
+        if (it2 == FullScreenMapping.right.end())
+            rhs.FullScreen = UIni::FullScreenMode::BORDERLESS;
+        else
+            rhs.FullScreen = it2->second;
+
+        std::optional<UIni::TResolution> CurrentRes;
+        // Check if there are any modes available
+
+        // retrieve currently used Video Display
+        std::optional<int> DisplayIndexOpt;
+        SDL_DisplayMode CurrentMode;
+        UIni::TResolution MaxRes = { 0, 0 };
+        SDL_DisplayMode ModeIter;
+        CurrentMode.h = -1; CurrentMode.w = -1;
+        for (int i = 0; i < SDL_GetNumVideoDisplays(); ++i)
+        {
+            if (SDL_GetCurrentDisplayMode(i, &CurrentMode) == 0)
+            {
+                DisplayIndexOpt = i;
+                CurrentRes = { CurrentMode.w, CurrentMode.h };
+                break;
+            }
+        }
+
+        // retrieve available display modes, store into separate array
+        if (DisplayIndexOpt.has_value())
+        {
+            const auto& DisplayIndex = DisplayIndexOpt.value();
+            for (int i = 0; i < SDL_GetNumDisplayModes(DisplayIndex); ++i)
+            {
+                if (SDL_GetDisplayMode(DisplayIndex, i, &ModeIter) != 0)
+                    continue;
+
+                auto it = UIni::IResolutionFullScreen.emplace(ModeIter.w, ModeIter.h);
+                if (it.second)
+                {
+                    ULog::Log.LogStatus("Found Video Mode: " + it.first->to_string(), "Video");
+                    MaxRes = MaxRes.max(*it.first);
+                }
+            }
+        }
+
+        // if display modes are found, override fallback ones
+        if (!UIni::IResolutionFullScreen.empty())
+        {
+            ULog::Log.LogStatus("Found resolutions: " + std::to_string(UIni::IResolutionFullScreen.size()), "Video");
+            UIni::IResolution = UIni::IResolutionFullScreen;
+
+            // reverse order TODO::Why?
+            //std::ranges::reverse(IResolution);
+        }
+        else
+            UIni::IResolution = UIni::IFallbackResolution;
+
+        // read fullscreen resolution && verify if possible
+        UIni::TResolution tempRes;
+        bool valid = true;
+        if (!convert<UIni::TResolution>::decode(node["ResolutionFullscreen"], tempRes))
+        {
+            if (CurrentRes.has_value())
+                tempRes = CurrentRes.value();
+            else
+                valid = false;
+        }
+        const auto itFSC = valid ? UIni::IResolutionFullScreen.find(tempRes) : UIni::IResolutionFullScreen.end();
+        if (itFSC != UIni::IResolutionFullScreen.end())
+            rhs.ResolutionFullscreen = std::make_unique<UIni::TResolution>(*itFSC);
+
+        // Check if there is a resolution configured, try using it
+        valid = true;
+        if (!convert<UIni::TResolution>::decode(node["Resolution"], tempRes))
+        {
+            // either store desktop resolution or invalid which results into DEFAULT
+            if (CurrentRes.has_value())
+                tempRes = CurrentRes.value();
+            else
+                valid = false;
+        }
+        const auto itR = valid ? UIni::IResolution.find(tempRes) : UIni::IResolution.end();
+        if // check if stored resolution is valid
+        	(itR != UIni::IResolution.end())
+            rhs.Resolution = std::make_unique<UIni::TResolution>(*itR);
+        else if // if resolution cannot be found, check if is larger than max resolution
+        	(tempRes = { ModeIter.w, ModeIter.h }; MaxRes.isValid() && !MaxRes.contains(tempRes))
+        {
+
+            ULog::Log.LogInfo(std::format("Exceeding resolution found ({}). Reverting to standard resolution.", tempRes.to_string()), "Video");
+            const auto itR2 = UIni::IResolution.find(tempRes);
+            if (itR2 != UIni::IResolution.end())
+                rhs.Resolution = std::make_unique<UIni::TResolution>(*itR2);
+        }
+        else if // append unknown mode to list
+            (tempRes.isValid())
+        {
+            // store also as custom resolution to eventually remove it upon window size change
+            //TODO:: keep in mind that we don't store custom one's in the main resolution anymore
+            rhs.Resolution = std::make_unique<UIni::TResolution>(*UIni::IResolutionCustom.insert(tempRes).first);
+        }
+        else
+        {
+            // if no modes were set, failback to DEFAULT_RESOLUTION (800x600)
+	        // as per http://sourceforge.net/forum/message.php?msg_id=4544965
+	        // THANKS : linnex at users.sourceforge.net
+
+            rhs.Resolution = std::make_unique<UIni::TResolution>(UIni::DEFAULT_RESOLUTION);
+            ULog::Log.LogStatus(std::format("No video mode found! Default to: {} ", UIni::DEFAULT_RESOLUTION.to_string()), "Video");
+            rhs.FullScreen = UIni::FullScreenMode::OFF; // default to fullscreen OFF in this case
+        }
+        const auto& depthString = node["Depth"].as<std::string>("BIT_32");
+        switch (depthString)
+        {
+        case "BIT_16":
+            rhs.Depth = UIni::DepthMode::BIT_16;
+            break;
+        default:
+            rhs.Depth = UIni::DepthMode::BIT_32;
+        }
+        return true;
+    }
+};
+}
