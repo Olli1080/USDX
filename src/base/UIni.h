@@ -47,6 +47,7 @@
 namespace UIni
 {
 static constexpr int IMaxPlayerCount = 12;
+static constexpr int IMaxTeamCount = 3;
 
 /**
  * TInputDeviceConfig stores the configuration for an input device.
@@ -96,6 +97,19 @@ enum class DepthMode
 enum class FullScreenMode
 {
     OFF, ON, BORDERLESS
+};
+
+enum class Difficulty
+{
+    EASY, MEDIUM, HARD,
+	Size
+};
+
+enum class PartyMode
+{
+	CLASSIC, CLASSIC_FREE,
+    CHALLENGE, TOURNAMENT,
+    Size
 };
 
 // Jukebox Lyric Fill Color
@@ -212,10 +226,10 @@ public:
   std::array<std::string, IMaxPlayerCount> PlayerAvatar;
   std::array<int, IMaxPlayerCount> PlayerLevel;
 
-  std::array<int, 3> TeamColor;
+  std::array<int, IMaxTeamCount> TeamColor;
 
   // Templates for Names Mod
-  std::array<std::string, 3> NameTeam;
+  std::array<std::string, IMaxTeamCount> NameTeam;
   std::array<std::string, IMaxPlayerCount> NameTemplate;
 
   // Filename of the opened iniFile
