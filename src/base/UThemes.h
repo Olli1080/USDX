@@ -3721,33 +3721,19 @@ UCommon::TRGB<double> GetJukeboxLyricOtherOutlineColor(int Line)
     {
     case 0:
     {
-        return UCommon::convertNormalized<double>()
-
-    		(UCommon::TRGB<double> { 0, 150, 255 }) / 255.0;
-    		Result.R = Ini.JukeboxSingLineOtherOColorR / 255;
-    Result.G = Ini.JukeboxSingLineOtherOColorG / 255;
-    Result.B = Ini.JukeboxSingLineOtherOColorB / 255;
+        return (UCommon::TRGB<double> { 0, 150, 255 }) / 255.0;
     }
     case 1:
     {
         return (UCommon::TRGB<double> { 0, 150, 255 }) / 255.0;
-    		Result.R = Ini.JukeboxActualLineOtherOColorR / 255;
-    Result.G = Ini.JukeboxActualLineOtherOColorG / 255;
-    Result.B = Ini.JukeboxActualLineOtherOColorB / 255;
     }
     case 2:
     {
         return (UCommon::TRGB<double> { 0, 150, 255 }) / 255.0;
-    		Result.R = Ini.JukeboxNextLineOtherOColorR / 255;
-    Result.G = Ini.JukeboxNextLineOtherOColorG / 255;
-    Result.B = Ini.JukeboxNextLineOtherOColorB / 255;
     }
     default:
     {
         return (UCommon::TRGB<double> { 0, 150, 255 }) / 255.0;
-        Result.R = Ini.JukeboxSingLineOtherOColorR / 255;
-        Result.G = Ini.JukeboxSingLineOtherOColorG / 255;
-        Result.B = Ini.JukeboxSingLineOtherOColorB / 255;
     }
     }
 }
