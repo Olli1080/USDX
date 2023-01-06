@@ -145,7 +145,7 @@ namespace UImage
           FilenameCaseAdj: std::filesystem::path;*/
     {
         // try to adjust filename's case and check if it exists
-        auto FilenameCaseAdj = Filename; //Filename.AdjustCase(false);
+        const auto& FilenameCaseAdj = Filename; //Filename.AdjustCase(false);
         if (!exists(FilenameCaseAdj) || !is_regular_file(FilenameCaseAdj))
         {
             ULog::Log.LogErrorLocation("Image - File does not exist \"" + FilenameCaseAdj.string() + "\"");
@@ -255,28 +255,18 @@ namespace UImage
         // whenever differences are formed.
         // This should not be a problem, since the results should all be positive.
         // replacing uint32_t by long int would probably resolve this cosmetic fault :-)
-
-        /*var
-          PixelIndex: uint32_t;
-          Pixel: PByte;
-          PixelColors: PByteArray;
-          Red, Green, Blue: uint32_t;
-          Hue, Sat: uint32_t;
-          Min, Max, Delta: uint32_t;
-          HueInteger: uint32_t;
-          f, p, q, t: uint32_t;
-          GreyReal: double;
-          Grey: uint8_t;*/
     {
         // check of the size of a pixel in bytes.
         // It should be always 4, but this
         // additional safeguard will show,
         // whether something went wrong up to here.
 
-        if (ImgSurface.format->BytesPerPixel != 4)
+        const auto BytePerPixel = ImgSurface.format->BytesPerPixel;
+        if (BytePerPixel != 4)
         {
             ULog::Log.LogError("ColorizeImage: The pixel size should be 4, but it is "
-                + std::to_string(ImgSurface.format->BytesPerPixel));
+                + std::to_string(BytePerPixel));
+            //Works also with 3!
         }
         auto Pixel = static_cast<uint8_t*>(ImgSurface.pixels);
 
@@ -293,7 +283,7 @@ namespace UImage
             // According to these recommendations (ITU-R BT.709-5)
             // the conversion parameters for rgb to greyscale are
             // 0.299, 0.587, 0.114
-            for (size_t PixelIndex = 0; PixelIndex < ImgSurface.w * ImgSurface.h; ++PixelIndex, Pixel += 4)
+            for (size_t PixelIndex = 0; PixelIndex < static_cast<size_t>(ImgSurface.w) * ImgSurface.h; ++PixelIndex, Pixel += BytePerPixel)
             {
                 //TODO:: check intention!
                 const uint8_t Grey = ColorToGrayScale(Pixel[0], Pixel[1], Pixel[2]);
@@ -309,7 +299,7 @@ namespace UImage
         const uint16_t f = Hue & 0x3ff;           // f is the decimal part of hue
         const uint8_t HueInteger = Hue / 1024;
 
-        for (size_t PixelIndex = 0; PixelIndex < ImgSurface.w * ImgSurface.h; ++PixelIndex, Pixel += 4)
+        for (size_t PixelIndex = 0; PixelIndex < static_cast<size_t>(ImgSurface.w) * ImgSurface.h; ++PixelIndex, Pixel += BytePerPixel)
         {
             // inlined colorize per pixel
 
