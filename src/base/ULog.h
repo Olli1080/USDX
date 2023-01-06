@@ -24,7 +24,7 @@
  * $URL: svn://basisbit@svn.code.sf.net/p/ultrastardx/svn/trunk/src/base/ULog.pas $
  * $Id: ULog.pas 3117 2015-08-15 01:23:56Z basisbit $
  */
-#include "switches.h"
+#include "../switches.h"
 
 #include <string>
 #include <array>
@@ -34,6 +34,7 @@
 #include <mutex>
 #include <fstream>
 #include <chrono>
+#include <source_location>
 
 namespace ULog
 {
@@ -52,25 +53,28 @@ uses
  * LOG_LEVEL_DEBUG+20 for less important ones and so on. By changing the log-level
  * you can hide the less important ones.  
  */
-const int LOG_LEVEL_DEBUG_MAX    = std::numeric_limits<int>::max();
-const int LOG_LEVEL_DEBUG        = 50;
-const int LOG_LEVEL_INFO_MAX     = LOG_LEVEL_DEBUG-1;
-const int LOG_LEVEL_INFO         = 40;
-const int LOG_LEVEL_STATUS_MAX   = LOG_LEVEL_INFO-1;
-const int LOG_LEVEL_STATUS       = 30;
-const int LOG_LEVEL_WARN_MAX     = LOG_LEVEL_STATUS-1;
-const int LOG_LEVEL_WARN         = 20;
-const int LOG_LEVEL_ERROR_MAX    = LOG_LEVEL_WARN-1;
-const int LOG_LEVEL_ERROR        = 10;
-const int LOG_LEVEL_CRITICAL_MAX = LOG_LEVEL_ERROR-1;
-const int LOG_LEVEL_CRITICAL     =  0;
-const int LOG_LEVEL_NONE         = -1;
+enum LogLevel
+{
+	DEBUG_MAX = std::numeric_limits<int>::max(),
+	DEBUG = 50,
+	INFO_MAX = DEBUG_MAX - 1,
+	INFO = 40,
+	STATUS_MAX = INFO - 1,
+	STATUS = 30,
+	WARN_MAX = STATUS - 1,
+	WARN = 20,
+	ERROR_MAX = WARN - 1,
+	ERROR = 10,
+	CRITICAL_MAX = ERROR - 1,
+	CRITICAL = 0,
+	NONE = -1,
+};
 
   // define level that Log(File)Level is initialized with
-const int LOG_LEVEL_DEFAULT      = LOG_LEVEL_WARN;
-const int LOG_FILE_LEVEL_DEFAULT = LOG_LEVEL_ERROR;
+constexpr LogLevel LOG_LEVEL_DEFAULT      = WARN;
+constexpr LogLevel LOG_FILE_LEVEL_DEFAULT = ERROR;
 
-const int CONSOLE_SCROLLBACK_SIZE = 512;
+constexpr int CONSOLE_SCROLLBACK_SIZE = 512;
 
 typedef std::array<uint8_t, 4> TRiffChunkID;
 
@@ -150,6 +154,55 @@ public:
   //Critical Error (Halt + MessageBox)
   inline void LogCritical(const std::string Msg, const std::string Context);
   inline void CriticalError(const std::string Text);
+
+	template<typename T = decltype(&std::source_location::function_name)>
+  inline void LogMsgLocation(const std::string Msg, int Level, T member = &std::source_location::function_name,
+	  const std::source_location& location = std::source_location::current())
+	{
+	  LogMsg(Msg, std::invoke(member, location), Level);
+	}
+
+  template<typename T = decltype(&std::source_location::function_name)>
+  inline void LogDebugLocation(const std::string Msg, T member = &std::source_location::function_name,
+	  const std::source_location& location = std::source_location::current())
+	{
+	  LogDebug(Msg, std::invoke(member, location));
+	}
+
+  template<typename T = decltype(&std::source_location::function_name)>
+  inline void LogInfoLocation(const std::string Msg, T member = &std::source_location::function_name,
+	  const std::source_location& location = std::source_location::current())
+	{
+	  LogInfo(Msg, std::invoke(member, location));
+	}
+
+  template<typename T = decltype(&std::source_location::function_name)>
+  inline void LogStatusLocation(const std::string Msg, T member = &std::source_location::function_name,
+	  const std::source_location& location = std::source_location::current())
+	{
+	  LogStatus(Msg, std::invoke(member, location));
+	}
+
+  template<typename T = decltype(&std::source_location::function_name)>
+  inline void LogWarnLocation(const std::string Msg, T member = &std::source_location::function_name,
+	  const std::source_location& location = std::source_location::current())
+	{
+	  LogWarn(Msg, std::invoke(member, location));
+	}
+
+  template<typename T = decltype(&std::source_location::function_name)>
+  inline void LogErrorLocation(const std::string Msg, T member = &std::source_location::function_name,
+	  const std::source_location& location = std::source_location::current())
+	{
+	  LogError(Msg, std::invoke(member, location));
+	}
+  
+  template<typename T = decltype(&std::source_location::function_name)>
+  inline void LogCriticalLocation(const std::string Msg, T member = &std::source_location::function_name,
+	  const std::source_location& location = std::source_location::current())
+	{
+	  LogCritical(Msg, std::invoke(member, location));
+	}
 
   // voice
   void LogVoice(int SoundNr);

@@ -24,7 +24,7 @@ void DebugWriteln(const std::string aString)
     #endif
 }
 
-TLog::TLog() : LogLevel(LOG_LEVEL_DEFAULT), LogFileLevel(LOG_FILE_LEVEL_DEFAULT), FileOutputEnabled(false)
+TLog::TLog() : LogLevel(DEFAULT), LogFileLevel(LOG_FILE_LEVEL_DEFAULT), FileOutputEnabled(false)
 {
 }
 
@@ -190,15 +190,15 @@ void TLog::LogMsg(const std::string Text, int Level)
 
   if (((Level <= LogLevel) || (Level <= LogFileLevel)))
   {
-    if (Level <= LOG_LEVEL_CRITICAL_MAX)
+    if (Level <= CRITICAL_MAX)
       LogMsg = "CRITICAL: " + Text;
-    else if (Level <= LOG_LEVEL_ERROR_MAX)
+    else if (Level <= ERROR_MAX)
       LogMsg = "ERROR:  " + Text;
-    else if (Level <= LOG_LEVEL_WARN_MAX)
+    else if (Level <= WARN_MAX)
       LogMsg = "WARN:   " + Text;
-    else if (Level <= LOG_LEVEL_STATUS_MAX)
+    else if (Level <= STATUS_MAX)
       LogMsg = "STATUS: " + Text;
-    else if (Level <= LOG_LEVEL_INFO_MAX)
+    else if (Level <= INFO_MAX)
       LogMsg = "INFO:   " + Text;
     else
       LogMsg = "DEBUG:  " + Text;
@@ -218,7 +218,7 @@ void TLog::LogMsg(const std::string Text, int Level)
   }
 
   // exit application on criticial errors (cannot be turned off)
-  if (Level <= LOG_LEVEL_CRITICAL_MAX)
+  if (Level <= CRITICAL_MAX)
   {
     // Show information (window)
     //ShowMessage(Text, mtError);
@@ -233,42 +233,42 @@ void TLog::LogMsg(const std::string Msg, const std::string Context, int Level)
 
 void TLog::LogDebug(const std::string Msg, const std::string Context)
 {
-  LogMsg(Msg, Context, LOG_LEVEL_DEBUG);
+  LogMsg(Msg, Context, DEBUG);
 }
 
 void TLog::LogInfo(const std::string Msg, const std::string Context)
 {
-  LogMsg(Msg, Context, LOG_LEVEL_INFO);
+  LogMsg(Msg, Context, INFO);
 }
 
 void TLog::LogStatus(const std::string Msg, const std::string Context)
 {
-  LogMsg(Msg, Context, LOG_LEVEL_STATUS);
+  LogMsg(Msg, Context, STATUS);
 }
 
 void TLog::LogWarn(const std::string Msg, const std::string Context)
 {
-  LogMsg(Msg, Context, LOG_LEVEL_WARN);
+  LogMsg(Msg, Context, WARN);
 }
 
 void TLog::LogError(const std::string Msg, const std::string Context)
 {
-  LogMsg(Msg, Context, LOG_LEVEL_ERROR);
+  LogMsg(Msg, Context, ERROR);
 }
 
 void TLog::LogError(const std::string Text)
 {
-  LogMsg(Text, LOG_LEVEL_ERROR);
+  LogMsg(Text, ERROR);
 }
 
 void TLog::CriticalError(const std::string Text)
 {
-  LogMsg(Text, LOG_LEVEL_CRITICAL);
+  LogMsg(Text, CRITICAL);
 }
 
 void TLog::LogCritical(const std::string Msg, const std::string Context)
 {
-  LogMsg(Msg, Context, LOG_LEVEL_CRITICAL);
+  LogMsg(Msg, Context, CRITICAL);
 }
 
 void TLog::LogVoice(int SoundNr)
