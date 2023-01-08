@@ -1,4 +1,5 @@
-{* UltraStar Deluxe - Karaoke Game
+#pragma once
+/* UltraStar Deluxe - Karaoke Game
  *
  * UltraStar Deluxe is the legal property of its developers, whose names
  * are too numerous to list here. Please refer to the COPYRIGHT
@@ -21,27 +22,21 @@
  *
  * $URL$
  * $Id$
- *}
+ */
+#include "../switches.h"
 
-unit ULuaGl;
-
-interface
-
-{$IFDEF FPC}
-  {$MODE Delphi}
-{$ENDIF}
-
-{$I switches.inc}
-
+namespace ULuaGl
+{
+    /*
 uses
   SysUtils,
   dglOpenGL,
   ULua;
-
+  */
 function luaopen_gl (L: Plua_State): Integer; cdecl;
 function ULuaGl_StringToEnum(Str: String): GLenum;
 
-{ lua lib functions }
+//{ lua lib functions }
 function ULuaGl_Begin(L: Plua_State): Integer; cdecl;
 function ULuaGl_BindTexture(L: Plua_State): Integer; cdecl;
 function ULuaGl_BlendFunc(L: Plua_State): Integer; cdecl;
@@ -1509,5 +1504,4 @@ begin
   end;
   Result := Result or temp;
 end;
-end.
-
+}

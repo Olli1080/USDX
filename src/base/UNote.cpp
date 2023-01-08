@@ -148,7 +148,7 @@ void UNote::NewBeatClick()
         for (int Count = 0; Count < Tracks[0].Lines[Tracks[0].CurrentLine].HighNote; ++Count) 
         {
             //basisbit todo
-            if (Tracks[0].Lines[Tracks[0].CurrentLine].Notes[Count].StartBeat = LyricsState.CurrentBeatC)
+            if (Tracks[0].Lines[Tracks[0].CurrentLine].Notes[Count].StartBeat == LyricsState.CurrentBeatC)
             {
             // click assist
             if Ini.ClickAssist = 1
