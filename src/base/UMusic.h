@@ -141,7 +141,8 @@ namespace UMusic
         std::vector<TLineFragment> Notes;
 
     private:
-        int GetLength() const;
+
+        [[nodiscard]] int GetLength() const;
 
     public:
         // Returns whether the line has a valid length. }
@@ -164,10 +165,11 @@ namespace UMusic
     struct TLines
     {
         int CurrentLine;  // for drawing of current line
-        int High;  // = High(Line)!
+        //int High;  // = High(Line)!
         int Number;
-        int Resolution;
-        int NotesGAP;
+        //int Resolution;
+        //int NotesGAP;
+        int Rel = 0;
         int ScoreValue;
         std::vector<TLine> Lines;
     };
@@ -350,7 +352,8 @@ namespace UMusic
     {
     protected:
         double AvgSyncDiff;  //** average difference between stream and sync clock
-        UTime::TSyncSource SyncSource;        TAudioSourceStream SourceStream;
+        UTime::TSyncSource SyncSource;
+        TAudioSourceStream SourceStream;
 
         virtual double GetLatency() = 0;
         virtual TStreamStatus GetStatus() = 0;
@@ -676,7 +679,8 @@ namespace UMusic
     };
 
     // TODO: JB --- THESE SHOULD NOT BE GLOBAL
-    std::vector<TLines> Tracks;
+    typedef std::vector<TLines> TrackVec;
+	TrackVec Tracks;
     TLyricsState LyricsState;
     TSoundLibrary SoundLib;
 

@@ -100,7 +100,7 @@ bool TParser::ParseSongHeader(const std::filesystem::path Filename)
         }
       }
       else
-        ErrorMessage = "Can""t open melody.xml file";
+        ErrorMessage = "Can't open melody.xml file";
     }
     catch (...)
     {
@@ -109,7 +109,7 @@ bool TParser::ParseSongHeader(const std::filesystem::path Filename)
     }
   }
   else
-    ErrorMessage = "Can""t find melody.xml file";
+    ErrorMessage = "Can't find melody.xml file";
 }
 
 bool TParser::ParseLine(std::string Line)
@@ -273,7 +273,7 @@ bool TParser::ParseLine(std::string Line)
               else
               { //Can"t understand teh Resolution :/
                 Result = false;
-                ErrorMessage = "Can""t read Resolution from Song";
+                ErrorMessage = "Can't read Resolution from Song";
               }
             }
             else if (avalue.Name == "GENRE")

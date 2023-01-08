@@ -1,48 +1,48 @@
 #include "UPathUtils.h"
 
+#include "UCommandLine.h"
+#include "ULog.h"
+#include "UPlatform.hpp"
+
 #if defined(_WIN32)
 #include <io.h>
 #elif defined(__unix__)
 #include <unistd.h>
-//#else
+//#else//TODO::mac?
 //#error "No implementation defined"
 #endif
 
 namespace UPathUtils
 {
     void AddSpecialPath(std::vector<std::filesystem::path>& PathList, const std::filesystem::path Path)
-    {
-        std::filesystem::path PathAbs, PathTmp;
-        std::filesystem::path OldPath, OldPathAbs, OldPathTmp;
-        
-        if (Path.empty() || !std::filesystem::create_directory(Path))
+    {        
+        if (Path.empty() || !create_directories(Path))
             return;
 
-        PathAbs = std::filesystem::absolute(Path);
+        auto PathAbs = absolute(Path);
 
         // check if path or a part of the path was already added
         for (int i = 0; i < PathList.size(); ++i)
         {
             auto& OldPath = PathList[i];
-            OldPathAbs = std::filesystem::absolute(OldPath);
+            auto OldPathAbs = absolute(OldPath);
 
             // check if the new directory is a sub-directory of a previously added one.
             // This is also true, if both paths point to the same directories.
-            if (OldPathAbs.IsChildOf(PathAbs, false) || OldPathAbs == PathAbs)
+            if (OldPathAbs == PathAbs || IsChild(OldPathAbs, PathAbs))
             {
                 // ignore the new path
                 return;
             }
 
             // check if a previously added directory is a sub-directory of the new one.
-            if (PathAbs.IsChildOf(OldPathAbs, false))
+            if (IsChild(PathAbs, OldPathAbs))
             {
                 // replace the old with the new one.
                 PathList[i] = PathAbs;
                 return;
             }
         }
-
         PathList.emplace_back(PathAbs);
     }
 
@@ -51,6 +51,11 @@ namespace UPathUtils
         AddSpecialPath(SongPaths, Path);
     }
 
+    bool IsChild(const std::filesystem::path& potChild, const std::filesystem::path& base)
+    {
+        const auto mismatch_pair = std::mismatch(potChild.begin(), potChild.end(), base.begin(), base.end());
+        return mismatch_pair.second == base.end();
+    }
 
     /**
      * Initialize a path variable
@@ -62,7 +67,7 @@ namespace UPathUtils
             Exit;*/
 
         // Make sure the directory exists
-        if (!std::filesystem::create_directory(RequestedPath))
+        if (!create_directories(RequestedPath))
         {
             PathResult = "";
             return false;
@@ -87,5 +92,58 @@ namespace UPathUtils
         #else 
             #error "No access check implemented!"
         #endif
+    }
+
+    void AddCoverPath(const std::filesystem::path Path)
+    {
+        AddSpecialPath(CoverPaths, Path);
+    }
+
+    void InitializePaths()
+    {
+        // Log directory (must be writable)
+        if (!FindPath(LogPath, UPlatform::Platform.GetLogPath(), true))
+        {
+            ULog::Log.FileOutputEnabled = false;
+            ULog::Log.LogWarnLocation("Log directory \"" + UPlatform::Platform.GetLogPath().string() + "\" not available");
+        }
+
+        auto SharedPath = UPlatform::Platform.GetGameSharedPath();
+        auto UserPath = UPlatform::Platform.GetGameUserPath();
+
+        FindPath(SoundPath, SharedPath / "sounds", false);
+        FindPath(ThemePath, SharedPath / "themes", false);
+        FindPath(SkinsPath, SharedPath / "themes", false);
+        FindPath(LanguagesPath, SharedPath / "languages", false);
+        FindPath(PluginPath, SharedPath / "plugins", false);
+        FindPath(FontPath, SharedPath / "fonts", false);
+        FindPath(ResourcesPath, SharedPath / "resources", false);
+        FindPath(WebsitePath, SharedPath / "webs", false);
+        FindPath(SoundFontsPath, SharedPath / "soundfonts", false);
+        FindPath(AvatarsPath, SharedPath / "avatars", false);
+
+        // Playlists are not shared as we need one directory to write too
+        FindPath(PlaylistPath, UserPath / "playlists", true);
+
+        // Screenshot directory (must be writable)
+        if (!FindPath(ScreenshotsPath, UserPath / "screenshots", true))
+        {
+            ULog::Log.LogWarn("Screenshot directory \"" + UserPath.string() + "\" not available");
+        }
+
+        // Add song paths
+        if (UCommandLine::Params.SongPath)
+            AddSongPath(UCommandLine::Params.SongPath.value());
+
+#ifdef (__APPLE__)
+        AddSongPath(UPlatform::Platform.GetMusicPath);
+#else
+        AddSongPath(SharedPath / "songs");
+#endif
+        AddSongPath(UserPath / "songs");
+
+        // Add category cover paths
+        AddCoverPath(SharedPath / "covers");
+        AddCoverPath(UserPath / "covers");
     }
 }

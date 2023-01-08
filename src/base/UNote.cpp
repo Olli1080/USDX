@@ -1,5 +1,7 @@
 #include "UNote.h"
 
+#include "UFiles.h"
+
 SecDouble UNote::GetTimeForBeats(double BPM, double Beats)
 {
     return std::chrono::duration_cast<SecDouble>(MinDouble(BPM * Beats));
@@ -10,33 +12,31 @@ double UNote::GetBeats(double BPM, SecDouble Time)
     return BPM * std::chrono::duration_cast<MinDouble>(Time).count();
 }
 
-void UNote::GetMidBeatSub(int BPMNum, SecDouble& Time, double& CurBeat)
+void UNote::GetMidBeatSub(size_t BPMNum, SecDouble& Time, double& CurBeat, const std::vector<USong::TBPM>& BPM)
 {
-    SecDouble NewTime;
-
-    if (CurrentSong->BPM.size() == BPMNum)
+	if (BPM.size() - 1 == BPMNum)
     {
         // last BPM
-        CurBeat = CurrentSong->BPM[BPMNum].StartBeat + GetBeats(CurrentSong->BPM[BPMNum].BPM, Time);
+        CurBeat = BPM[BPMNum].StartBeat + GetBeats(BPM[BPMNum].BPM, Time);
         Time = SecDouble(0);
     }
     else
-    {
-        // not last BPM
+    {	    
+	    // not last BPM
         // count how much time is it for start of the new BPM and store it in NewTime
-        NewTime = GetTimeForBeats(CurrentSong->BPM[BPMNum].BPM, CurrentSong->BPM[BPMNum+1].StartBeat - CurrentSong->BPM[BPMNum].StartBeat);
+        SecDouble NewTime = GetTimeForBeats(BPM[BPMNum].BPM, BPM[BPMNum + 1].StartBeat - BPM[BPMNum].StartBeat);
 
         // compare it to remaining time
-        if ((Time - NewTime) > SecDouble(0))
+        if (Time - NewTime > SecDouble(0))
         {
             // there is still remaining time
-            CurBeat = CurrentSong->BPM[BPMNum].StartBeat;
+            CurBeat = BPM[BPMNum].StartBeat;
             Time -= NewTime;
         }
         else
         {
             // there is no remaining time
-            CurBeat = CurrentSong->BPM[BPMNum].StartBeat + GetBeats(CurrentSong->BPM[BPMNum].BPM, Time);
+            CurBeat = BPM[BPMNum].StartBeat + GetBeats(BPM[BPMNum].BPM, Time);
             Time = SecDouble(0);
         }
     }
@@ -78,40 +78,33 @@ double UNote::GetMidBeat(SecDouble Time)
     }
 }
 
-SecDouble UNote::GetTimeFromBeat(int Beat, std::shared_ptr<TSong> SelfSong)
+SecDouble UNote::GetTimeFromBeat(int Beat, const std::vector<UFiles::TBPM>& BPM, const MiliSecDouble& GAP)
 {
-    int CurBPM;
-    std::shared_ptr<TSong> Song;
-
-    Song = (SelfSong) ? SelfSong : CurrentSong;
-
-    SecDouble out{ 0.0 };
-
-    // static BPM
-    if (Song->BPM.size() == 1)
+	// static BPM
+    if (BPM.size() == 1)
     {
-        return std::chrono::duration_cast<SecDouble>(Song->GAP) + GetTimeForBeats(Song->BPM[0].BPM, Beat);
+        return std::chrono::duration_cast<SecDouble>(GAP) + GetTimeForBeats(BPM[0].BPM, Beat);
     }
     // variable BPM
-    else if (Song->BPM.size() > 1)
+    if (BPM.size() > 1)
     {
-        out = std::chrono::duration_cast<SecDouble>(Song->GAP);
-        int CurBPM = 0;
-        while (CurBPM <= Song->BPM.size() &&
-                (Beat > Song->BPM[CurBPM].StartBeat))
+	    auto out = std::chrono::duration_cast<SecDouble>(GAP);
+        size_t CurBPM = 0;
+        while (CurBPM < BPM.size() &&
+                Beat > BPM[CurBPM].StartBeat)
         {
-            if (CurBPM < Song->BPM.size() &&
-                Beat >= Song->BPM[CurBPM+1].StartBeat)
+            if (CurBPM < BPM.size() - 1 &&
+                Beat >= BPM[CurBPM + 1].StartBeat)
             {
                 // full range
-                out += GetTimeForBeats(Song->BPM[CurBPM].BPM, Song->BPM[CurBPM+1].StartBeat - Song->BPM[CurBPM].StartBeat);
+                out += GetTimeForBeats(BPM[CurBPM].BPM, BPM[CurBPM + 1].StartBeat - BPM[CurBPM].StartBeat);
             }
 
-            if (CurBPM == Song->BPM.size() ||
-                Beat < Song->BPM[CurBPM+1].StartBeat)
+            if (CurBPM == BPM.size() - 1 ||
+                Beat < BPM[CurBPM + 1].StartBeat)
             {
                 // in the middle
-                out += GetTimeForBeats(Song->BPM[CurBPM].BPM, Beat - Song->BPM[CurBPM].StartBeat);
+                out += GetTimeForBeats(BPM[CurBPM].BPM, Beat - BPM[CurBPM].StartBeat);
             }
             ++CurBPM;
         }
@@ -125,11 +118,7 @@ SecDouble UNote::GetTimeFromBeat(int Beat, std::shared_ptr<TSong> SelfSong)
        return out;
     }
     // invalid BPM
-    else
-    {
-        out = SecDouble{0.0};
-    }
-    return out;
+    return SecDouble{0.0};
 }
 
 

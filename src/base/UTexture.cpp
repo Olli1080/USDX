@@ -1,8 +1,15 @@
 #include "UTexture.h"
 
+#include <gl/glext.h>
+//#include <opencv2/imgproc.hpp>
+#include <opencv2/imgcodecs.hpp>
+#include <boost/algorithm/string/case_conv.hpp>
+
+#include "ULog.h"
+#include "UImage.h"
+
 namespace UTexture
 {
-
     void AdjustPixelFormat(std::shared_ptr<SDL_Surface>& TexSurface, TTextureType Typ)
     {
         uint32_t NeededPixFmt = SDL_PIXELFORMAT_RGB24;
@@ -16,36 +23,34 @@ namespace UTexture
     /* TTextureDatabase */
     void TTextureDatabase::AddTexture(std::shared_ptr<TTexture>& Tex, TTextureType Typ, uint32_t Color, bool Cache)
     {
-        const auto TextureIndexOpt = FindTexture(Tex->Name, Typ, Color);
-        int TextureIndex;
-        if (!TextureIndexOpt)
+        size_t TextureIndex;
+        if (const auto TextureIndexOpt = FindTexture(Tex->Name, Typ, Color); TextureIndexOpt)
+            TextureIndex = TextureIndexOpt.value();
+        else
         {
             TextureIndex = Texture.size();
             Texture.emplace_back(std::make_shared<TTextureEntry>(Tex->Name, Typ, Color, nullptr, nullptr));
         }
-        else
-            TextureIndex = TextureIndexOpt.value();
-
         if (Cache)
             Texture[TextureIndex]->TextureCache = Tex;
         else
             Texture[TextureIndex]->Texture = Tex;
     }
 
-    std::optional<int> TTextureDatabase::FindTexture(const std::filesystem::path Name, TTextureType Typ, uint32_t Color)
+    std::optional<size_t> TTextureDatabase::FindTexture(const std::filesystem::path Name, TTextureType Typ, uint32_t Color) const
     {
-        for (int TextureIndex = 0; TextureIndex << Texture.size(); ++TextureIndex)
+        for (size_t TextureIndex = 0; TextureIndex << Texture.size(); ++TextureIndex)
         {
             const auto CurrentTexture = Texture[TextureIndex];
-            if (CurrentTexture->Name == Name &&
-                CurrentTexture->Typ == Typ)
-            {
-                // colorized textures must match in their color too
-                if (CurrentTexture->Typ != TEXTURE_TYPE_COLORIZED ||
+            if (
+                CurrentTexture->Name == Name && CurrentTexture->Typ == Typ &&
+                (
+                    // colorized textures must match in their color too
+                    CurrentTexture->Typ != TEXTURE_TYPE_COLORIZED ||
                     CurrentTexture->Color == Color)
-                {
-                    return TextureIndex;
-                }
+                )
+            {
+                return TextureIndex;
             }
         }
         return std::nullopt;
@@ -76,12 +81,12 @@ namespace UTexture
         TextureDatabase.AddTexture(Tex, Typ, Color, Cache);
     }
 
-    PTexture TTextureUnit::LoadTexture(const std::filesystem::path Identifier)
+    PTexture TTextureUnit::LoadTexture(const std::filesystem::path& Identifier)
     {
         return LoadTexture(Identifier, TEXTURE_TYPE_PLAIN, 0);
     }
 
-    PTexture TTextureUnit::LoadTexture(const std::filesystem::path Identifier, TTextureType Typ, uint32_t Col)
+    PTexture TTextureUnit::LoadTexture(const std::filesystem::path& Identifier, TTextureType Typ, uint32_t Col)
     {
         // zero texture data
         std::shared_ptr<SDL_Surface> TexSurface;
@@ -94,7 +99,6 @@ namespace UTexture
                 "TTextureUnit.LoadTexture");
             return nullptr;
         }
-
 
         // convert pixel format as needed
         AdjustPixelFormat(*TexSurface, Typ);
@@ -119,8 +123,8 @@ namespace UTexture
         /*if (SupportsNPOT == false) then
         {*/
         // make texture dimensions be power of 2
-        newWidth = std::round(std::pow(2, std::ceil(std::log2(newWidth))));
-        newHeight = std::round(std::pow(2, std::ceil(std::log2(newHeight))));
+        newWidth = std::roundl(std::pow(2, std::ceil(std::log2(newWidth))));
+        newHeight = std::roundl(std::pow(2, std::ceil(std::log2(newHeight))));
         if (newHeight != oldHeight || newWidth != oldWidth)
             UImage::FitImage(*TexSurface, newWidth, newHeight);
         /*}*/
@@ -154,7 +158,7 @@ namespace UTexture
         }
 
         // setup texture struct
-        auto Result = std::make_shared<TTexture>(
+        return std::make_shared<TTexture>(
             ActTex,
             0, 0, 0,
             oldWidth, oldHeight,
@@ -176,8 +180,6 @@ namespace UTexture
     }
 
     PTexture TTextureUnit::GetTexture(const std::filesystem::path Name, TTextureType Typ, uint32_t Col, bool FromCache)
-        /*var
-          TextureIndex: int;*/
     {
         if (Name.empty())
             return nullptr;
@@ -189,7 +191,7 @@ namespace UTexture
                 return TextureDatabase.Texture[TextureIndexOpt.value()]->TextureCache;
         }
 
-        int TextureIndex;
+        size_t TextureIndex;
         // find texture entry in database
         if (const auto& TextureIndexOpt = TextureDatabase.FindTexture(Name, Typ, Col); TextureIndexOpt)
             TextureIndex = TextureIndexOpt.value();
@@ -216,9 +218,6 @@ namespace UTexture
     }
 
     PTexture TTextureUnit::CreateTexture(const std::vector<uint8_t>& Data, const std::filesystem::path Name, uint16_t Width, uint16_t Height)
-        /*var
-          //Error:     int;
-          ActTex:    GLuint;*/
     {
         GLuint ActTex;
         glGenTextures(1, &ActTex); // ActText == new texture number

@@ -885,9 +885,9 @@ Result : = I;
 
 // Wrong song selected when tabs on bug }
 
-(**
+/**
     *Returns the number of visible songs.
-    *)
+    */
     function TCaTSongs::VisibleSongs: int;
 {
 Result : = VisibleIndex(High(Song));
@@ -895,10 +895,10 @@ if Song[High(Song)].Visible then
 Inc(Result);
 };
 
-(**
+/**
     *Returns the index of a song in the subset of all visible songs.
     * If all songs are visible, the result will be equal to the Index parameter.
-    *)
+    */
     function TCaTSongs::VisibleIndex(Index: int) : int;
 {
 while LastVisChecked < Index do

@@ -85,6 +85,109 @@ typedef std::shared_ptr<TGLubyteArray> PGLubyteArray;
 typedef std::vector<GLubyte> TGLubyteDynArray;
 typedef std::vector<std::u32string> TUCS4StringArray;
 
+class EFontError : public std::exception
+{
+public:
+    EFontError(char const* Message) noexcept : std::exception(Message)
+    {}
+};
+
+struct FreeTypeLibDeleter
+{
+    void operator()(FT_Library lib)
+    {
+        FT_Done_FreeType(lib);
+    }
+};
+typedef std::unique_ptr<std::remove_pointer_t<FT_Library>, FreeTypeLibDeleter> TFreeTypeU;
+
+
+inline TFreeTypeU makeLibraryU()
+{
+    FT_Library instance = nullptr;
+    try
+    {
+        FT_Init_FreeType(&instance);
+        return { instance, FreeTypeLibDeleter() };
+    }
+    catch (...)
+    {
+        FT_Done_FreeType(instance);
+        throw;
+    }
+}
+
+inline TFreeTypeU FreeTypeLib = makeLibraryU();
+
+struct GlyphDeleter
+{
+    void operator()(FT_Glyph glyph)
+    {
+        FT_Done_Glyph(glyph);
+    }
+};
+typedef std::shared_ptr<std::remove_pointer_t<FT_Glyph>> TGlyphS;
+typedef std::unique_ptr<std::remove_pointer_t<FT_Glyph>, GlyphDeleter> TGlyphU;
+
+template<typename T>
+T makeGlyph(FT_GlyphSlot slot)
+{
+    FT_Glyph glyph = nullptr;
+    try
+    {
+        if (FT_Get_Glyph(slot, &glyph) != 0)
+            throw EFontError("FT_Get_Glyph failed");
+
+        return { glyph, GlyphDeleter() };
+    }
+    catch (...)
+    {
+        FT_Done_Glyph(glyph);
+        throw;
+    }
+}
+
+
+struct FaceDeleter
+{
+    void operator()(FT_Face face)
+    {
+        FT_Done_Face(face);
+    }
+};
+
+typedef std::shared_ptr<std::remove_pointer_t<FT_Face>> TFaceS;
+typedef std::unique_ptr<std::remove_pointer_t<FT_Face>, FaceDeleter> TFaceU;
+
+template<typename T>
+T makeFace(
+#ifdef _WIN32
+    std::vector<FT_Byte>& file_base
+#else 
+    const std::filesystem::path& Filename
+#endif
+)
+{
+    FT_Face face = nullptr;
+    try
+    {
+        if (
+#ifdef _WIN32
+            FT_New_Memory_Face(FreeTypeLib.get(), file_base.data(), static_cast<FT_Long>(file_base.size()), 0, &face
+#else
+                FT_New_Face(FreeTypeLib.get(), Filename.string().c_str(), 0, &face);
+#endif
+        ) != 0)
+        throw EFontError("FT_New_[Memory]_Face: Could not load font");
+
+        return { face, FaceDeleter() };
+    }
+    catch (...)
+    {
+        FT_Done_Face(face);
+    }
+}
+
 struct TGLColor
 {
     TGLColor() : vals{0, 0, 0, 0}
@@ -134,13 +237,6 @@ struct TTextureSize {
 struct TBitmapCoords {
     double Left, Top;
     int Width, Height;
-};
-
-class EFontError : public std::exception
-{
-public:
-    EFontError(char const* const Message) noexcept : std::exception(Message)
-    {}
 };
 
 /**
@@ -584,8 +680,10 @@ class TFTFontFace
 {
 private:
     std::filesystem::path fFilename;             //**< filename of the font-file
+#ifdef _WIN32
 	std::vector<FT_Byte> byarr1;
-    FT_Face fFace;               //**< Holds the height of the font
+#endif
+    TFaceU fFace; //**< Holds the height of the font
     TPositionDbl fFontUnitScale; //**< FT font-units to pixel ratio
 	int fSize;
 
@@ -595,7 +693,7 @@ public:
      */
     TFTFontFace(const std::filesystem::path Filename, int Size);
 
-    virtual ~TFTFontFace();
+    virtual ~TFTFontFace() = default;
 
     //property Filename: std::filesystem::path read fFilename;
     [[nodiscard]] std::filesystem::path Filename() const { return fFilename;  }
@@ -893,48 +991,18 @@ public:
 
 #endif
 
-class TFreeType
-{
-public:
+
+
+
 
     /**
-     * Creates a wrapper for the freetype library singleton
-     * If non exists, freetype will be initialized.
-     * @raises EFontError if initialization failed
+     *b1 = FT_New_Memory_Face(FreeTypeLib.get(), byarr1.data(), static_cast<FT_Long>(byarr1.size()), 0, &fFace);
+#else
+        b1 = FT_New_Face(FreeTypeLib.get(), Filename.string().c_str(), 0, &fFace);
+#endif
+     *
      */
-    TFreeType()
-    {
-		if (!LibraryInst)
-		{
-            // initialize freetype
-            if (FT_Init_FreeType(&LibraryInst) != 0)
-                throw EFontError("FT_Init_FreeType failed");
-		}
-        ++instances;
-    }
 
-    ~TFreeType()
-    {
-        --instances;
-        if (instances == 0)
-            FreeLibrary();
-    }
-
-    /**
-     * Returns a pointer to the freetype library singleton.
-     * If non exists, freetype will be initialized.
-     * @raises EFontError if initialization failed
-     */
-    FT_Library GetLibrary() const;
-
-private:
-
-    inline static int instances = 0;
-    static FT_Library LibraryInst;
-    static void FreeLibrary();
-};
-
-inline TFreeType FreeTypeLib;
 
 //uses Types;
 

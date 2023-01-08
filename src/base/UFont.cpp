@@ -613,51 +613,39 @@ void TCachedFont::FlushCache(bool KeepBaseSet)
 
 TFTFontFace::TFTFontFace(const std::filesystem::path Filename, int Size)
 {
-    int b1 = 3;
+    //int b1 = 3;
 
     fFilename = Filename;
     fSize = Size;
-    try
-    {
-#ifdef _WIN32
-        auto SourceFile = std::basic_ifstream<FT_Byte>(Filename, std::ios::binary);
 
-        byarr1 = std::vector<FT_Byte>(
-            std::istreambuf_iterator(SourceFile),
-            std::istreambuf_iterator()
-            );
-        b1 = FT_New_Memory_Face(FreeTypeLib.GetLibrary(), byarr1.data(), static_cast<FT_Long>(byarr1.size()), 0, &fFace);
+#ifdef _WIN32
+    auto SourceFile = std::basic_ifstream<FT_Byte>(Filename, std::ios::binary);
+
+    byarr1 = std::vector<FT_Byte>(
+        std::istreambuf_iterator(SourceFile),
+        std::istreambuf_iterator()
+        );
+    fFace = makeFace<TFaceU>(byarr1);
 #else
-        b1 = FT_New_Face(FreeTypeLib.GetLibrary(), Filename.string().c_str(), 0, &fFace);
+	fFace = makeFace<TFaceU>(Filename);
 #endif
-    }
-    catch (...)
-    {
-        const auto msg = "FT_New_Face: Error - Could not load font file to memory on Windows \"" + Filename.string() + "\"";
-        throw EFontError(msg.c_str());
-    }
     // load font information
-    if (b1 != 0)
+    /*if (b1 != 0)
     {
         const auto msg = "FT_New_Face: Could not load font \"" + Filename.string() + "\"";
         throw EFontError(msg.c_str());
-    }
+    }*/
 
     // support scalable fonts only
     if (!FT_IS_SCALABLE(fFace))
         throw EFontError("Font is not scalable");
 
-    if (FT_Set_Pixel_Sizes(fFace, 0, Size) != 0)
+    auto raw = fFace.get();
+    if (FT_Set_Pixel_Sizes(raw, 0, Size) != 0)
         throw EFontError("FT_Set_Pixel_Sizes fails");
     // get scale factor for font-unit to pixel-size transformation
-    fFontUnitScale.X = fFace->size->metrics.x_ppem / fFace->units_per_EM;
-    fFontUnitScale.Y = fFace->size->metrics.y_ppem / fFace->units_per_EM;
-}
-
-TFTFontFace::~TFTFontFace()
-{
-    // free face data
-    FT_Done_Face(fFace);
+    fFontUnitScale.X = static_cast<double>(fFace->size->metrics.x_ppem) / fFace->units_per_EM;
+    fFontUnitScale.Y = static_cast<double>(fFace->size->metrics.y_ppem) / fFace->units_per_EM;
 }
 
 /*
@@ -745,7 +733,7 @@ std::shared_ptr<TFTFontFaceCache> TFTFont::GetFaceCache()
     return FontFaceCache;
 }
 
-void TFTFont::ResetIntern();
+void TFTFont::ResetIntern()
 {
     // Note: outset && non outset fonts use same spacing
     fLineSpacing = fFace->Data()->height * fFace->FontUnitScale().Y;
@@ -1303,11 +1291,11 @@ UseStencil: bool;*/
     //{ extrude outer border }
 
     FT_Stroker OuterStroker;
-    if (FT_Stroker_New(FreeTypeLib.GetLibrary(), &OuterStroker) != 0)
+    if (FT_Stroker_New(FreeTypeLib.get(), &OuterStroker) != 0)
         throw EFontError("FT_Stroker_New failed!");
     FT_Stroker_Set(
         OuterStroker,
-        std::round(fOutset * 64),
+        std::roundl(fOutset * 64),
         FT_STROKER_LINECAP_ROUND,
         FT_STROKER_LINEJOIN_BEVEL,
         0);
@@ -1326,7 +1314,7 @@ UseStencil: bool;*/
     FT_Stroker InnerStroker;
     if (UseStencil)
     {
-      if (FT_Stroker_New(FreeTypeLib.GetLibrary(), &InnerStroker) != 0)
+      if (FT_Stroker_New(FreeTypeLib.get(), &InnerStroker) != 0)
         throw EFontError("FT_Stroker_New failed!");
       FT_Stroker_Set(
           InnerStroker,
@@ -1354,8 +1342,8 @@ UseStencil: bool;*/
     FT_Int OutlineFlags = Outline.flags;
 
     // resize glyph outline to hold inner && outer border
-    FT_Outline_Done(FreeTypeLib.GetLibrary(), &Outline);
-    if (FT_Outline_New(FreeTypeLib.GetLibrary(), GlyphNumPoints, GlyphNumContours, &Outline) != 0)
+    FT_Outline_Done(FreeTypeLib.get(), &Outline);
+    if (FT_Outline_New(FreeTypeLib.get(), GlyphNumPoints, GlyphNumContours, &Outline) != 0)
         throw EFontError("FT_Outline_New failed!");
 
     Outline.n_points = 0;
@@ -1397,9 +1385,8 @@ void TFTGlyph::CreateTexture(FT_Int32 LoadFlags)
         throw EFontError("FT_Load_Glyph failed");
 
     // move the face's glyph into a Glyph object
-    FT_Glyph Glyph;
-    if (FT_Get_Glyph(fFace.Data()->glyph, &Glyph) != 0)
-        throw EFontError("FT_Get_Glyph failed");
+    auto uniqueGlyph = makeGlyph<TGlyphU>(fFace.Data()->glyph);
+    auto Glyph = Glyph.get();
 
     if (fOutset > 0)
         StrokeBorder(Glyph);
@@ -1420,7 +1407,7 @@ void TFTGlyph::CreateTexture(FT_Int32 LoadFlags)
     // convert the glyph to a bitmap (&& destroy original glyph image).
     // Request 8 bit gray level pixel mode. 
     FT_Glyph_To_Bitmap(&Glyph, FT_RENDER_MODE_NORMAL, nullptr, 1);
-    auto BitmapGlyph = FT_BitmapGlyph(Glyph);
+    auto BitmapGlyph = reinterpret_cast<FT_BitmapGlyph>(Glyph);
 
     // get bitmap offsets
     fBitmapCoords.Left = BitmapGlyph->left - cTexSmoothBorder;
@@ -1525,7 +1512,6 @@ void TFTGlyph::CreateTexture(FT_Int32 LoadFlags)
     glEndList();
 
     // free glyph data (bitmap, etc.)
-    FT_Done_Glyph(Glyph);
 }
 
 TFTGlyph::TFTGlyph(std::shared_ptr<TFTFont> Font, char32_t ch, float Outset,
@@ -1709,23 +1695,6 @@ void TGlyphCache::FlushCache(bool KeepBaseSet)
 			return key >= 256;
         });
 }
-
-/*
- * TFreeType
- */
-
-FT_Library TFreeType::GetLibrary() const
-{
-    return LibraryInst;
-}
-
-void TFreeType::FreeLibrary()
-{
-    if (LibraryInst)
-        FT_Done_FreeType(LibraryInst);
-    LibraryInst = nullptr;
-}
-
 
 #ifdef BITMAP_FONT
 /*

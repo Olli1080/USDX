@@ -31,20 +31,22 @@
 #include <vector>
 #include <cstdint>
 
+#include "UFiles.h"
 #include "UMusic.h"
 #include "USong.h"
 #include "UIni.h"
 
 namespace UNote
 {
-struct TPlayerNote {
+struct TPlayerNote
+{
   int Start;
   int Duration;
   double Detect;
   double Tone;
   bool Perfect;
   bool Hit;
-  TNoteType NoteType;
+  UMusic::TNoteType NoteType;
 };
 
 typedef std::shared_ptr<TPlayerNote> PPLayerNote;
@@ -120,11 +122,11 @@ struct TMedleyPlaylist
  * Player info and state for each player.
  * The amount of players is given by PlayersPlay.
  */
-std::vector<TPlayer> Player;
+inline std::vector<TPlayer> Player;
 
 /**
  * Number of players or teams playing.
- * Possible values: 1 - 6
+ * Possible values: 1 - 6 //TODO::should be IMaxPlayer from UIni
  */
 int PlayersPlay;
 
@@ -144,7 +146,7 @@ void NewBeatClick(TScreenSingController Screen);  // executed when on then new b
 void NewBeatDetect(TScreenSingController Screen); // executed when on then new beat for detection
 void NewNote(int CP, TScreenSingController Screen);       // detect note
 double GetMidBeat(double Time);
-SecDouble GetTimeFromBeat(int Beat, std::shared_ptr<USong::TSong> SelfSong = {});
+SecDouble GetTimeFromBeat(int Beat, const std::vector<UFiles::TBPM>& BPM, const MiliSecDouble& GAP);
 
 void SingJukebox(TScreenJukebox Screen);
 
@@ -173,7 +175,7 @@ SecDouble GetTimeForBeats(double BPM, double Beats);
 
 double GetBeats(double BPM, SecDouble Time);
 
-void GetMidBeatSub(int BPMNum, SecDouble& Time, double& CurBeat);
+static void GetMidBeatSub(size_t BPMNum, SecDouble& Time, double& CurBeat, const std::vector<USong::TBPM>& BPM);
 
 
 double GetMidBeat(SecDouble Time);

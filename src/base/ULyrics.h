@@ -95,8 +95,8 @@ namespace ULyrics
         TLyricLine LowerLine;    // second lind displayed (bottom)
         TLyricLine QueueLine;    // third line (will be displayed when lower line is finished)
 
-        UTexture::TTexture IndicatorTex;      // texture for lyric indikator
-        UTexture::TTexture BallTex;      // texture of the ball for the lyric effect
+        UTexture::PTexture IndicatorTex;      // texture for lyric indikator
+        UTexture::PTexture BallTex;      // texture of the ball for the lyric effect
 
         bool QueueFull;       // set to true if the queue is full and a line will be replaced with the next AddLine
         int LCounter;       // line counter

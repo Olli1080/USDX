@@ -41,6 +41,7 @@
 #include <boost/algorithm/string/case_conv.hpp>
 #include <boost/algorithm/string/trim.hpp>
 
+#include "TextGL.h"
 #include "UCommon.h"
 #include "UIni.h"
 #include "ULanguage.h"
@@ -73,6 +74,13 @@ struct TThemeBackground
     std::string Tex;
 };
 
+template<typename T>
+struct TThemeColor<T>
+{
+    T R;
+    T G;
+    T B;
+};
 
 //Defaul Background for Screens w/o Theme e.g. editor
 const TThemeBackground DEFAULT_BACKGROUND = {
@@ -238,6 +246,7 @@ struct TThemeLoading : public TThemeBasic
     TThemeStatic StaticAnimation;
     TThemeText TextLoading;
 };
+
 struct TThemeMain : public TThemeBasic
 {
     TThemeButton ButtonSolo;
@@ -280,9 +289,7 @@ struct TThemeName : public TThemeBasic
 
 struct TThemeLevel : public TThemeBasic
 {
-    TThemeButton ButtonEasy;
-    TThemeButton ButtonMedium;
-    TThemeButton ButtonHard;
+    std::array<UIni::Difficulty, static_cast<size_t>(UIni::Difficulty::Size)> Button;
 };
 
 struct TThemeSong : public TThemeBasic
@@ -368,54 +375,43 @@ struct TThemeSong : public TThemeBasic
 
     //Screen Song Scores
     TThemeText TextScore;
+
     TThemeText TextMaxScore;
     TThemeText TextMediaScore;
+
     TThemeText TextMaxScore2;
     TThemeText TextMediaScore2;
+
     TThemeText TextScoreUser;
-    TThemeText TextMaxScoreLocal;
-    TThemeText TextMediaScoreLocal;
     TThemeText TextScoreUserLocal;
 
+    TThemeText TextMaxScoreLocal;
+    TThemeText TextMediaScoreLocal;
+
     //Party Mode
-    TThemeStatic StaticTeam1Joker1;
-    TThemeStatic StaticTeam1Joker2;
-    TThemeStatic StaticTeam1Joker3;
-    TThemeStatic StaticTeam1Joker4;
-    TThemeStatic StaticTeam1Joker5;
-    TThemeStatic StaticTeam2Joker1;
-    TThemeStatic StaticTeam2Joker2;
-    TThemeStatic StaticTeam2Joker3;
-    TThemeStatic StaticTeam2Joker4;
-    TThemeStatic StaticTeam2Joker5;
-    TThemeStatic StaticTeam3Joker1;
-    TThemeStatic StaticTeam3Joker2;
-    TThemeStatic StaticTeam3Joker3;
-    TThemeStatic StaticTeam3Joker4;
-    TThemeStatic StaticTeam3Joker5;
+    std::array<std::array<TThemeStatic, 5>, UIni::IMaxTeamCount> StaticTeamJoker;
 
     TThemeText TextPartyTime;
 
-    TThemeStatic Static2PlayersDuetSingerP1;
-    TThemeStatic Static2PlayersDuetSingerP2;
+    std::array<TThemeStatic, 2> Static2PlayersDuetSinger;
+    std::array<TThemeStatic, 3> Static3PlayersDuetSinger;
 
-    TThemeStatic Static3PlayersDuetSingerP1;
-    TThemeStatic Static3PlayersDuetSingerP2;
-    TThemeStatic Static3PlayersDuetSingerP3;
+    std::array<TThemeStatic, 2> Static4PlayersDuetSinger;
+    std::array<TThemeStatic, 3> Static6PlayersDuetSinger;
 
-    TThemeStatic Static4PlayersDuetSingerP3;
-    TThemeStatic Static4PlayersDuetSingerP4;
+    std::array<TThemeText, 2> Text2PlayersDuetSinger;
+    std::array<TThemeText, 3> Text3PlayersDuetSinger;
+};
 
-    TThemeStatic Static6PlayersDuetSingerP4;
-    TThemeStatic Static6PlayersDuetSingerP5;
-    TThemeStatic Static6PlayersDuetSingerP6;
-
-    TThemeText Text2PlayersDuetSingerP1;
-    TThemeText Text2PlayersDuetSingerP2;
-
-    TThemeText Text3PlayersDuetSingerP1;
-    TThemeText Text3PlayersDuetSingerP2;
-    TThemeText Text3PlayersDuetSingerP3;
+struct SingMode
+{
+    TThemeStatic Static;
+    TThemeStatic StaticAvatar;
+    TThemeStatic StaticScoreBG;
+    TThemeText Text;
+    TThemeText TextScore;
+    TThemeStatic StaticSingBar;
+    TThemePosition SingOscilloscope;
 };
 
 struct TThemeSing : public TThemeBasic
@@ -430,253 +426,31 @@ struct TThemeSing : public TThemeBasic
     TThemeText TextTimeText;
     //eoa TimeBar mod
 
-    TThemeStatic StaticP1;
-    TThemeText TextP1;
-    TThemeStatic StaticP1ScoreBG; //Static for ScoreBG
-    TThemeText TextP1Score;
-    TThemeStatic StaticP1Avatar;
+    SingMode P1; //added for ps3 skin
+    SingMode P1TwoP; //game in 2/4 player modi
+    SingMode P1ThreeP; //game in 3/6 player modi
 
-    //moveable singbar mod
-    TThemeStatic StaticP1SingBar;
-    TThemeStatic StaticP1ThreePSingBar;
-    TThemeStatic StaticP1TwoPSingBar;
-    TThemeStatic StaticP2RSingBar;
-    TThemeStatic StaticP2MSingBar;
-    TThemeStatic StaticP3SingBar;
-    //eoa moveable singbar
+    SingMode P2R;
+    SingMode P2M;
+    SingMode P3R;
 
-    //added for ps3 skin
-    //game in 2/4 player modi
-    TThemeStatic StaticP1TwoP;
-    TThemeStatic StaticP1TwoPAvatar;
-    TThemeStatic StaticP1TwoPScoreBG; //Static for ScoreBG
-    TThemeText TextP1TwoP;
-    TThemeText TextP1TwoPScore;
-    //game in 3/6 player modi
-    TThemeStatic StaticP1ThreeP;
-    TThemeStatic StaticP1ThreePAvatar;
-    TThemeStatic StaticP1ThreePScoreBG; //Static for ScoreBG
-    TThemeText TextP1ThreeP;
-    TThemeText TextP1ThreePScore;
-    //eoa
-
-    TThemeStatic StaticP2R;
-    TThemeStatic StaticP2RAvatar;
-    TThemeStatic StaticP2RScoreBG; //Static for ScoreBG
-    TThemeText TextP2R;
-    TThemeText TextP2RScore;
-
-    TThemeStatic StaticP2M;
-    TThemeStatic StaticP2MAvatar;
-    TThemeStatic StaticP2MScoreBG; //Static for ScoreBG
-    TThemeText TextP2M;
-    TThemeText TextP2MScore;
-
-    TThemeStatic StaticP3R;
-    TThemeStatic StaticP3RAvatar;
-    TThemeStatic StaticP3RScoreBG; //Static for ScoreBG
-    TThemeText TextP3R;
-    TThemeText TextP3RScore;
-
-    TThemeStatic StaticDuetP1ThreeP;
-    TThemeStatic StaticDuetP1ThreePAvatar;
-    TThemeText TextDuetP1ThreeP;
-    TThemeStatic StaticDuetP1ThreePScoreBG;
-    TThemeText TextDuetP1ThreePScore;
-
-    TThemeStatic StaticDuetP2M;
-    TThemeStatic StaticDuetP2MAvatar;
-    TThemeText TextDuetP2M;
-    TThemeStatic StaticDuetP2MScoreBG;
-    TThemeText TextDuetP2MScore;
-
-    TThemeStatic StaticDuetP3R;
-    TThemeStatic StaticDuetP3RAvatar;
-    TThemeText TextDuetP3R;
-    TThemeStatic StaticDuetP3RScoreBG;
-    TThemeText TextDuetP3RScore;
-
-    TThemeStatic StaticDuetP1ThreePSingBar;
-    TThemeStatic StaticDuetP2MSingBar;
-    TThemeStatic StaticDuetP3RSingBar;
+    SingMode DuetP1ThreeP;
+    SingMode DuetP2M;
+    SingMode DuetP3R;
 
     //game in 4/6 player modi in 1 Screen
-    TThemeStatic StaticP1FourPSingBar;
-    TThemeStatic StaticP1FourP;
-    TThemeStatic StaticP1FourPAvatar;
-    TThemeStatic StaticP1FourPScoreBG; //Static for ScoreBG
-    TThemeText TextP1FourP;
-    TThemeText TextP1FourPScore;
-
-    TThemeStatic StaticP2FourPSingBar;
-    TThemeStatic StaticP2FourP;
-    TThemeStatic StaticP2FourPAvatar;
-    TThemeStatic StaticP2FourPScoreBG; //Static for ScoreBG
-    TThemeText TextP2FourP;
-    TThemeText TextP2FourPScore;
-
-    TThemeStatic StaticP3FourPSingBar;
-    TThemeStatic StaticP3FourP;
-    TThemeStatic StaticP3FourPAvatar;
-    TThemeStatic StaticP3FourPScoreBG; //Static for ScoreBG
-    TThemeText TextP3FourP;
-    TThemeText TextP3FourPScore;
-
-    TThemeStatic StaticP4FourPSingBar;
-    TThemeStatic StaticP4FourP;
-    TThemeStatic StaticP4FourPAvatar;
-    TThemeStatic StaticP4FourPScoreBG; //Static for ScoreBG
-    TThemeText TextP4FourP;
-    TThemeText TextP4FourPScore;
-
-    TThemeStatic StaticP1SixPSingBar;
-    TThemeStatic StaticP1SixP;
-    TThemeStatic StaticP1SixPAvatar;
-    TThemeStatic StaticP1SixPScoreBG; //Static for ScoreBG
-    TThemeText TextP1SixP;
-    TThemeText TextP1SixPScore;
-
-    TThemeStatic StaticP2SixPSingBar;
-    TThemeStatic StaticP2SixP;
-    TThemeStatic StaticP2SixPAvatar;
-    TThemeStatic StaticP2SixPScoreBG; //Static for ScoreBG
-    TThemeText TextP2SixP;
-    TThemeText TextP2SixPScore;
-
-    TThemeStatic StaticP3SixPSingBar;
-    TThemeStatic StaticP3SixP;
-    TThemeStatic StaticP3SixPAvatar;
-    TThemeStatic StaticP3SixPScoreBG; //Static for ScoreBG
-    TThemeText TextP3SixP;
-    TThemeText TextP3SixPScore;
-
-    TThemeStatic StaticP4SixPSingBar;
-    TThemeStatic StaticP4SixP;
-    TThemeStatic StaticP4SixPAvatar;
-    TThemeStatic StaticP4SixPScoreBG; //Static for ScoreBG
-    TThemeText TextP4SixP;
-    TThemeText TextP4SixPScore;
-
-    TThemeStatic StaticP5SixPSingBar;
-    TThemeStatic StaticP5SixP;
-    TThemeStatic StaticP5SixPAvatar;
-    TThemeStatic StaticP5SixPScoreBG; //Static for ScoreBG
-    TThemeText TextP5SixP;
-    TThemeText TextP5SixPScore;
-
-    TThemeStatic StaticP6SixPSingBar;
-    TThemeStatic StaticP6SixP;
-    TThemeStatic StaticP6SixPAvatar;
-    TThemeStatic StaticP6SixPScoreBG; //Static for ScoreBG
-    TThemeText TextP6SixP;
-    TThemeText TextP6SixPScore;
+    std::array<SingMode, 4> FourP;
+    std::array<SingMode, 6> SixP;
 
     // duet 4/6 players in one screen
-    TThemeStatic StaticP1DuetFourPSingBar;
-    TThemeStatic StaticP1DuetFourP;
-    TThemeStatic StaticP1DuetFourPAvatar;
-    TThemeStatic StaticP1DuetFourPScoreBG; //Static for ScoreBG
-    TThemeText TextP1DuetFourP;
-    TThemeText TextP1DuetFourPScore;
-
-    TThemeStatic StaticP2DuetFourPSingBar;
-    TThemeStatic StaticP2DuetFourP;
-    TThemeStatic StaticP2DuetFourPAvatar;
-    TThemeStatic StaticP2DuetFourPScoreBG; //Static for ScoreBG
-    TThemeText TextP2DuetFourP;
-    TThemeText TextP2DuetFourPScore;
-
-    TThemeStatic StaticP3DuetFourPSingBar;
-    TThemeStatic StaticP3DuetFourP;
-    TThemeStatic StaticP3DuetFourPAvatar;
-    TThemeStatic StaticP3DuetFourPScoreBG; //Static for ScoreBG
-    TThemeText TextP3DuetFourP;
-    TThemeText TextP3DuetFourPScore;
-
-    TThemeStatic StaticP4DuetFourPSingBar;
-    TThemeStatic StaticP4DuetFourP;
-    TThemeStatic StaticP4DuetFourPAvatar;
-    TThemeStatic StaticP4DuetFourPScoreBG; //Static for ScoreBG
-    TThemeText TextP4DuetFourP;
-    TThemeText TextP4DuetFourPScore;
-
-    TThemeStatic StaticP1DuetSixPSingBar;
-    TThemeStatic StaticP1DuetSixP;
-    TThemeStatic StaticP1DuetSixPAvatar;
-    TThemeStatic StaticP1DuetSixPScoreBG; //Static for ScoreBG
-    TThemeText TextP1DuetSixP;
-    TThemeText TextP1DuetSixPScore;
-
-    TThemeStatic StaticP2DuetSixPSingBar;
-    TThemeStatic StaticP2DuetSixP;
-    TThemeStatic StaticP2DuetSixPAvatar;
-    TThemeStatic StaticP2DuetSixPScoreBG; //Static for ScoreBG
-    TThemeText TextP2DuetSixP;
-    TThemeText TextP2DuetSixPScore;
-
-    TThemeStatic StaticP3DuetSixPSingBar;
-    TThemeStatic StaticP3DuetSixP;
-    TThemeStatic StaticP3DuetSixPAvatar;
-    TThemeStatic StaticP3DuetSixPScoreBG; //Static for ScoreBG
-    TThemeText TextP3DuetSixP;
-    TThemeText TextP3DuetSixPScore;
-
-    TThemeStatic StaticP4DuetSixPSingBar;
-    TThemeStatic StaticP4DuetSixP;
-    TThemeStatic StaticP4DuetSixPAvatar;
-    TThemeStatic StaticP4DuetSixPScoreBG; //Static for ScoreBG
-    TThemeText TextP4DuetSixP;
-    TThemeText TextP4DuetSixPScore;
-
-    TThemeStatic StaticP5DuetSixPSingBar;
-    TThemeStatic StaticP5DuetSixP;
-    TThemeStatic StaticP5DuetSixPAvatar;
-    TThemeStatic StaticP5DuetSixPScoreBG; //Static for ScoreBG
-    TThemeText TextP5DuetSixP;
-    TThemeText TextP5DuetSixPScore;
-
-    TThemeStatic StaticP6DuetSixPSingBar;
-    TThemeStatic StaticP6DuetSixP;
-    TThemeStatic StaticP6DuetSixPAvatar;
-    TThemeStatic StaticP6DuetSixPScoreBG; //Static for ScoreBG
-    TThemeText TextP6DuetSixP;
-    TThemeText TextP6DuetSixPScore;
-
-    TThemePosition SingP1Oscilloscope;
-    TThemePosition SingP1TwoPOscilloscope;
-    TThemePosition SingP2ROscilloscope;
-    TThemePosition SingP1ThreePOscilloscope;
-    TThemePosition SingP2MOscilloscope;
-    TThemePosition SingP3ROscilloscope;
-    TThemePosition SingDuetP1ThreePOscilloscope;
-    TThemePosition SingDuetP2MOscilloscope;
-    TThemePosition SingDuetP3ROscilloscope;
-    TThemePosition SingP1FourPOscilloscope;
-    TThemePosition SingP2FourPOscilloscope;
-    TThemePosition SingP3FourPOscilloscope;
-    TThemePosition SingP4FourPOscilloscope;
-    TThemePosition SingP1SixPOscilloscope;
-    TThemePosition SingP2SixPOscilloscope;
-    TThemePosition SingP3SixPOscilloscope;
-    TThemePosition SingP4SixPOscilloscope;
-    TThemePosition SingP5SixPOscilloscope;
-    TThemePosition SingP6SixPOscilloscope;
-    TThemePosition SingP1DuetFourPOscilloscope;
-    TThemePosition SingP2DuetFourPOscilloscope;
-    TThemePosition SingP3DuetFourPOscilloscope;
-    TThemePosition SingP4DuetFourPOscilloscope;
-    TThemePosition SingP1DuetSixPOscilloscope;
-    TThemePosition SingP2DuetSixPOscilloscope;
-    TThemePosition SingP3DuetSixPOscilloscope;
-    TThemePosition SingP4DuetSixPOscilloscope;
-    TThemePosition SingP5DuetSixPOscilloscope;
-    TThemePosition SingP6DuetSixPOscilloscope;
+    std::array<SingMode, 4> DuetFourP;
+    std::array<SingMode, 6> DuetSixP;
 
     TThemeStatic StaticSongName;
     TThemeText TextSongName;
 
     //Linebonus Translations
-    std::array<std::u8string, 9> LineBonusText;
+    std::array<std::string, 9> LineBonusText;
 
     //Pause Popup
     TThemeStatic PausePopUp;
@@ -743,15 +517,9 @@ struct TThemeJukebox : public TThemeBasic
     TThemeSelectSlide SongOptionsLyricLineSlide;
     TThemeSelectSlide SongOptionsLyricPropertySlide;
     TThemeSelectSlide SongOptionsLyricAlphaSlide;
-    TThemeSelectSlide SelectR;
-    TThemeSelectSlide SelectG;
-    TThemeSelectSlide SelectB;
-    TThemeStatic TexR;
-    TThemeStatic TexG;
-    TThemeStatic TexB;
-    TThemeStatic PointerR;
-    TThemeStatic PointerG;
-    TThemeStatic PointerB;
+    TThemeColor<TThemeSelectSlide> Select;
+    TThemeColor<TThemeStatic> Tex;
+    TThemeColor<TThemeStatic> Pointer;
 };
 
 struct TThemeJukeboxPlaylist : public TThemeBasic
@@ -766,6 +534,39 @@ struct TThemeLyricBar
         LowerX, LowerW, LowerY, LowerH;
 };
 
+struct TThemePlayerScore
+{
+    AThemeStatic PlayerStatic;
+    AThemeText PlayerTexts;
+
+    TThemeText TextName;
+    TThemeText TextScore;
+
+    TThemeStatic AvatarStatic;
+
+    TThemeText TextNotes;
+    TThemeText TextNotesScore;
+    TThemeText TextLineBonus;
+    TThemeText TextLineBonusScore;
+    TThemeText TextGoldenNotes;
+    TThemeText TextGoldenNotesScore;
+    TThemeText TextTotal;
+    TThemeText TextTotalScore;
+
+    TThemeStatic StaticBoxLightest;
+    TThemeStatic StaticBoxLight;
+    TThemeStatic StaticBoxDark;
+
+    TThemeStatic StaticRatings;
+
+    TThemeStatic StaticBackLevel;
+    TThemeStatic StaticBackLevelRound;
+    TThemeStatic StaticLevel;
+    TThemeStatic StaticLevelRound;
+
+    TThemeButton ButtonSend;
+};
+
 struct TThemeScore : public TThemeBasic
 {
     TThemeText TextArtist;
@@ -773,35 +574,7 @@ struct TThemeScore : public TThemeBasic
 
     TThemeText TextArtistTitle;
 
-    std::array<AThemeStatic, UIni::IMaxPlayerCount> PlayerStatic;
-    std::array<AThemeText, UIni::IMaxPlayerCount> PlayerTexts;
-
-    std::array<TThemeText, UIni::IMaxPlayerCount> TextName;
-    std::array<TThemeText, UIni::IMaxPlayerCount> TextScore;
-
-    std::array<TThemeStatic, UIni::IMaxPlayerCount> AvatarStatic;
-
-    std::array<TThemeText, UIni::IMaxPlayerCount> TextNotes;
-    std::array<TThemeText, UIni::IMaxPlayerCount> TextNotesScore;
-    std::array<TThemeText, UIni::IMaxPlayerCount> TextLineBonus;
-    std::array<TThemeText, UIni::IMaxPlayerCount> TextLineBonusScore;
-    std::array<TThemeText, UIni::IMaxPlayerCount> TextGoldenNotes;
-    std::array<TThemeText, UIni::IMaxPlayerCount> TextGoldenNotesScore;
-    std::array<TThemeText, UIni::IMaxPlayerCount> TextTotal;
-    std::array<TThemeText, UIni::IMaxPlayerCount> TextTotalScore;
-
-    std::array<TThemeStatic, UIni::IMaxPlayerCount> StaticBoxLightest;
-    std::array<TThemeStatic, UIni::IMaxPlayerCount> StaticBoxLight;
-    std::array<TThemeStatic, UIni::IMaxPlayerCount> StaticBoxDark;
-
-    std::array<TThemeStatic, UIni::IMaxPlayerCount> StaticRatings;
-
-    std::array<TThemeStatic, UIni::IMaxPlayerCount> StaticBackLevel;
-    std::array<TThemeStatic, UIni::IMaxPlayerCount> StaticBackLevelRound;
-    std::array<TThemeStatic, UIni::IMaxPlayerCount> StaticLevel;
-    std::array<TThemeStatic, UIni::IMaxPlayerCount> StaticLevelRound;
-
-    std::array<TThemeButton, UIni::IMaxPlayerCount> ButtonSend;
+    std::array<TThemePlayerScore, UIni::IMaxPlayerCount> PlayerScore;
 
     TThemeStatic StaticNavigate;
     TThemeText TextNavigate;
@@ -835,7 +608,7 @@ struct TThemeOptions : public TThemeBasic
     TThemeButton ButtonExit;
 
     TThemeText TextDescription;
-    std::array<std::u8string, 12> Description;
+    std::array<std::string, 12> Description;
 };
 
 struct TThemeOptionsGame : public TThemeBasic
@@ -934,9 +707,8 @@ struct TThemeOptionsNetwork : public TThemeBasic
     TThemeSelectSlide SelectSendName;
     TThemeSelectSlide SelectAutoMode;
     TThemeSelectSlide SelectAutoPlayer;
-    TThemeSelectSlide SelectAutoScoreEasy;
-    TThemeSelectSlide SelectAutoScoreMedium;
-    TThemeSelectSlide SelectAutoScoreHard;
+
+    std::array<TThemeSelectSlide, static_cast<size_t>(UIni::Difficulty::Size)> SelectAutoScoreDifficulty;
     TThemeText TextInsertUser;
     TThemeButton ButtonInsert;
     TThemeButton ButtonExit;
@@ -966,16 +738,10 @@ struct TThemeOptionsJukebox : public TThemeBasic
     TThemeSelectSlide SelectLine;
     TThemeSelectSlide SelectProperty;
     TThemeSelectSlide SelectColor;
-    TThemeSelectSlide SelectR;
-    TThemeSelectSlide SelectG;
-    TThemeSelectSlide SelectB;
-    TThemeStatic TexR;
-    TThemeStatic TexG;
-    TThemeStatic TexB;
+    TThemeColor<TThemeSelectSlide> Select;
+    TThemeColor<TThemeStatic> Tex;
     TThemeStatic TexColor;
-    TThemeStatic PointerR;
-    TThemeStatic PointerG;
-    TThemeStatic PointerB;
+    TThemeColor<TThemeStatic> Pointer;
     TThemeButton ButtonExit;
     int UpperX, UpperW, UpperY, UpperH,
         LowerX, LowerW, LowerY, LowerH;
@@ -988,8 +754,8 @@ struct TThemeEdit : public TThemeBasic
 
     TThemeText TextDescription;
     TThemeText TextDescriptionLong;
-	std::array<std::u8string, 6> Description;
-	std::array<std::u8string, 6> DescriptionLong;
+	std::array<std::string, 6> Description;
+	std::array<std::string, 6> DescriptionLong;
 };
 
 struct TThemeEditConvert : public TThemeBasic
@@ -1002,8 +768,8 @@ struct TThemeEditConvert : public TThemeBasic
 
     TThemeText TextDescription;
     TThemeText TextDescriptionLong;
-	std::array<std::u8string, 6> Description;
-	std::array<std::u8string, 6> DescriptionLong;
+	std::array<std::string, 6> Description;
+	std::array<std::string, 6> DescriptionLong;
 };
 
 struct TThemeEditOpen: public TThemeBasic
@@ -1014,8 +780,8 @@ struct TThemeEditOpen: public TThemeBasic
 
     TThemeText TextDescription;
     TThemeText TextDescriptionLong;
-	std::array<std::u8string, 6> Description;
-	std::array<std::u8string, 6> DescriptionLong;
+	std::array<std::string, 6> Description;
+	std::array<std::string, 6> DescriptionLong;
 };
 
 struct TThemeEditSub: public TThemeBasic
@@ -1085,7 +851,7 @@ struct TThemeError: public TThemeBasic
 };
 
 struct TThemeCheck: public TThemeBasic
-	{
+{
     TThemeButton Button1;
     TThemeButton Button2;
     TThemeText TextCheck;
@@ -1149,78 +915,66 @@ struct TThemeSongJumpTo: public TThemeBasic
     TThemeText TextFound;
 
     //Translated Texts
-    std::u8string Songsfound;
-    std::u8string NoSongsfound;
-    std::u8string CatText;
-	std::array<std::u8string, 8> IType;
+    std::string Songsfound;
+    std::string NoSongsfound;
+    std::string CatText;
+	std::array<std::string, 8> IType;
+};
+
+struct PartyRound
+{
+    TThemeText TextRound;
+    TThemeText TextWinner;
+    TThemeStatic StaticRound;
+};
+/*
+struct PartyTeam
+{
+    TThemeText TextScoreTeam1;
+    TThemeText TextNameTeam1;
+    TThemeStatic StaticTeam1;
+};
+
+struct PartyPlayer
+{
+    TThemeText TextNextPlayer1;
+    TThemeText TextTeam1Players;
+    TThemeStatic StaticNextPlayer1;
+};
+*/
+
+struct PartyEntity
+{
+    TThemeText TextNextPlayer;
+    TThemeText TextScoreTeam;
+    TThemeText TextNameTeam;
+    TThemeText TextTeamPlayers;
+    TThemeStatic StaticTeam;
+    TThemeStatic StaticNextPlayer;
 };
 
   //Party Screens
 struct TThemePartyNewRound: public TThemeBasic
 {
-    TThemeText TextRound1;
-    TThemeText TextRound2;
-    TThemeText TextRound3;
-    TThemeText TextRound4;
-    TThemeText TextRound5;
-    TThemeText TextRound6;
-    TThemeText TextRound7;
-    TThemeText TextWinner1;
-    TThemeText TextWinner2;
-    TThemeText TextWinner3;
-    TThemeText TextWinner4;
-    TThemeText TextWinner5;
-    TThemeText TextWinner6;
-    TThemeText TextWinner7;
+    std::array<PartyRound, 7> Rounds;
+    std::array<PartyEntity, UIni::IMaxTeamCount> Entity;
+
     TThemeText TextNextRound;
     TThemeText TextNextRoundNo;
-    TThemeText TextNextPlayer1;
-    TThemeText TextNextPlayer2;
-    TThemeText TextNextPlayer3;
+};
 
-    TThemeStatic StaticRound1;
-    TThemeStatic StaticRound2;
-    TThemeStatic StaticRound3;
-    TThemeStatic StaticRound4;
-    TThemeStatic StaticRound5;
-    TThemeStatic StaticRound6;
-    TThemeStatic StaticRound7;
-
-    TThemeText TextScoreTeam1;
-    TThemeText TextScoreTeam2;
-    TThemeText TextScoreTeam3;
-    TThemeText TextNameTeam1;
-    TThemeText TextNameTeam2;
-    TThemeText TextNameTeam3;
-    TThemeText TextTeam1Players;
-    TThemeText TextTeam2Players;
-    TThemeText TextTeam3Players;
-
-    TThemeStatic StaticTeam1;
-    TThemeStatic StaticTeam2;
-    TThemeStatic StaticTeam3;
-    TThemeStatic StaticNextPlayer1;
-    TThemeStatic StaticNextPlayer2;
-    TThemeStatic StaticNextPlayer3;
+struct TeamPartyScore
+{
+    TThemeText TextScore;
+    TThemeText TextName;
+    TThemeStatic Static;
+    TThemeStatic StaticBG;
+    TThemeStatic StaticDeco;
 };
 
 struct TThemePartyScore: public TThemeBasic
 {
-    TThemeText TextScoreTeam1;
-    TThemeText TextScoreTeam2;
-    TThemeText TextScoreTeam3;
-    TThemeText TextNameTeam1;
-    TThemeText TextNameTeam2;
-    TThemeText TextNameTeam3;
-    TThemeStatic StaticTeam1;
-    TThemeStatic StaticTeam1BG;
-    TThemeStatic StaticTeam1Deco;
-    TThemeStatic StaticTeam2;
-    TThemeStatic StaticTeam2BG;
-    TThemeStatic StaticTeam2Deco;
-    TThemeStatic StaticTeam3;
-    TThemeStatic StaticTeam3BG;
-    TThemeStatic StaticTeam3Deco;
+    std::array<TeamPartyScore, UIni::IMaxTeamCount> Team;
 
     struct 
     {
@@ -1243,21 +997,11 @@ struct TThemePartyScore: public TThemeBasic
 
 struct TThemePartyWin: public TThemeBasic
 {
-    TThemeText TextScoreTeam1;
-    TThemeText TextScoreTeam2;
-    TThemeText TextScoreTeam3;
-    TThemeText TextNameTeam1;
-    TThemeText TextNameTeam2;
-    TThemeText TextNameTeam3;
-    TThemeStatic StaticTeam1;
-    TThemeStatic StaticTeam1BG;
-    TThemeStatic StaticTeam1Deco;
-    TThemeStatic StaticTeam2;
-    TThemeStatic StaticTeam2BG;
-    TThemeStatic StaticTeam2Deco;
-    TThemeStatic StaticTeam3;
-    TThemeStatic StaticTeam3BG;
-    TThemeStatic StaticTeam3Deco;
+    std::array<TThemeText, UIni::IMaxTeamCount> TextScoreTeam;
+    std::array<TThemeText, UIni::IMaxTeamCount> TextNameTeam;
+    std::array<TThemeStatic, UIni::IMaxTeamCount> StaticTeam;
+    std::array<TThemeStatic, UIni::IMaxTeamCount> StaticTeamBG;
+    std::array<TThemeStatic, UIni::IMaxTeamCount> StaticTeamDeco;
 
     TThemeText TextWinner;
 };
@@ -1275,28 +1019,14 @@ struct TThemePartyOptions: public TThemeBasic
 
 struct TThemePartyPlayer: public TThemeBasic
 {
+    std::array<TThemeButton, UIni::IMaxPlayerCount> PlayerName;
+    std::array<TThemeSelectSlide, UIni::IMaxTeamCount> SelectPlayers;
+
     TThemeSelectSlide SelectTeams;
-    TThemeSelectSlide SelectPlayers1;
-    TThemeSelectSlide SelectPlayers2;
-    TThemeSelectSlide SelectPlayers3;
 
     TThemeButton Team1Name;
-    TThemeButton Player1Name;
-    TThemeButton Player2Name;
-    TThemeButton Player3Name;
-    TThemeButton Player4Name;
-
     TThemeButton Team2Name;
-    TThemeButton Player5Name;
-    TThemeButton Player6Name;
-    TThemeButton Player7Name;
-    TThemeButton Player8Name;
-
     TThemeButton Team3Name;
-    TThemeButton Player9Name;
-    TThemeButton Player10Name;
-    TThemeButton Player11Name;
-    TThemeButton Player12Name;
 
     /*TThemeButton{ ButtonNext;
     TThemeButton ButtonPrev; }*/
@@ -1312,22 +1042,7 @@ struct TThemePartyTournamentPlayer: public TThemeBasic
 {
     TThemeSelectSlide SelectPlayers;
 
-    TThemeButton Player1Name;
-    TThemeButton Player2Name;
-    TThemeButton Player3Name;
-    TThemeButton Player4Name;
-    TThemeButton Player5Name;
-    TThemeButton Player6Name;
-    TThemeButton Player7Name;
-    TThemeButton Player8Name;
-    TThemeButton Player9Name;
-    TThemeButton Player10Name;
-    TThemeButton Player11Name;
-    TThemeButton Player12Name;
-    TThemeButton Player13Name;
-    TThemeButton Player14Name;
-    TThemeButton Player15Name;
-    TThemeButton Player16Name;
+    std::array<TThemeButton, UIni::IMaxPlayerCount> PlayerName;
 };
 
 struct TThemePartyTournamentOptions: public TThemeBasic
@@ -1346,14 +1061,16 @@ struct TThemePartyTournamentRounds: public TThemeBasic
     TThemeText NextPlayers;
 };
 
+struct PlayerPartyTournamentWin
+{
+    TThemeText TextScore;
+    TThemeText TextName;
+    TThemeStatic StaticBGP;
+};
+
 struct TThemePartyTournamentWin: public TThemeBasic
 {
-    TThemeText TextScorePlayer1;
-    TThemeText TextScorePlayer2;
-    TThemeText TextNamePlayer1;
-    TThemeText TextNamePlayer2;
-    TThemeStatic StaticBGPlayer1;
-    TThemeStatic StaticBGPlayer2;
+    std::array<PlayerPartyTournamentWin, 2> Player;
 };
 
   //About
@@ -1388,16 +1105,16 @@ struct TThemeStatDetail: public TThemeBasic
     TThemeText TextPage;
     AThemeText TextList;
 
-    std::array<std::u8string, 4> Description;
-    std::array<std::u8string, 4> DescriptionR;
-    std::array<std::u8string, 4> FormatStr;
-    std::u8string PageStr;
+    std::array<std::string, 4> Description;
+    std::array<std::string, 4> DescriptionR;
+    std::array<std::string, 4> FormatStr;
+    std::string PageStr;
 };
 
   //Playlist Translations
 struct TThemePlaylist
 {
-	std::u8string CatText;
+	std::string CatText;
 };
 
 struct TThemeEntry
@@ -1487,8 +1204,8 @@ public:
 
     TThemePlaylist Playlist;
 
-    std::array<std::u8string, 3> ILevel;
-    std::array<std::u8string, 4> IMode;
+    std::array<std::string, static_cast<size_t>(UIni::Difficulty::Size)> ILevel;
+    std::array<std::string, static_cast<size_t>(UIni::PartyMode::Size)> IMode;
 
     TTheme();
 
@@ -1594,6 +1311,7 @@ void glColorRGB(UCommon::TRGBA Color, double Alpha)
 
 TTheme::TTheme()
 {
+    /*
   Loading = TThemeLoading.Create;
   Main = TThemeMain.Create;
   Name = TThemeName.Create;
@@ -1652,66 +1370,66 @@ TTheme::TTheme()
   StatDetail = TThemeStatDetail.Create;
 
   JukeboxPlaylist = TThemeJukeboxPlaylist.Create;
-
+  */
   //LoadTheme(FileName, Color);
   LoadList();
 };
 
 void TTheme::LoadHeader(std::filesystem::path FileName)
-  /*var
-    TThemeEntry Entry;
-    TMemIniFile Ini;
-    string SkinName;
-    boolean SkinsFound;
-    string ThemeVersion;
-    int I;
-    int Len;
-    TUTF8StringDynArray Skins;*/
+/*var
+  TThemeEntry Entry;
+  TMemIniFile Ini;
+  string SkinName;
+  boolean SkinsFound;
+  string ThemeVersion;
+  int I;
+  int Len;
+  TUTF8StringDynArray Skins;*/
 {
-	TThemeEntry Entry;
-  Entry.Filename = UPathUtils::ThemePath / FileName;
-  //read info from theme header
-  auto Ini = TMemIniFile(Entry.Filename);
+    TThemeEntry Entry;
+    Entry.Filename = UPathUtils::ThemePath / FileName;
+    //read info from theme header
+    auto Ini = TMemIniFile(Entry.Filename);
 
-  Entry.Name = Ini.ReadString("Theme", "Name", FileName.filename().string());
-  auto ThemeVersion = boost::algorithm::trim_copy(boost::algorithm::to_upper_copy(Ini.ReadString("Theme", "US_Version", "no version tag")));
-  Entry.Creator = Ini.ReadString("Theme", "Creator", "Unknown");
-  auto SkinName = Ini.ReadString("Theme", "DefaultSkin", FileName.filename().string());
-  
+    Entry.Name = Ini.ReadString("Theme", "Name", FileName.filename().string());
+    auto ThemeVersion = boost::algorithm::trim_copy(boost::algorithm::to_upper_copy(Ini.ReadString("Theme", "US_Version", "no version tag")));
+    Entry.Creator = Ini.ReadString("Theme", "Creator", "Unknown");
+    auto SkinName = Ini.ReadString("Theme", "DefaultSkin", FileName.filename().string());
 
-  // don"t load theme with wrong version tag
-  if (ThemeVersion != "USD 110")
-  {
-    ULog::Log.LogWarn("Wrong Version (" + ThemeVersion + ") in Theme : " + Entry.Name, "Theme.LoadHeader");
-  }
-  else
-  {
-    //Search for Skins for this Theme
-    bool SkinsFound = false;
-    for I = Low(Skin.Skin) to High(Skin.Skin) do
+
+    // don"t load theme with wrong version tag
+    if (ThemeVersion != "USD 110")
     {
-      if (CompareText(Skin.Skin[I].Theme, Entry.Name) == 0)
-      {
-        SkinsFound = true;
-        break;
-      };
-    };
-
-    if (SkinsFound)
+        ULog::Log.LogWarn("Wrong Version (" + ThemeVersion + ") in Theme : " + Entry.Name, "Theme.LoadHeader");
+    }
+    else
     {
-      //{ found a valid Theme }
-      // set correct default skin
-      Skin.GetSkinsByTheme(Entry.Name, Skins);
-      Entry.DefaultSkin = max(0, GetArrayIndex(Skins, SkinName, true));
+        //Search for Skins for this Theme
+        bool SkinsFound = false;
+        for (I = Low(Skin.Skin) to High(Skin.Skin))
+        {
+            if (CompareText(Skin.Skin[I].Theme, Entry.Name) == 0)
+            {
+                SkinsFound = true;
+                break;
+            }
+        }
 
-      Len = Length(Themes);
-      SetLength(Themes, Len + 1);
-      SetLength(ITheme, Len + 1);
-      Themes[Len] = Entry;
-      ITheme[Len] = Entry.Name;
-    };
-  };
-};
+        if (SkinsFound)
+        {
+            //{ found a valid Theme }
+            // set correct default skin
+            Skin.GetSkinsByTheme(Entry.Name, Skins);
+            Entry.DefaultSkin = max(0, GetArrayIndex(Skins, SkinName, true));
+
+            Len = Length(Themes);
+            SetLength(Themes, Len + 1);
+            SetLength(ITheme, Len + 1);
+            Themes[Len] = Entry;
+            ITheme[Len] = Entry.Name;
+        }
+    }
+}
 
 void TTheme::LoadList()
   /*var
@@ -1750,7 +1468,7 @@ bool TTheme::LoadTheme(int ThemeNum, int sColor)
     #ifdef THEMESAVE
     ThemeIni = TIniFile.Create(Themes[ThemeNum].FileName.string());
     #else
-    ThemeIni = TMemIniFile.Create(Themes[ThemeNum].FileName.string());
+    ThemeIni = TMemIniFile(Themes[ThemeNum].FileName.string());
     #endif
 
     if (!ThemeIni.ReadString("Theme", "Name", "").empty())
@@ -2885,7 +2603,7 @@ void TTheme::ThemeLoadText(TThemeText& ThemeText, const std::string Name)
   ThemeText.ColB  = ThemeIni.ReadFloat(Name, "ColB", 0);
 
   ThemeText.Font  = ThemeIni.ReadInteger(Name, "Font", 0);
-  ThemeText.Style = ThemeIni.ReadInteger(Name, "Style", ftRegular);
+  ThemeText.Style = ThemeIni.ReadInteger(Name, "Style", TextGL::ftRegular);
   ThemeText.Size  = ThemeIni.ReadInteger(Name, "Size", 0);
   ThemeText.Align = ThemeIni.ReadInteger(Name, "Align", 0);
 
@@ -3003,106 +2721,106 @@ void TTheme::ThemeLoadButtonCollections(AThemeButtonCollection& Collections, con
 };
 //End Button Collection Mod
 
-void TTheme::ThemeLoadButton(TThemeButton& ThemeButton, const std::string Name, PAThemeButtonCollection Collections);
+void TTheme::ThemeLoadButton(TThemeButton& ThemeButton, const std::string Name, PAThemeButtonCollection Collections)
 /*var
   int C;
   int TLen;
   int T;
   PAThemeButtonCollection Collections2;*/
 {
-  if not ThemeIni.SectionExists(Name) then
-  {
-    ThemeButton.Visible = False;
-    exit;
-  };
-  ThemeButton.Tex = ThemeIni.ReadString(Name, "Tex", "");
-  ThemeButton.X = ThemeIni.ReadInteger (Name, "X", 0);
-  ThemeButton.Y = ThemeIni.ReadInteger (Name, "Y", 0);
-  ThemeButton.Z = ThemeIni.ReadFloat   (Name, "Z", 0);
-  ThemeButton.W = ThemeIni.ReadInteger (Name, "W", 0);
-  ThemeButton.H = ThemeIni.ReadInteger (Name, "H", 0);
-  ThemeButton.Typ = ParseTextureType(ThemeIni.ReadString(Name, "Type", ""), TEXTURE_TYPE_PLAIN);
+    if (!ThemeIni.SectionExists(Name))
+    {
+        ThemeButton.Visible = False;
+        return;
+    };
+    ThemeButton.Tex = ThemeIni.ReadString(Name, "Tex", "");
+    ThemeButton.X = ThemeIni.ReadInteger(Name, "X", 0);
+    ThemeButton.Y = ThemeIni.ReadInteger(Name, "Y", 0);
+    ThemeButton.Z = ThemeIni.ReadFloat(Name, "Z", 0);
+    ThemeButton.W = ThemeIni.ReadInteger(Name, "W", 0);
+    ThemeButton.H = ThemeIni.ReadInteger(Name, "H", 0);
+    ThemeButton.Typ = ParseTextureType(ThemeIni.ReadString(Name, "Type", ""), UTexture::TEXTURE_TYPE_PLAIN);
 
-  //Reflection Mod
-  ThemeButton.Reflection = (ThemeIni.ReadInteger(Name, "Reflection", 0) == 1);
-  ThemeButton.ReflectionSpacing = ThemeIni.ReadFloat(Name, "ReflectionSpacing", 15);
+    //Reflection Mod
+    ThemeButton.Reflection = (ThemeIni.ReadInteger(Name, "Reflection", 0) == 1);
+    ThemeButton.ReflectionSpacing = ThemeIni.ReadFloat(Name, "ReflectionSpacing", 15);
 
-  ThemeButton.ColR = ThemeIni.ReadFloat(Name, "ColR", 1);
-  ThemeButton.ColG = ThemeIni.ReadFloat(Name, "ColG", 1);
-  ThemeButton.ColB = ThemeIni.ReadFloat(Name, "ColB", 1);
-  ThemeButton.Int =  ThemeIni.ReadFloat(Name, "Int", 1);
-  ThemeButton.DColR = ThemeIni.ReadFloat(Name, "DColR", 1);
-  ThemeButton.DColG = ThemeIni.ReadFloat(Name, "DColG", 1);
-  ThemeButton.DColB = ThemeIni.ReadFloat(Name, "DColB", 1);
-  ThemeButton.DInt =  ThemeIni.ReadFloat(Name, "DInt", 1);
+    ThemeButton.ColR = ThemeIni.ReadFloat(Name, "ColR", 1);
+    ThemeButton.ColG = ThemeIni.ReadFloat(Name, "ColG", 1);
+    ThemeButton.ColB = ThemeIni.ReadFloat(Name, "ColB", 1);
+    ThemeButton.Int = ThemeIni.ReadFloat(Name, "Int", 1);
+    ThemeButton.DColR = ThemeIni.ReadFloat(Name, "DColR", 1);
+    ThemeButton.DColG = ThemeIni.ReadFloat(Name, "DColG", 1);
+    ThemeButton.DColB = ThemeIni.ReadFloat(Name, "DColB", 1);
+    ThemeButton.DInt = ThemeIni.ReadFloat(Name, "DInt", 1);
 
-  ThemeButton.Color = ThemeIni.ReadString(Name, "Color", "");
-  C = ColorExists(ThemeButton.Color);
-  if C >= 0 then
-  {
-    ThemeButton.ColR = Color[C].RGB.R;
-    ThemeButton.ColG = Color[C].RGB.G;
-    ThemeButton.ColB = Color[C].RGB.B;
-  };
+    ThemeButton.Color = ThemeIni.ReadString(Name, "Color", "");
+    C = ColorExists(ThemeButton.Color);
+    if (C >= 0)
+    {
+      ThemeButton.ColR = Color[C].RGB.R;
+      ThemeButton.ColG = Color[C].RGB.G;
+      ThemeButton.ColB = Color[C].RGB.B;
+    };
 
-  ThemeButton.DColor = ThemeIni.ReadString(Name, "DColor", "");
-  C = ColorExists(ThemeButton.DColor);
-  if C >= 0 then
-  {
-    ThemeButton.DColR = Color[C].RGB.R;
-    ThemeButton.DColG = Color[C].RGB.G;
-    ThemeButton.DColB = Color[C].RGB.B;
-  };
+    ThemeButton.DColor = ThemeIni.ReadString(Name, "DColor", "");
+    C = ColorExists(ThemeButton.DColor);
+    if (C >= 0)
+    {
+      ThemeButton.DColR = Color[C].RGB.R;
+      ThemeButton.DColG = Color[C].RGB.G;
+      ThemeButton.DColB = Color[C].RGB.B;
+    };
 
-  ThemeButton.Visible = (ThemeIni.ReadInteger(Name, "Visible", 1) == 1);
+    ThemeButton.Visible = (ThemeIni.ReadInteger(Name, "Visible", 1) == 1);
 
-  //Fade Mod
-  ThemeButton.SelectH = ThemeIni.ReadInteger (Name, "SelectH", ThemeButton.H);
-  ThemeButton.SelectW = ThemeIni.ReadInteger (Name, "SelectW", ThemeButton.W);
+    //Fade Mod
+    ThemeButton.SelectH = ThemeIni.ReadInteger(Name, "SelectH", ThemeButton.H);
+    ThemeButton.SelectW = ThemeIni.ReadInteger(Name, "SelectW", ThemeButton.W);
 
-  ThemeButton.DeSelectReflectionspacing = ThemeIni.ReadFloat(Name, "DeSelectReflectionSpacing", ThemeButton.Reflectionspacing);
+    ThemeButton.DeSelectReflectionspacing = ThemeIni.ReadFloat(Name, "DeSelectReflectionSpacing", ThemeButton.Reflectionspacing);
 
-  ThemeButton.Fade = (ThemeIni.ReadInteger(Name, "Fade", 0) == 1);
-  ThemeButton.FadeText = (ThemeIni.ReadInteger(Name, "FadeText", 0) == 1);
+    ThemeButton.Fade = (ThemeIni.ReadInteger(Name, "Fade", 0) == 1);
+    ThemeButton.FadeText = (ThemeIni.ReadInteger(Name, "FadeText", 0) == 1);
 
 
-  ThemeButton.FadeTex = ThemeIni.ReadString(Name, "FadeTex", "");
-  ThemeButton.FadeTexPos= ThemeIni.ReadInteger(Name, "FadeTexPos", 0);
-  if (ThemeButton.FadeTexPos > 4) Or (ThemeButton.FadeTexPos < 0) then
-    ThemeButton.FadeTexPos = 0;
+    ThemeButton.FadeTex = ThemeIni.ReadString(Name, "FadeTex", "");
+    ThemeButton.FadeTexPos = ThemeIni.ReadInteger(Name, "FadeTexPos", 0);
+    if (ThemeButton.FadeTexPos > 4) Or(ThemeButton.FadeTexPos < 0) then
+        ThemeButton.FadeTexPos = 0;
 
-  //Button Collection Mod
-  T = ThemeIni.ReadInteger(Name, "Parent", 0);
+    //Button Collection Mod
+    T = ThemeIni.ReadInteger(Name, "Parent", 0);
 
-  //Set Collections to Last Basic Collections if no valid Value
-  if (Collections == nil) then
-    Collections2 = @LastThemeBasic.ButtonCollection
-  else
-    Collections2 = Collections;
-  //Test for valid Value
-  if (Collections2 != nil) AND (T > 0) AND (T <= Length(Collections2^)) then
-  {
-    Inc(Collections2^[T-1].ChildCount);
-    ThemeButton.Parent = T;
-  }
-  else
-    ThemeButton.Parent = 0;
+    //Set Collections to Last Basic Collections if no valid Value
+    if (Collections == nil) then
+        Collections2 = @LastThemeBasic.ButtonCollection
+    else
+        Collections2 = Collections;
+    //Test for valid Value
+    if (Collections2 != nil && T > 0 && T <= Length(Collections2^))
+    {
+        Inc(Collections2 ^ [T - 1].ChildCount);
+        ThemeButton.Parent = T;
+    }
+    else
+        ThemeButton.Parent = 0;
 
-  //Read ButtonTexts
-  TLen = ThemeIni.ReadInteger(Name, "Texts", 0);
-  SetLength(ThemeButton.Text, TLen);
-  for T = 1 to TLen do
-    ThemeLoadText(ThemeButton.Text[T-1], Name + "Text" + std::to_string(T));
-};
+    //Read ButtonTexts
+    TLen = ThemeIni.ReadInteger(Name, "Texts", 0);
+    SetLength(ThemeButton.Text, TLen);
+    for T = 1 to TLen do
+        ThemeLoadText(ThemeButton.Text[T - 1], Name + "Text" + std::to_string(T));
+}
 
 void TTheme::ThemeLoadSelectSlide(TThemeSelectSlide& ThemeSelectS, const std::string Name)
 {
   ThemeSelectS.Text = ULanguage::Language.Translate(ThemeIni.ReadString(Name, "Text", ""));
 
   ThemeSelectS.Tex = {Skin.SkinPath + }ThemeIni.ReadString(Name, "Tex", "");
-  ThemeSelectS.Typ = ParseTextureType(ThemeIni.ReadString(Name, "Type", ""), TEXTURE_TYPE_PLAIN);
+  ThemeSelectS.Typ = ParseTextureType(ThemeIni.ReadString(Name, "Type", ""), UTexture::TEXTURE_TYPE_PLAIN);
   ThemeSelectS.TexSBG = {Skin.SkinPath + }ThemeIni.ReadString(Name, "TexSBG", "");
-  ThemeSelectS.TypSBG = ParseTextureType(ThemeIni.ReadString(Name, "TypeSBG", ""), TEXTURE_TYPE_PLAIN);
+  ThemeSelectS.TypSBG = ParseTextureType(ThemeIni.ReadString(Name, "TypeSBG", ""), UTexture::TEXTURE_TYPE_PLAIN);
 
   ThemeSelectS.X = ThemeIni.ReadInteger(Name, "X", 0);
   ThemeSelectS.Y = ThemeIni.ReadInteger(Name, "Y", 0);

@@ -27,7 +27,12 @@
 #include "../switches.h"
 
 #include <vector>
+#include <variant>
+#include <fstream>
 
+#include <hash-library/md5.h>
+
+#include "UMusic.h"
 #include "USong.h"
 
 namespace UFiles
@@ -41,6 +46,16 @@ namespace UFiles
   USong,
   UPath;*/
 
+
+constexpr SecDouble DEFAULT_FADE_IN_TIME = SecDouble(8);   // for medley fade-in
+constexpr SecDouble DEFAULT_FADE_OUT_TIME = SecDouble(2);  // for medley fade-out
+
+constexpr int Mult = 1; // accuracy of measurement of note
+constexpr int MultBPM = 4; // multiply beat-count of note by 4
+
+//--------------------
+// Resets the temporary Sentence Arrays for each Player and some other Variables
+//--------------------
 void ResetSingTemp();
 
 enum TSaveSongResult
@@ -48,12 +63,132 @@ enum TSaveSongResult
     ssrOK, ssrFileError, ssrEncodingError
 };
 
+static std::optional<std::string> fileHash(const std::filesystem::path& path);
+
 /***
- * Throws a TEncodingException if the song's fields cannot be encoded in the
+ * Throws a TEncodingException if the song"s fields cannot be encoded in the
  * requested encoding.
  **/
-TSaveSongResult SaveSong(const USong::TSong Song, const std::vector<TLines> Tracks, const std::filesystem::path Name, bool Relative);
+struct SongPayLoad
+{
+    USong::TSong Song;
+    UMusic::TrackVec Tracks; //during loading size in [1, 2]
+};
 
+enum class TMedleySource
+{
+    msNone, msCalculated, msTag
+};
+
+struct TMedley
+{
+    TMedleySource Source;  //source of the information
+    int StartBeat;        //start beat of medley
+    int EndBeat;        //end beat of medley
+    SecDouble FadeIn_time;           //FadeIn-Time in seconds
+    SecDouble FadeOut_time;           //FadeOut-Time in seconds
+};
+
+/*{ used to hold header tags that are not supported by this version of
+  usdx (e.g. some tags from ultrastar 0.7.0) when songs are loaded in
+  songeditor. They will be written the end of the song header }*/
+struct TCustomHeaderTag
+{
+    std::string Tag;
+    std::string Content;
+};
+
+struct TBPM
+{
+    double BPM;
+    double StartBeat;
+};
+
+struct SongPaths
+{
+    // filenames
+    std::filesystem::path Cover;
+    std::filesystem::path Mp3;
+    std::filesystem::path Background;
+    std::filesystem::path Video;
+};
+
+struct SongHeader
+{
+    std::vector<TCustomHeaderTag> CustomTags;
+
+    bool CalcMedley = true;  // if true => do not calc medley for that song
+
+    std::string Encoding;
+    std::string Language;
+
+    std::string Title;
+    std::string Artist;
+    std::string Edition;
+    std::string Genre;
+    std::string Creator;
+
+    SongPaths paths;
+
+    int Year;
+
+    double VideoGAP;
+    int Resolution;
+    int NotesGAP;
+
+    SecDouble Start; // in seconds
+    std::chrono::milliseconds Finish; // in milliseconds
+
+    bool Relative = false;
+    TMedley medley;
+
+    std::vector<TBPM> BPM;
+    MiliSecDouble GAP;
+
+    std::array<std::string, 2> DuetNames = { "P1", "P2" };
+
+    SecDouble PreviewStart;   // in seconds
+    bool HasPreview;  // set if a valid PreviewStart was read
+};
+
+struct SongData
+{
+    std::filesystem::path Path;
+    //std::filesystem::path Filename;
+    std::string md5;
+    SongHeader header;
+    SongPayLoad payload;
+};
+
+class EUSDXParseException : public std::exception
+{
+public:
+
+    EUSDXParseException(const char* str) : std::exception(str)
+    {}
+};
+
+class SongIO
+{
+public:
+
+    static TSaveSongResult SaveSongTXT(const SongData& SongData, const std::vector<UMusic::TLines>& Tracks, const std::filesystem::path Name, bool Relative);
+    static std::optional<SongPayLoad> LoadSongTXTPayload(std::ifstream& SongFile, SongHeader& header, size_t& FileLineNo);
+    static std::optional<SongData> LoadSongTXT(const std::filesystem::path& FileNamePath);
+
+private:
+    
+    template<typename T>
+    static T ParseLyricParam(std::string_view Line, size_t& LinePos, size_t FileLineNo = -1);
+    static std::string_view ParseLyricText(std::string_view Line, size_t& LinePos);
+    static void ParseNote(UMusic::TLines& track, char TypeP, int StartP, int DurationP, int NoteP, std::string_view LyricS);
+    
+    static void NewSentence(UMusic::TLines& track, int StartBeatP, int RelativeP, bool relative, bool isDuet, size_t FileLineNo = -1);
+
+    static std::optional<SongHeader> ReadTXTHeader(std::ifstream& SongFile, size_t& FileLineNo, const std::filesystem::path& Path, bool ReadCustomTags = false);
+
+    static int calcStartBeat(int progress, int mult, int rel_p = 0);
+};
 /*uses
   TextGL,
   UIni,
@@ -62,179 +197,15 @@ TSaveSongResult SaveSong(const USong::TSong Song, const std::vector<TLines> Trac
   UUnicodeUtils,
   UTextEncoding;*/
 
-//--------------------
-// Resets the temporary Sentence Arrays for each Player and some other Variables
-//--------------------
-void ResetSingTemp()
-/*var
-  Count:  int;*/
+/*
+RawByteString EncodeToken(const std::string& Str)
 {
-    SetLength(Tracks, Length(Player));
-    for Count := 0 to High(Player) do begin
-        SetLength(Tracks[Count].Lines, 1);
-    SetLength(Tracks[Count].Lines[0].Notes, 0);
-    Tracks[Count].Lines[0].Lyric = '';
-    Player[Count].Score = 0;
-    Player[Count].LengthNote = 0;
-    Player[Count].HighNote = -1;
-    end;
-}
-
-//--------------------
-// Saves a Song
-//--------------------
-function SaveSong(const Song: TSong; const Tracks: array of TLines; const Name: IPath; Relative: bool): TSaveSongResult;
-var
-  CurrentLine:      int;
-  CurrentNote:      int;
-  CurrentTrack:     int;
-  Line:             AnsiString;
-  B:      int;
-  RelativeSubTime: int;
-  NoteState: AnsiString;
-  SongFile: TTextFileStream;
-
-  function EncodeToken(const Str: UTF8String): RawByteString;
-  var
-    Success: bool;
-  begin
-    Success := EncodeStringUTF8(Str, Result, Song.Encoding);
+	bool Success = EncodeStringUTF8(Str, Result, Song.Encoding);
     if (not Success) then
-      SaveSong := ssrEncodingError;
-  end;
+        SaveSong = ssrEncodingError;
+}
+*/
 
-  void WriteCustomTags;
-    var
-      I: int;
-      Line: RawByteString;
-  begin
-    for I := 0 to High(Song.CustomTags) do
-    begin
-      Line := EncodeToken(Song.CustomTags[I].Content);
-      if (Length(Song.CustomTags[I].Tag) > 0) then
-        Line := EncodeToken(Song.CustomTags[I].Tag) + ':' + Line;
-
-      SongFile.WriteLine('#' + Line);
-    end;
-
-  end;
-
-begin
-  //  Relative := true; // override (idea - use shift+S to save with relative)
-  Result := ssrOK;
-
-  try
-    SongFile := TMemTextFileStream.Create(Name, fmCreate);
-    try
-      // to-do: should we really write the BOM?
-      //        it causes problems w/ older versions
-      //        e.g. usdx 1.0.1a or ultrastar < 0.7.0
-      if (Song.Encoding = encUTF8) then
-        SongFile.WriteString(UTF8_BOM);
-
-      // do not save "auto" encoding tag
-      if (Song.Encoding <> encAuto) then
-        SongFile.WriteLine('#ENCODING:' + EncodingName(Song.Encoding));
-      SongFile.WriteLine('#TITLE:'    + EncodeToken(Song.Title));
-      SongFile.WriteLine('#ARTIST:'   + EncodeToken(Song.Artist));
-
-      if Song.Language    <> 'Unknown' then    SongFile.WriteLine('#LANGUAGE:'  + EncodeToken(Song.Language));
-      if Song.Edition     <> 'Unknown' then    SongFile.WriteLine('#EDITION:'   + EncodeToken(Song.Edition));
-      if Song.Genre       <> 'Unknown' then    SongFile.WriteLine('#GENRE:'     + EncodeToken(Song.Genre));
-      if Song.Year        <> 0         then    SongFile.WriteLine('#YEAR:'      + IntToStr(Song.Year));
-      if Song.Creator     <> ''        then    SongFile.WriteLine('#CREATOR:'   + EncodeToken(Song.Creator));
-
-      SongFile.WriteLine('#MP3:' + EncodeToken(Song.Mp3.ToUTF8));
-      if Song.Cover.IsSet              then    SongFile.WriteLine('#COVER:'       + EncodeToken(Song.Cover.ToUTF8));
-      if Song.Background.IsSet         then    SongFile.WriteLine('#BACKGROUND:'  + EncodeToken(Song.Background.ToUTF8));
-      if Song.Video.IsSet              then    SongFile.WriteLine('#VIDEO:'       + EncodeToken(Song.Video.ToUTF8));
-
-      if Song.VideoGAP    <> 0.0       then    SongFile.WriteLine('#VIDEOGAP:'    + FloatToStr(Song.VideoGAP));
-      if Song.Resolution  <> 4         then    SongFile.WriteLine('#RESOLUTION:'  + IntToStr(Song.Resolution));
-      if Song.NotesGAP    <> 0         then    SongFile.WriteLine('#NOTESGAP:'    + IntToStr(Song.NotesGAP));
-      if Song.Start       <> 0.0       then    SongFile.WriteLine('#START:'       + FloatToStr(Song.Start));
-      if Song.Finish      <> 0         then    SongFile.WriteLine('#END:'         + IntToStr(Song.Finish));
-      if not Song.isDuet and Relative  then    SongFile.WriteLine('#RELATIVE:yes');
-
-      if Song.HasPreview and (Song.PreviewStart >= 0.0) then // also allow writing 0.0 preview if set
-        SongFile.WriteLine('#PREVIEWSTART:' + FloatToStr(Song.PreviewStart));
-
-      if (Song.Medley.Source=msTag) and not Relative and (Song.Medley.EndBeat - Song.Medley.StartBeat > 0) then
-      begin
-        SongFile.WriteLine('#MEDLEYSTARTBEAT:' + IntToStr(Song.Medley.StartBeat));
-        SongFile.WriteLine('#MEDLEYENDBEAT:' + IntToStr(Song.Medley.EndBeat));
-      end;
-
-      SongFile.WriteLine('#BPM:' + FloatToStr(Song.BPM[0].BPM / 4));
-      SongFile.WriteLine('#GAP:' + FloatToStr(Song.GAP));
-
-      if Song.isDuet then
-      begin
-        SongFile.WriteLine('#P1:' + EncodeToken(Song.DuetNames[0]));
-        SongFile.WriteLine('#P2:' + EncodeToken(Song.DuetNames[1]));
-      end;
-
-      // write custom header tags
-      WriteCustomTags;
-
-      RelativeSubTime := 0;
-      for B := 1 to High(Song.BPM) do
-        SongFile.WriteLine('B ' + FloatToStr(Song.BPM[B].StartBeat) + ' '
-                                + FloatToStr(Song.BPM[B].BPM/4));
-
-      for CurrentTrack := 0 to High(Tracks) do
-      begin
-        if Song.isDuet then
-        begin
-          Line := 'P' + IntToStr(CurrentTrack+1);
-          SongFile.WriteLine(Line);
-        end;
-
-        for CurrentLine := 0 to Tracks[CurrentTrack].High do
-        begin
-          for CurrentNote := 0 to Tracks[CurrentTrack].Lines[CurrentLine].HighNote do
-          begin
-            with Tracks[CurrentTrack].Lines[CurrentLine].Notes[CurrentNote] do
-            begin
-              //Golden + Freestyle Note Patch
-              case Tracks[CurrentTrack].Lines[CurrentLine].Notes[CurrentNote].NoteType of
-                ntFreestyle: NoteState := 'F ';
-                ntNormal: NoteState := ': ';
-                ntGolden: NoteState := '* ';
-                ntRap: NoteState:= 'R ';
-                ntRapGolden: NoteState:='G ';
-              end; // case
-              Line := NoteState + IntToStr(StartBeat - RelativeSubTime) + ' '
-                                + IntToStr(Duration) + ' '
-                                + IntToStr(Tone) + ' '
-                                + EncodeToken(Text);
-
-              SongFile.WriteLine(Line);
-            end; // with
-          end; // CurrentNote
-
-          if CurrentLine < Tracks[CurrentTrack].High then // don't write end of last sentence
-          begin
-            if not Relative then
-              Line := '- ' + IntToStr(Tracks[CurrentTrack].Lines[CurrentLine+1].StartBeat)
-            else
-            begin
-              Line := '- ' + IntToStr(Tracks[CurrentTrack].Lines[CurrentLine+1].StartBeat - RelativeSubTime) +
-                ' ' + IntToStr(Tracks[CurrentTrack].Lines[CurrentLine+1].StartBeat - RelativeSubTime);
-              RelativeSubTime := Tracks[CurrentTrack].Lines[CurrentLine+1].StartBeat;
-            end;
-            SongFile.WriteLine(Line);
-          end;
-        end; // CurrentLine
-      end;
-
-      SongFile.WriteLine('E');
-    finally
-      SongFile.Free;
-    end;
-  except
-    Result := ssrFileError;
-  end;
-end;
+void WriteCustomTags();
 
 }

@@ -73,8 +73,9 @@ public:
     TUnicodeMemIniFile(std::filesystem::path p) : TMemIniFile()
     {};
 };
-
+/*
 class TEncoding
 {
 
 };
+*/

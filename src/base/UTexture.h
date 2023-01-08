@@ -36,16 +36,8 @@
 #include <cstdint>
 
 #include <gl/GL.h>
-#include <gl/glext.h>
 #include <SDL2/SDL_surface.h>
-#include <opencv2/imgproc.hpp>
-#include <opencv2/imgcodecs.hpp>
-#include <boost/algorithm/string/case_conv.hpp>
 #include <boost/algorithm/string/predicate.hpp>
-
-
-#include "ULog.h"
-#include "UImage.h"
 
 namespace UTexture
 {
@@ -118,12 +110,15 @@ namespace UTexture
     class TTextureDatabase
     {
     private:
+
         friend class TTextureUnit;
 
         std::vector<PTextureEntry> Texture;
+
     public:
+
         void AddTexture(PTexture& Tex, TTextureType Typ, uint32_t Color, bool Cache);
-        std::optional<int> FindTexture(const std::filesystem::path Name, TTextureType Typ, uint32_t Color);
+        [[nodiscard]] std::optional<size_t> FindTexture(const std::filesystem::path Name, TTextureType Typ, uint32_t Color) const;
     };
 
     class TTextureUnit
@@ -140,8 +135,8 @@ namespace UTexture
         void AddTexture(PTexture& Tex, TTextureType Typ, uint32_t Color, bool Cache = false);
         PTexture GetTexture(const std::filesystem::path Name, TTextureType Typ, bool FromCache = false);
         PTexture GetTexture(const std::filesystem::path Name, TTextureType Typ, uint32_t Col, bool FromCache = false);
-        PTexture LoadTexture(const std::filesystem::path Identifier, TTextureType Typ, uint32_t Col);
-        PTexture LoadTexture(const std::filesystem::path Identifier);
+        PTexture LoadTexture(const std::filesystem::path& Identifier, TTextureType Typ, uint32_t Col);
+        PTexture LoadTexture(const std::filesystem::path& Identifier);
         PTexture CreateTexture(const std::vector<uint8_t>& Data, const std::filesystem::path Name, uint16_t Width, uint16_t Height);
         void UnloadTexture(const std::filesystem::path Name, TTextureType Typ, bool FromCache);
         void UnloadTexture(const std::filesystem::path Name, TTextureType Typ, uint32_t Col, bool FromCache);
