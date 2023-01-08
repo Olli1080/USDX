@@ -280,6 +280,7 @@ private:
     void ResetIntern();
 
 protected:
+
     std::filesystem::path fFilename;
     TFontStyle fStyle;
     bool fUseKerning;
@@ -293,32 +294,8 @@ protected:
      * @param Text   UCS-4 encoded string
      * @param Lines  splitted std::u32string lines
      */
-    void SplitLines(const std::u32string Text, TUCS4StringArray& Lines);
-
-    /**
-     * Print an array of UCS4Strings. Each array-item is a line of text.
-     * Lines of text are separated by the line-spacing.
-     * This is the base function for all text drawing.
-     */
-    virtual void Print(const TUCS4StringArray Text);
-
-    /**
-     * Draws an underline.
-     */
-    virtual void DrawUnderline(const std::u32string Text);
-
-    /**
-     * Renders (one) line of text.
-     */
-    virtual void Render(const std::u32string Text) = 0;
-
-    /**
-     * Returns the bounds of text-lines contained in Text.
-     * @param(Advance if true the right bound is set to the advance instead
-     *   of the minimal right bound.)
-     */
-    virtual TBoundsDbl BBox(const TUCS4StringArray Text, bool Advance) = 0;
-
+    void SplitLines(const std::u32string& Text, TUCS4StringArray& Lines);
+    
     /**
      * Resets all user settings to default values.
      * Override methods should always call the inherited version.
@@ -330,14 +307,37 @@ protected:
 
 public:
 
-    TFont(const std::filesystem::path Filename);
-    virtual ~TFont();
+    TFont(const std::filesystem::path& Filename);
+    virtual ~TFont() = default;
 
     /**
      * Prints a text.
      */
     template<typename CharType>
-    void Print(const std::basic_string<CharType> Text);
+    void Print(const std::basic_string<CharType>& Text);
+
+    /**
+     * Draws an underline.
+     */
+    virtual void DrawUnderline(const std::u32string& Text);
+
+    /**
+     * Print an array of UCS4Strings. Each array-item is a line of text.
+     * Lines of text are separated by the line-spacing.
+     * This is the base function for all text drawing.
+     */
+    virtual void Print(const TUCS4StringArray& Text);
+    /**
+     * Renders (one) line of text.
+     */
+    virtual void Render(const std::u32string& Text) = 0;
+
+    /**
+     * Returns the bounds of text-lines contained in Text.
+     * @param(Advance if true the right bound is set to the advance instead
+     *   of the minimal right bound.)
+     */
+    virtual TBoundsDbl BBox(const TUCS4StringArray& Text, bool Advance) = 0;
 
     /**
      * Calculates the bounding box (width && height) around Text.
@@ -352,13 +352,13 @@ public:
      */
 
     template<typename TextType>
-    TBoundsDbl BBox(const std::basic_string<TextType> Text, bool Advance = true);
+    TBoundsDbl BBox(const std::basic_string<TextType>& Text, bool Advance = true);
 
     /**
      * Adds a new font that is used if the default font misses a glyph
      * @raises EFontError  if the fallback could not be initialized
      */
-    virtual void AddFallback(const std::filesystem::path Filename) = 0;
+    virtual void AddFallback(const std::filesystem::path& Filename) = 0;
 
     /** Font height */
     virtual void Height(float Height) = 0;
@@ -396,7 +396,7 @@ public:
     /** Filename */
     [[nodiscard]] std::filesystem::path Filename() const;
 
-    virtual bool ReflectionPass() const;
+    [[nodiscard]] virtual bool ReflectionPass() const;
 };
 
 //** Max. number of mipmap levels that a TScalableFont can contain
@@ -414,8 +414,10 @@ class TScalableFont : public TFont
 private:
 	// ReSharper disable once CppHidingFunction
 	void ResetIntern();
+    bool mipMapInit = false;
 
 protected:
+
     float fScale;        //**< current height to base-font height ratio
 	float fStretch;      //**< stretch factor for width (Width * fStretch)
     std::shared_ptr<TFont> fBaseFont;      //**< shortcut for fMipmapFonts[0]
@@ -423,9 +425,6 @@ protected:
     /// Mipmap fonts (size[level+1] == size[level]/2)
 	std::array<std::shared_ptr<TFont>, cMaxMipmapLevel + 1> fMipmapFonts;
 
-    void Render(const std::u32string Text) override;
-    void Print(const TUCS4StringArray Text) override;
-    TBoundsDbl BBox(const TUCS4StringArray Text, bool Advance) override;
 
     /**
      * Callback called for creation of each mipmap font.
@@ -444,7 +443,7 @@ protected:
      * Returns the scale applied to the given mipmap font.
      * fScale * fBaseFont.Height / fMipmapFont[Level].Height
      */
-    [[nodiscard]] std::optional<float> GetMipmapScale(int Level) const;
+    [[nodiscard]] std::optional<float> GetMipmapScale(int Level);
 
     /**
      * Chooses the mipmap that looks nicest with current scale && projection
@@ -452,7 +451,13 @@ protected:
      */
     std::shared_ptr<TFont> ChooseMipmapFont();
 
+    /**
+     * Has to be called before accessing mipmap
+     */
+    void initMipMaps();
+
 public:
+
     /**
      * Creates a wrapper to make the base-font Font scalable.
      * If UseMipmaps is set to true smaller fonts are created so that a
@@ -465,10 +470,14 @@ public:
      * Frees memory. The fonts passed on Create() && mipmap creation
      * are freed too.
      */
-    ~TScalableFont() override;
+    ~TScalableFont() override = default;
 
     /** @seealso TFont::Reset */
     void Reset() override;
+
+    void Print(const TUCS4StringArray& Text) override;
+    void Render(const std::u32string& Text) override;
+    TBoundsDbl BBox(const TUCS4StringArray& Text, bool Advance) override;
 
     /** Font height */
     //property Height: float read Height write Height;
@@ -525,6 +534,7 @@ typedef std::shared_ptr<TGlyphTable> PGlyphTable;
 class TGlyphCache
 {
 private:
+
     std::map<char32_t, std::shared_ptr<TGlyph>> fGlyphs;
 
     /**
@@ -572,6 +582,7 @@ public:
 class TCachedFont : public TFont
 {
 protected:
+
     TGlyphCache fCache;
 
     /**
@@ -607,7 +618,7 @@ typedef std::vector<std::weak_ptr<TFTFontFace>> TFTFontFaceArray;
 /**
 * Freetype font class.
 */
-class TFTFont : public TCachedFont
+class TFTFont : public TCachedFont, public std::enable_shared_from_this<TFTFont>
 {
 private:
 	// ReSharper disable once CppHidingFunction
@@ -615,6 +626,7 @@ private:
     static std::shared_ptr<TFTFontFaceCache> GetFaceCache();
 
 protected:
+
     std::shared_ptr<TFTFontFace> fFace;           //**< Default font face
     int fSize;               //**< Font base size (in pixels)
     float fOutset;              //**< size of outset extrusion (in pixels)
@@ -627,10 +639,6 @@ protected:
     /** @seealso TCachedFont::LoadGlyph */
     std::shared_ptr<TGlyph> LoadGlyph(char32_t ch) override;
 
-    void Render(const std::u32string Text) override;
-    TBoundsDbl BBox(const TUCS4StringArray Text, bool Advance) override;
-
-public:
     /**
      * Creates a font of size Size (in pixels) from the file Filename.
      * If Outset (in pixels) is set to a value > 0 the glyphs will be extruded
@@ -638,7 +646,16 @@ public:
      * @param  LoadFlags  flags passed to FT_Load_Glyph()
      * @raises EFontError  if the font-file could not be loaded
      */
-    TFTFont(const std::filesystem::path Filename,
+    TFTFont(const std::filesystem::path& Filename,
+        int Size, float Outset = 0.f,
+        bool PreCache = true,
+        FT_Int32 LoadFlags = FT_LOAD_DEFAULT);
+
+public:
+
+    typedef std::shared_ptr<TFTFont> SPtr;
+    
+    SPtr make(const std::filesystem::path& Filename,
         int Size, float Outset = 0.f,
         bool PreCache = true,
         FT_Int32 LoadFlags = FT_LOAD_DEFAULT);
@@ -651,7 +668,9 @@ public:
     /** @see also TFont::Reset */
     void Reset() override;
 
-    void AddFallback(const std::filesystem::path Filename) override;
+    void AddFallback(const std::filesystem::path& Filename) override;
+
+    void Render(const std::u32string& Text) override;
 
     /** Size of the base font */
     [[nodiscard]] int Size() const { return fSize; }
@@ -671,6 +690,8 @@ public:
     [[nodiscard]] float Descender() const override;
     [[nodiscard]] float UnderlinePosition() const override;
     [[nodiscard]] float UnderlineThickness() const override;
+
+    TBoundsDbl BBox(const TUCS4StringArray& Text, bool Advance) override;
 };
 
 /**
@@ -683,11 +704,13 @@ private:
 #ifdef _WIN32
 	std::vector<FT_Byte> byarr1;
 #endif
-    TFaceU fFace; //**< Holds the height of the font
+    TFaceS fFace; //**< Holds the height of the font
     TPositionDbl fFontUnitScale; //**< FT font-units to pixel ratio
 	int fSize;
 
 public:
+
+    typedef std::shared_ptr<TFTFontFace> SPtr;
     /**
      * @raises EFontError  if the glyph could not be initialized
      */
@@ -697,7 +720,7 @@ public:
 
     //property Filename: std::filesystem::path read fFilename;
     [[nodiscard]] std::filesystem::path Filename() const { return fFilename;  }
-    [[nodiscard]] FT_Face Data() const { return fFace; }
+    [[nodiscard]] TFaceS Data() const { return fFace; }
     [[nodiscard]] TPositionDbl FontUnitScale() const { return fFontUnitScale; }
     [[nodiscard]] int Size() const { return fSize; }
 };
@@ -730,8 +753,9 @@ public:
 class TFTGlyph : public TGlyph
 {
 private:
+
     char32_t fCharCode;     //**< Char code
-    TFTFontFace fFace;       //**< Freetype face used for this glyph
+    TFTFontFace::SPtr fFace;       //**< Freetype face used for this glyph
     FT_UInt fCharIndex;      //**< Freetype specific char-index (!= char-code)
     GLuint fDisplayList;     //**< Display-list ID
 	GLuint fTexture;         //**< Texture ID
@@ -787,7 +811,7 @@ public:
     [[nodiscard]] FT_UInt CharIndex() const { return fCharIndex; }
 
     /** Freetype face used for this glyph */
-    [[nodiscard]] TFTFontFace Face() const { return fFace; }
+    [[nodiscard]] TFTFontFace::SPtr Face() const { return fFace; }
 };
 
 class TFTScalableFont : public TScalableFont
@@ -817,12 +841,12 @@ public:
      *
      * Note: once a glyph is cached there will
      */
-    TFTScalableFont(const std::filesystem::path Filename,
+    TFTScalableFont(const std::filesystem::path& Filename,
 		int Size, float OutsetAmount = 0.f,
 		bool UseMipmaps= true,
 		bool PreCache= true);
 
-    void AddFallback(const std::filesystem::path Filename) override;
+    void AddFallback(const std::filesystem::path& Filename) override;
 
     /** @seealso TGlyphCache.FlushCache */
     void FlushCache(bool KeepBaseSet);
@@ -839,6 +863,7 @@ public:
 class TFTOutlineFont : public TFont
 {
 private:
+
     int fSize;
     float fOutset;
     std::shared_ptr<TFTFont> fInnerFont, fOutlineFont;
@@ -849,11 +874,7 @@ private:
     void ResetIntern();
 
 protected:
-    void DrawUnderline(const std::u32string Text) override;
-    void Render(const std::u32string Text) override;
-    TBoundsDbl BBox(const TUCS4StringArray Text, bool Advance) override;
-
-    
+        
     void LineSpacing(float Spacing) override;
     void GlyphSpacing(float Spacing) override;
     void ReflectionSpacing(float Spacing) override;
@@ -862,11 +883,22 @@ protected:
     void ReflectionPass(bool Enable) override;
 
 public:
+
     TFTOutlineFont(const std::filesystem::path Filename,
 		int Size, float Outset,
 		bool PreCache = true,
         FT_Int32 LoadFlags = FT_LOAD_DEFAULT);
     ~TFTOutlineFont() override;
+
+
+    //TODO:: whole has lot of renaming
+    //TODO:: Check if overload keywords missing or missmatchs
+    [[nodiscard]] bool PreCache() const { return fPreCache; }
+
+    void DrawUnderline(const std::u32string& Text) override;
+    void Render(const std::u32string& Text) override;
+
+    TBoundsDbl BBox(const TUCS4StringArray& Text, bool Advance) override;
 
     /**
      * Sets the color of the outline.
@@ -878,7 +910,7 @@ public:
     /** @seealso TGlyphCache.FlushCache */
     void FlushCache(bool KeepBaseSet);
 
-    void AddFallback(const std::filesystem::path Filename) override;
+    void AddFallback(const std::filesystem::path& Filename) override;
 
     /** @seealso TFont::Reset */
     void Reset() override;
@@ -918,7 +950,7 @@ public:
     /** @seealso TGlyphCache.FlushCache */
     void FlushCache(bool KeepBaseSet);
 
-    void AddFallback(const std::filesystem::path Filename) override;
+    void AddFallback(const std::filesystem::path& Filename) override;
 
     /** Outset size */
     [[nodiscard]] virtual float Outset() const;
@@ -934,6 +966,7 @@ public:
 class TBitmapFont : public TFont
 {
 private:
+
 	UTexture::PTexture fTex;
     int fTexSize;
     int fBaseline;
@@ -956,16 +989,11 @@ private:
     void LoadFontInfo(const std::filesystem::path InfoFile);
 
 protected:
-    void Render(const std::u32string Text) override;
-    TBoundsDbl BBox(const TUCS4StringArray Text, bool Advance) override;
 
-    [[nodiscard]] float Height() const override;
-    [[nodiscard]] float Ascender() const override;
-    [[nodiscard]] float Descender() const override;
-    [[nodiscard]] float UnderlinePosition() const override;
-    [[nodiscard]] float UnderlineThickness() const override;
+    
 
 public:
+
     /**
      * Creates a bitmapped font from image Filename && font width info
      * loaded from the corresponding file with ending .dat.
@@ -977,6 +1005,9 @@ public:
         int Baseline, int Ascender, int Descender);
     ~TBitmapFont() override;
 
+    void Render(const std::u32string& Text) override;
+    TBoundsDbl BBox(const TUCS4StringArray& Text, bool Advance) override;
+
     /**
      * Corrects font widths provided by the info file.
      * NewWidth = Width * WidthMult + WidthAdd
@@ -986,7 +1017,13 @@ public:
     /** @seealso TFont::Reset */
     void Reset() override;
 
-    void AddFallback(const std::filesystem::path Filename) override;
+    void AddFallback(const std::filesystem::path& Filename) override;
+
+    [[nodiscard]] float Height() const override;
+    [[nodiscard]] float Ascender() const override;
+    [[nodiscard]] float Descender() const override;
+    [[nodiscard]] float UnderlinePosition() const override;
+    [[nodiscard]] float UnderlineThickness() const override;
 };
 
 #endif

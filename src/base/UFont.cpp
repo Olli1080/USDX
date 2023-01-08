@@ -5,18 +5,14 @@
 
 namespace UFont
 {
-
+//TODO:: replace conversions with boost locale
 /*
  * TFont
  */
-
-TFont::TFont(const std::filesystem::path Filename) : fFilename(Filename)
+TFont::TFont(const std::filesystem::path& Filename) : fFilename(Filename)
 {
     ResetIntern();
 }
-
-TFont::~TFont()
-{}
 
 void TFont::ResetIntern()
 {
@@ -35,7 +31,7 @@ void TFont::Reset()
     ResetIntern();
 }
 
-void TFont::SplitLines(const std::u32string Text, TUCS4StringArray& Lines)
+void TFont::SplitLines(const std::u32string& Text, TUCS4StringArray& Lines)
 {
     // split lines on newline
     Lines.resize(0);
@@ -46,7 +42,7 @@ void TFont::SplitLines(const std::u32string Text, TUCS4StringArray& Lines)
 }
 
 template<>
-TBoundsDbl TFont::BBox(const std::u32string Text, bool Advance)
+TBoundsDbl TFont::BBox(const std::u32string& Text, bool Advance)
 {
     TUCS4StringArray LineArray;
     SplitLines(Text, LineArray);
@@ -54,7 +50,7 @@ TBoundsDbl TFont::BBox(const std::u32string Text, bool Advance)
 }
 
 template<typename TextType>
-TBoundsDbl TFont::BBox(const std::basic_string<TextType> Text, bool Advance)
+TBoundsDbl TFont::BBox(const std::basic_string<TextType>& Text, bool Advance)
 {
     return BBox(std::codecvt<char32_t, TextType, std::mbstate_t>(Text), Advance);
 }
@@ -69,7 +65,7 @@ bool TFont::ReflectionPass() const
     return fReflectionPass;
 }
 
-void TFont::Print(const TUCS4StringArray Text)
+void TFont::Print(const TUCS4StringArray& Text)
     /*var
       LineIndex: int;*/
 {
@@ -151,7 +147,7 @@ void TFont::Print(const TUCS4StringArray Text)
 }
 
 template<>
-void TFont::Print(const std::u32string Text)
+void TFont::Print(const std::u32string& Text)
 {
     TUCS4StringArray LineArray;
     SplitLines(Text, LineArray);
@@ -159,12 +155,12 @@ void TFont::Print(const std::u32string Text)
 }
 
 template<typename CharType>
-void TFont::Print(const std::basic_string<CharType> Text)
+void TFont::Print(const std::basic_string<CharType>& Text)
 {
     Print(std::codecvt<char32_t, CharType, std::mbstate_t>(Text));
 }
 
-void TFont::DrawUnderline(const std::u32string Text)
+void TFont::DrawUnderline(const std::u32string& Text)
 {
     const float UnderlineY1 = UnderlinePosition();
     const float UnderlineY2 = UnderlineY1 + UnderlineThickness();
@@ -241,7 +237,6 @@ void TFont::ReflectionPass(bool Enable)
 /*
  * TScalableFont
  */
-
 TScalableFont::TScalableFont(std::shared_ptr<TFont> Font, bool UseMipmaps)
 	:
 	TFont(Font->Filename()),
@@ -250,22 +245,23 @@ TScalableFont::TScalableFont(std::shared_ptr<TFont> Font, bool UseMipmaps)
 {
     fMipmapFonts[0] = Font;
     ResetIntern();
+}
+
+void TScalableFont::initMipMaps()
+{
+    if (!fUseMipmaps || mipMapInit)
+        return;
 
     // create mipmap fonts if requested
-    if (fUseMipmaps)
+    for (int MipmapLevel = 1; MipmapLevel < cMaxMipmapLevel; ++MipmapLevel)
     {
-        for (int MipmapLevel = 1; MipmapLevel < cMaxMipmapLevel; ++MipmapLevel)
-        {
-            fMipmapFonts[MipmapLevel] = CreateMipmap(MipmapLevel, 1 / (1 << MipmapLevel));
-            // stop if no smaller mipmap font is returned
-            if (!fMipmapFonts[MipmapLevel])
-                break;
-        }
+        fMipmapFonts[MipmapLevel] = CreateMipmap(MipmapLevel, 1.f / static_cast<float>(1 << MipmapLevel));
+        // stop if no smaller mipmap font is returned
+        if (!fMipmapFonts[MipmapLevel])
+            break;
     }
 }
 
-TScalableFont::~TScalableFont()
-{}
 
 void TScalableFont::ResetIntern()
 {
@@ -383,14 +379,16 @@ int TScalableFont::GetMipmapLevel()
     // The result is our mipmap-level == the index of the mipmap to use.
 
     // Level > 0: Minification; < 0: Magnification
-    const size_t res = static_cast<int>(std::log2(std::max(WidthScale, HeightScale)) + cBias);
+    const auto res = static_cast<size_t>(std::log2l(std::max(WidthScale, HeightScale)) + cBias);
 
     // clamp to valid range
     return std::min(std::max<size_t>(0, res), fMipmapFonts.size() - 1);
 }
 
-std::optional<float> TScalableFont::GetMipmapScale(int Level) const
+std::optional<float> TScalableFont::GetMipmapScale(int Level)
 {
+    initMipMaps();
+
     if (!fMipmapFonts[Level])
         return std::nullopt;
 
@@ -426,7 +424,7 @@ std::shared_ptr<TFont> TScalableFont::ChooseMipmapFont()
     return Result;
 }
 
-void TScalableFont::Print(const TUCS4StringArray Text)
+void TScalableFont::Print(const TUCS4StringArray& Text)
 {
     glPushMatrix();
 
@@ -442,12 +440,12 @@ void TScalableFont::Print(const TUCS4StringArray Text)
     glPopMatrix();
 }
 
-void TScalableFont::Render(const std::u32string Text)
+void TScalableFont::Render(const std::u32string& Text)
 {
-    Assert(false, 'Unused TScalableFont::Render() was called');
+    throw std::exception("Unused TScalableFont::Render() was called");
 }
 
-TBoundsDbl TScalableFont::BBox(const TUCS4StringArray Text, bool Advance)
+TBoundsDbl TScalableFont::BBox(const TUCS4StringArray& Text, bool Advance)
 {
     auto res = fBaseFont->BBox(Text, Advance);
     res.Left *= fScale * fStretch;
@@ -625,9 +623,9 @@ TFTFontFace::TFTFontFace(const std::filesystem::path Filename, int Size)
         std::istreambuf_iterator(SourceFile),
         std::istreambuf_iterator()
         );
-    fFace = makeFace<TFaceU>(byarr1);
+    fFace = makeFace<TFaceS>(byarr1);
 #else
-	fFace = makeFace<TFaceU>(Filename);
+	fFace = makeFace<TFaceS>(Filename);
 #endif
     // load font information
     /*if (b1 != 0)
@@ -691,7 +689,7 @@ void TFTFontFaceCache::UnloadFace(std::weak_ptr<TFTFontFace> Face)
  */
 
 TFTFont::TFTFont(
-    const std::filesystem::path Filename,
+    const std::filesystem::path& Filename,
     int Size, float Outset,
     bool PreCache,
     FT_Int32 LoadFlags)
@@ -706,13 +704,22 @@ TFTFont::TFTFont(
     fPart(fpNone)
 {
     ResetIntern();
+}
 
+    
+TFTFont::SPtr TFTFont::make(const std::filesystem::path& Filename,
+    int Size, float Outset,
+    bool PreCache,
+    FT_Int32 LoadFlags)
+{
+    auto temp = std::make_shared<TFTFont>(Filename, Size, Outset, PreCache, LoadFlags);
     // pre-cache some commonly used glyphs (' ' - '~')
     if (PreCache)
     {
-        for (char32_t ch = 32; ch <= 126; ++ch)
-            fCache.AddGlyph(ch, std::make_shared<TFTGlyph>(Self, ch, Outset, LoadFlags));
+        for (char32_t ch = 32; ch <= 126; ++ch) //TODO:: test for shared_ptr cycle
+            fCache.AddGlyph(ch, std::make_shared<TFTGlyph>(temp, ch, Outset, LoadFlags));
     }
+    return temp;
 }
 
 TFTFont::~TFTFont()
@@ -746,7 +753,7 @@ void TFTFont::Reset()
     ResetIntern();
 }
 
-void TFTFont::AddFallback(const std::filesystem::path Filename)
+void TFTFont::AddFallback(const std::filesystem::path& Filename)
 {
     auto FontFace = GetFaceCache()->LoadFace(Filename, Size());
     fFallbackFaces.emplace_back(FontFace);
@@ -754,10 +761,10 @@ void TFTFont::AddFallback(const std::filesystem::path Filename)
 
 std::shared_ptr<TGlyph> TFTFont::LoadGlyph(char32_t ch)
 {
-    return std::make_shared<TFTGlyph>(Self, ch, Outset, fLoadFlags);
+    return std::make_shared<TFTGlyph>(this->shared_from_this(), ch, Outset(), fLoadFlags);
 }
 
-TBoundsDbl TFTFont::BBox(const TUCS4StringArray Text, bool Advance)
+TBoundsDbl TFTFont::BBox(const TUCS4StringArray& Text, bool Advance)
 {
     // Reset global bounds
     TBoundsDbl res = {
@@ -797,7 +804,7 @@ TBoundsDbl TFTFont::BBox(const TUCS4StringArray Text, bool Advance)
                 if (fUseKerning && FT_HAS_KERNING(fFace->Data()) && PrevGlyph)
                 {
                     FT_Vector KernDelta;
-                    FT_Get_Kerning(fFace->Data(), PrevGlyph->CharIndex(), Glyph->CharIndex(),
+                    FT_Get_Kerning(fFace->Data().get(), PrevGlyph->CharIndex(), Glyph->CharIndex(),
                         FT_KERNING_UNSCALED, &KernDelta);
                     LineBounds.Right += KernDelta.x * fFace->FontUnitScale().X;
                 }
@@ -858,9 +865,11 @@ TBoundsDbl TFTFont::BBox(const TUCS4StringArray Text, bool Advance)
         res.Left = 0.0;
     if (res.Bottom == std::numeric_limits<double>::max())
         res.Bottom = 0.0;
+
+    return res;
 }
 
-void TFTFont::Render(const std::u32string Text)
+void TFTFont::Render(const std::u32string& Text)
 {
     // reset last glyph
     std::shared_ptr<TFTGlyph> PrevGlyph;
@@ -875,7 +884,7 @@ void TFTFont::Render(const std::u32string Text)
             if (fUseKerning && FT_HAS_KERNING(fFace->Data()) && PrevGlyph)
             {
                 FT_Vector KernDelta;
-                FT_Get_Kerning(fFace->Data(), PrevGlyph->CharIndex(), Glyph->CharIndex(),
+                FT_Get_Kerning(fFace->Data().get(), PrevGlyph->CharIndex(), Glyph->CharIndex(),
                     FT_KERNING_UNSCALED, &KernDelta);
                 glTranslatef(KernDelta.x * fFace->FontUnitScale().X, 0, 0);
             }
@@ -923,7 +932,7 @@ float TFTFont::UnderlineThickness() const
  * TFTScalableFont
  */
 
-TFTScalableFont::TFTScalableFont(const std::filesystem::path Filename,
+TFTScalableFont::TFTScalableFont(const std::filesystem::path& Filename,
     int Size, float OutsetAmount,
     bool UseMipmaps,
     bool PreCache)
@@ -960,7 +969,7 @@ float TFTScalableFont::GetOutset() const
     return std::static_pointer_cast<TFTFont>(fBaseFont)->Outset() * fScale;
 }
 
-void TFTScalableFont::AddFallback(const std::filesystem::path Filename)
+void TFTScalableFont::AddFallback(const std::filesystem::path& Filename)
 {
     for (auto& font : fMipmapFonts)
         if (font)
@@ -1017,7 +1026,7 @@ void TFTOutlineFont::Reset()
     ResetIntern();
 }
 
-void TFTOutlineFont::DrawUnderline(const std::u32string Text)
+void TFTOutlineFont::DrawUnderline(const std::u32string& Text)
 {
     TGLColor CurrentColor;
     // save current color
@@ -1040,7 +1049,7 @@ void TFTOutlineFont::DrawUnderline(const std::u32string Text)
     glPopMatrix();
 }
 
-void TFTOutlineFont::Render(const std::u32string Text)
+void TFTOutlineFont::Render(const std::u32string& Text)
 {
     TGLColor CurrentColor;
     // save current color
@@ -1078,13 +1087,13 @@ void TFTOutlineFont::FlushCache(bool KeepBaseSet)
     fInnerFont->FlushCache(KeepBaseSet);
 }
 
-void TFTOutlineFont::AddFallback(const std::filesystem::path Filename)
+void TFTOutlineFont::AddFallback(const std::filesystem::path& Filename)
 {
     fOutlineFont->AddFallback(Filename);
     fInnerFont->AddFallback(Filename);
 }
 
-TBoundsDbl TFTOutlineFont::BBox(const TUCS4StringArray Text, bool Advance)
+TBoundsDbl TFTOutlineFont::BBox(const TUCS4StringArray& Text, bool Advance)
 {
     return fOutlineFont->BBox(Text, Advance);
 }
@@ -1186,7 +1195,7 @@ std::shared_ptr<TFont> TFTScalableOutlineFont::CreateMipmap(int Level, float Sca
         return nullptr;
     return std::make_shared<TFTOutlineFont>(BaseFont->Filename(),
         ScaledSize, BaseFont->Outset()* Scale,
-        BaseFont->fPreCache,
+        BaseFont->PreCache(),
         FT_LOAD_DEFAULT | FT_LOAD_NO_HINTING);
 }
 
@@ -1209,7 +1218,7 @@ void TFTScalableOutlineFont::FlushCache(bool KeepBaseSet)
             std::static_pointer_cast<TFTOutlineFont>(font)->FlushCache(KeepBaseSet);
 }
 
-void TFTScalableOutlineFont::AddFallback(const std::filesystem::path Filename)
+void TFTScalableOutlineFont::AddFallback(const std::filesystem::path& Filename)
 {
     for (auto& font : fMipmapFonts)
         if (font)
@@ -1381,19 +1390,20 @@ void TFTGlyph::CreateTexture(FT_Int32 LoadFlags)
         LoadFlags |= FT_LOAD_NO_BITMAP;
 
     // load the Glyph for our character
-    if (FT_Load_Glyph(fFace.Data(), fCharIndex, LoadFlags) != 0)
+    if (FT_Load_Glyph(fFace->Data().get(), fCharIndex, LoadFlags) != 0)
         throw EFontError("FT_Load_Glyph failed");
 
     // move the face's glyph into a Glyph object
-    auto uniqueGlyph = makeGlyph<TGlyphU>(fFace.Data()->glyph);
+    auto uniqueGlyph = makeGlyph<TGlyphU>(fFace->Data()->glyph);
     auto Glyph = Glyph.get();
 
     if (fOutset > 0)
         StrokeBorder(Glyph);
 
     // store scaled advance width/height in glyph-object
-    fAdvance.X = fFace.Data()->glyph->advance.x / 64 + fOutset * 2;
-    fAdvance.Y = fFace.Data()->glyph->advance.y / 64 + fOutset * 2;
+    double common = 64.0 + fOutset * 2.0;
+    fAdvance.X = fFace->Data()->glyph->advance.x / common;
+    fAdvance.Y = fFace->Data()->glyph->advance.y / common;
 
     // get the contour's bounding box (in 1/64th pixels, not font-units)
     FT_BBox CBox;
@@ -1407,34 +1417,33 @@ void TFTGlyph::CreateTexture(FT_Int32 LoadFlags)
     // convert the glyph to a bitmap (&& destroy original glyph image).
     // Request 8 bit gray level pixel mode. 
     FT_Glyph_To_Bitmap(&Glyph, FT_RENDER_MODE_NORMAL, nullptr, 1);
-    auto BitmapGlyph = reinterpret_cast<FT_BitmapGlyph>(Glyph);
+    const auto BitmapGlyph = reinterpret_cast<FT_BitmapGlyph>(Glyph);
 
     // get bitmap offsets
     fBitmapCoords.Left = BitmapGlyph->left - cTexSmoothBorder;
     // Note: add 1*fOutset for lifting the baseline so outset fonts to not intersect
     // with the baseline; std::ceil(fOutset) for the outset pixels added to the bitmap.
-    fBitmapCoords.Top = BitmapGlyph->top + fOutset + std::ceil(fOutset) + cTexSmoothBorder;
+    fBitmapCoords.Top = BitmapGlyph->top + fOutset + std::ceill(fOutset) + cTexSmoothBorder;
 
     // make accessing the bitmap easier
     auto Bitmap = BitmapGlyph->bitmap;
     // get bitmap dimensions
-    fBitmapCoords.Width = Bitmap.width + (std::ceil(fOutset) + cTexSmoothBorder) * 2;
-    fBitmapCoords.Height = Bitmap.rows + (std::ceil(fOutset) + cTexSmoothBorder) * 2;
+    int post = (std::ceil(fOutset) + cTexSmoothBorder) * 2;
+    fBitmapCoords.Width = Bitmap.width + post;
+    fBitmapCoords.Height = Bitmap.rows + post;
 
     // get power-of-2 bitmap widths
     fTexSize.Width =
-        NextPowerOf2(Bitmap.width + (std::ceil(fOutset) + cTexSmoothBorder) * 2);
+        NextPowerOf2(fBitmapCoords.Width);
     fTexSize.Height =
-        NextPowerOf2(Bitmap.rows + (std::ceil(fOutset) + cTexSmoothBorder) * 2);
+        NextPowerOf2(fBitmapCoords.Height);
 
     // texture-widths ignoring empty (power-of-2) padding space
-    fTexOffset.X = fBitmapCoords.Width / fTexSize.Width;
-    fTexOffset.Y = fBitmapCoords.Height / fTexSize.Height;
+    fTexOffset.X = static_cast<double>(fBitmapCoords.Width) / fTexSize.Width;
+    fTexOffset.Y = static_cast<double>(fBitmapCoords.Height) / fTexSize.Height;
 
     // allocate memory for texture data
-    TGLubyteDynArray TexBuffer;
-    TexBuffer.reserve(fTexSize.Width * fTexSize.Height); //SetLength(TexBuffer, fTexSize.Width * fTexSize.Height);
-    FillChar(TexBuffer[0], Length(TexBuffer), 0);
+    TGLubyteDynArray TexBuffer = TGLubyteDynArray(fTexSize.Width * fTexSize.Height);
 
     // Freetype stores the bitmap with either upper (pitch is > 0) or lower
     // (pitch < 0) glyphs line first. Set the buffer to the upper line.
@@ -1452,8 +1461,8 @@ void TFTGlyph::CreateTexture(FT_Int32 LoadFlags)
         // set pointer to first pixel in line that holds bitmap data.
         // Each line starts with a cTexSmoothBorder pixel && multiple outset pixels
         // that are added by Extrude() later.
-        GLubyte* TexLine = &TexBuffer[(Y + cTexSmoothBorder + std::ceil(fOutset)) * fTexSize.Width +
-            cTexSmoothBorder + std::ceil(fOutset)];
+        GLubyte* TexLine = &TexBuffer[(Y + cTexSmoothBorder + std::ceill(fOutset)) * fTexSize.Width +
+            cTexSmoothBorder + std::ceill(fOutset)];
         // get next lower line offset, use pitch instead of width as it tells
         // us the storage direction of the lines. In addition a line might be padded.
         auto BitmapLine = &BitmapBuffer[Y * Bitmap.pitch];
@@ -1519,17 +1528,17 @@ TFTGlyph::TFTGlyph(std::shared_ptr<TFTFont> Font, char32_t ch, float Outset,
 {
     // Note: the default face is also used if no face (neither default nor fallback)
     // contains a glyph for the given char.
-    auto fFace = Font->DefaultFace();
+    fFace = Font->DefaultFace();
 
     // search the Freetype char-index (use default UNICODE charmap) in the default face
-    fCharIndex = FT_Get_Char_Index(fFace->Data(), ch);
+    fCharIndex = FT_Get_Char_Index(fFace->Data().get(), ch);
     if (fCharIndex == 0)
     {
         // glyph not in default font, search in fallback font faces
         for (auto& fbFace : Font->FallbackFaces())
         {
             auto strong = fbFace.lock();
-            fCharIndex = FT_Get_Char_Index(strong->Data(), ch);
+            fCharIndex = FT_Get_Char_Index(strong->Data().get(), ch);
             if (fCharIndex != 0)
             {
                 fFace = strong;
@@ -1734,7 +1743,7 @@ void TBitmapFont::Reset()
     ResetIntern();
 }
 
-void TBitmapFont::AddFallback(const std::filesystem::path Filename)
+void TBitmapFont::AddFallback(const std::filesystem::path& Filename)
 {
     // no support for fallbacks
 }
@@ -1746,16 +1755,14 @@ void TBitmapFont::CorrectWidths(double WidthMult, int WidthAdd)
 }
 
 void TBitmapFont::LoadFontInfo(const std::filesystem::path InfoFile)
-/*var
-Stream : TStream;*/
 {
-    FillChar(fWidths[0], Length(fWidths), 0);
-
-    Stream = nil;
     try
     {
-	    Stream = TBinaryFileStream(InfoFile, fmOpenRead);
-    	Stream.Read(fWidths, 256);
+        auto Stream = std::basic_ifstream<uint8_t>(InfoFile, std::fstream::binary);
+        if (!Stream.is_open())
+            throw std::exception();
+
+        Stream.read(fWidths.data(), 256);
     }
     catch (...)
     {
@@ -1764,7 +1771,7 @@ Stream : TStream;*/
     }
 }
 
-TBoundsDbl TBitmapFont::BBox(const TUCS4StringArray Text, bool Advance)
+TBoundsDbl TBitmapFont::BBox(const TUCS4StringArray& Text, bool Advance)
 {
     TBoundsDbl res = {
 			0, 0, 0, Height()
@@ -1869,7 +1876,7 @@ void TBitmapFont::RenderChar(char32_t ch, double& AdvanceX)
     AdvanceX += GlyphWidth;
 }
 
-void TBitmapFont::Render(const std::u32string Text)
+void TBitmapFont::Render(const std::u32string& Text)
 {
     // if there is no text do nothing
     //if (Text == nil) or (Text[0] == 0)
