@@ -618,63 +618,102 @@ const std::map<std::string, int> gl_map = {
 };
 #undef MACRO_GL_KEY_VALUE
 
-
-    void registerGLEnums(sol::state& state)
-    {
-        state.create
-    }
-
-    /*
-uses
-  SysUtils,
-  dglOpenGL,
-  ULua;
-  */
-int luaopen_gl(Plua_State L);
-//GLenum ULuaGl_StringToEnum(std::string Str);
+/*
+void registerGLEnums(sol::state& state)
+{
+    state.create
+}
+*/
 
 //{ lua lib functions }
-int ULuaGl_Begin(Plua_State L);
-int ULuaGl_BindTexture(Plua_State L);
-int ULuaGl_BlendFunc(Plua_State L);
-int ULuaGl_Clear(Plua_State L);
-int ULuaGl_ClearAccum(Plua_State L);
-int ULuaGl_ClearColor(Plua_State L);
-int ULuaGl_Color(Plua_State L);
-int ULuaGl_CullFace(Plua_State L);
-int ULuaGl_DepthFunc(Plua_State L);
-int ULuaGl_DepthRange(Plua_State L);
-int ULuaGl_Disable(Plua_State L);
-int ULuaGl_DisableClientState(Plua_State L);
-int ULuaGl_DrawBuffer(Plua_State L);
-int ULuaGl_Enable(Plua_State L);
-int ULuaGl_EnableClientState(Plua_State L);
-int ULuaGl_End(Plua_State L);
-int ULuaGl_EndList(Plua_State L);
-int ULuaGl_Finish(Plua_State L);
-int ULuaGl_Flush(Plua_State L);
-int ULuaGl_FrontFace(Plua_State L);
-int ULuaGl_InitNames(Plua_State L);
-int ULuaGl_LoadIdentity(Plua_State L);
-int ULuaGl_LogicOp(Plua_State L);
-int ULuaGl_MatrixMode(Plua_State L);
-int ULuaGl_Ortho(Plua_State L);
-int ULuaGl_PopAttrib(Plua_State L);
-int ULuaGl_PopClientAttrib(Plua_State L);
-int ULuaGl_PopMatrix(Plua_State L);
-int ULuaGl_PopName(Plua_State L);
-int ULuaGl_PushMatrix(Plua_State L);
-int ULuaGl_RasterPos(Plua_State L);
-int ULuaGl_ReadBuffer(Plua_State L);
-int ULuaGl_Rect(Plua_State L);
-int ULuaGl_Rotate(Plua_State L);
-int ULuaGl_Scale(Plua_State L);
-int ULuaGl_ShadeModel(Plua_State L);
-int ULuaGl_TexCoord(Plua_State L);
-int ULuaGl_Translate(Plua_State L);
-int ULuaGl_Vertex(Plua_State L);
-int ULuaGl_Viewport(Plua_State L);
-int ULuaGl_Dummy(Plua_State L);
+int Begin();
+int BindTexture();
+int BlendFunc();
+int Clear();
+int ClearAccum();
+int ClearColor();
+int Color();
+int CullFace();
+int DepthFunc();
+int DepthRange();
+int Disable();
+int DisableClientState();
+int DrawBuffer();
+int Enable();
+int EnableClientState();
+int End();
+int EndList();
+int Finish();
+int Flush();
+int FrontFace();
+int InitNames();
+int LoadIdentity();
+int LogicOp();
+int MatrixMode();
+int Ortho();
+int PopAttrib();
+int PopClientAttrib();
+int PopMatrix();
+int PopName();
+int PushMatrix();
+int RasterPos();
+int ReadBuffer();
+int Rect();
+int Rotate();
+int Scale();
+int ShadeModel();
+int TexCoord();
+int Translate();
+int Vertex();
+int Viewport();
+
+
+void registerGLFunctions(sol::state& state)
+{
+    state["gl"] = state.create_table_with
+    (
+        "Begin", Begin,
+        "BindTexture", BindTexture,
+        "BlendFunc", BlendFunc,
+        "Clear", Clear,
+        "ClearAccum", ClearAccum,
+        "ClearColor", ClearColor,
+        "Color", Color,
+        "CullFace", CullFace,
+        "DepthFunc", DepthFunc,
+        "DepthRange", DepthRange,
+        "Disable", Disable,
+        "DisableClientState", DisableClientState,
+        "DrawBuffer", DrawBuffer,
+        "Enable", Enable,
+        "EnableClientState", EnableClientState,
+        "End", End,
+        "EndList", EndList,
+        "Finish", Finish,
+        "Flush", Flush,
+        "FrontFace", FrontFace,
+        "InitNames", InitNames,
+        "LoadIdentity", LoadIdentity,
+        "LogicOp", LogicOp,
+        "MatrixMode", MatrixMode,
+        "Ortho", Ortho,
+        "PopAttrib", PopAttrib,
+        "PopClientAttrib", PopClientAttrib,
+        "PopMatrix", PopMatrix,
+        "PopName", PopName,
+        "PushMatrix", PushMatrix,
+        "RasterPos", RasterPos,
+        "ReadBuffer", ReadBuffer,
+        "Rect", Rect,
+        "Rotate", Rotate,
+        "Scale", Scale,
+        "ShadeModel", ShadeModel,
+        "TexCoord", TexCoord,
+        "Translate", Translate,
+        "Vertex", Vertex,
+        "Viewport", Viewport
+    );
+}
 
     /*
 const
@@ -1272,17 +1311,6 @@ var
   else
     luaL_error(L, "incorrect argument to function \"gl.Viewport\"");
   result:=0; // number of results
-}
-
-int ULuaGl_Dummy(Plua_State L)
-{
-  result:=0; // number of results
-}
-
-int luaopen_gl(Plua_State L)
-{
-    luaL_register(L,"gl",@ULuaGl_Lib_f[0]);
-    result:=1;
 }
 
 /*
