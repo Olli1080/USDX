@@ -63,8 +63,8 @@ struct TMedley
     TMedleySource Source;  //source of the information
     int StartBeat;        //start beat of medley
     int EndBeat;        //end beat of medley
-    double FadeIn_time;           //FadeIn-Time in seconds
-    double FadeOut_time;           //FadeOut-Time in seconds
+    SecDouble FadeIn_time;           //FadeIn-Time in seconds
+    SecDouble FadeOut_time;           //FadeOut-Time in seconds
 };
 
 struct TBPM

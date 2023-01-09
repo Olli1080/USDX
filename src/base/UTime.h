@@ -26,11 +26,9 @@
 
 #include "../switches.h"
 
-#include <cstdint>
-
 namespace UTime
 {
-    
+
     class TTime
     {
     public:
@@ -40,209 +38,51 @@ namespace UTime
 
     enum TRelativeTimerState { rtsStopped, rtsWait, rtsPaused, rtsRunning };
 
+    template<typename ClockType>
     class TRelativeTimer
     {
     private:
 
-        int64_t AbsoluteTime;      // system-clock reference time for calculation of CurrentTime
-        double RelativeTime;
-        bool TriggerMode;
-        TRelativeTimerState State;
+	    typename ClockType::time_point AbsoluteTime;
+	    typename ClockType::duration RelativeTime = ClockType::duration::zero();
+        TRelativeTimerState State = rtsStopped;
 
     public:
 
-    	TRelativeTimer();
+        TRelativeTimer();
+
         void Start(bool WaitForTrigger = false);
         void Pause();
         void Stop();
-        double GetTime();
-        void SetTime(double Time);
-        TRelativeTimerState GetState();
+
+        [[nodiscard]] typename ClockType::duration GetTime();
+        void SetTime(const typename ClockType::duration& Time);
+        [[nodiscard]] TRelativeTimerState GetState() const;
     };
 
-	class TSyncSource
+    class TSyncSource
     {
+    public:
+
+        virtual ~TSyncSource() = default;
+
         virtual double GetClock() = 0;
     };
 
-    void CountSkipTimeSet;
-    void CountSkipTime;
-    void CountMidTime;
+    void CountSkipTimeSet();
+    void CountSkipTime();
+    void CountMidTime();
+    
+    inline TRelativeTimer VideoBGTimer;
 
-    var
-        USTime : TTime;
-VideoBGTimer: TRelativeTimer;
+    /*
+    typedef std::chrono::time_point<std::chrono::system_clock, std::chrono::milliseconds> TimePointMili;
 
-TimeNew:     int64_t;
-TimeOld:     int64_t;
-TimeSkip:    double;
-TimeMid:     double;
-TimeMidTemp: int64_t;
+    std::chrono::system_clock::time_point TimeNew;
+    std::chrono::system_clock::time_point TimeOld;
+    std::chrono::system_clock::time_point TimeMidTemp;
 
-    implementation
-
-        uses
-        sdl2,
-        UCommon;
-
-    const
-        cSDLCorrectionRatio = 1000;
-
-    (*
-        BEST Option now(after discussion with whiteshark) seems to be to use SDL
-        timer functions...
-
-        SDL_delay
-        SDL_GetTicks
-        http ://www.gamedev.net/community/forums/topic.asp?topic_id=466145&whichpage=1%EE%8D%B7
-    *)
-
-
-        void CountSkipTimeSet;
-    begin
-        TimeNew : = SDL_GetTicks();
-    end;
-
-    void CountSkipTime;
-    begin
-        TimeOld : = TimeNew;
-TimeNew: = SDL_GetTicks();
-TimeSkip: = (TimeNew - TimeOld) / cSDLCorrectionRatio;
-    end;
-
-    void CountMidTime;
-    begin
-        TimeMidTemp : = SDL_GetTicks();
-TimeMid: = (TimeMidTemp - TimeNew) / cSDLCorrectionRatio;
-    end;
-
-    {**
-        *TTime
-        **}
-
-    constructor TTime.Create;
-    begin
-        inherited;
-    CountSkipTimeSet;
-    end;
-
-    function TTime.GetTime: double;
-    begin
-        Result : = SDL_GetTicks() / cSDLCorrectionRatio;
-    end;
-
-    {**
-        *TRelativeTimer
-        **}
-
-    (**
-        *Creates a new relative timer.
-        * A relative timer works like a stop - watch.It can be paused and
-        *resumed afterwards, continuing with the counter it had when it was paused.
-        *)
-        constructor TRelativeTimer.Create();
-    begin
-        State : = rtsStopped;
-AbsoluteTime: = 0;
-RelativeTime: = 0;
-    end;
-
-    (**
-        *Starts the timer.
-        * If WaitForTrigger is false the timer will be started immediately.
-        * If WaitForTrigger is true the timer will be started when a trigger event
-        * occurs.A trigger event is a call of one of the Get - / SetTime() methods.
-        * In addition the timer can be started by calling this method again with
-        * WaitForTrigger set to false.
-        *)
-        void TRelativeTimer.Start(WaitForTrigger: bool = false);
-    begin
-        case (State)of
-        rtsStopped, rtsPaused: begin
-        if (WaitForTrigger) then
-            begin
-            State : = rtsWait;
-    end
-        else
-            begin
-            State : = rtsRunning;
-AbsoluteTime: = SDL_GetTicks();
-    end;
-    end;
-
-rtsWait: begin
-if (not WaitForTrigger) then
-begin
-State : = rtsRunning;
-AbsoluteTime: = SDL_GetTicks();
-RelativeTime: = 0;
-end;
-end;
-end;
-end;
-
-(**
-    *Pauses the timerand leaves the counter untouched.
-    *)
-    void TRelativeTimer.Pause();
-begin
-if (State = rtsRunning) then
-begin
-// Important: GetTime() must be called in running state
-RelativeTime : = GetTime();
-State: = rtsPaused;
-end;
-end;
-
-(**
-    *Stops the timerand sets its counter to 0.
-    *)
-    void TRelativeTimer.Stop();
-begin
-if (State <> rtsStopped) then
-begin
-State : = rtsStopped;
-RelativeTime: = 0;
-end;
-end;
-
-(**
-    *Returns the current counter of the timer.
-    * If WaitForTrigger was true in Start() the timer will be started
-    * if it was not already running.
-    *)
-    function TRelativeTimer.GetTime() : double;
-begin
-case (State)of
-rtsStopped, rtsPaused:
-Result: = RelativeTime;
-rtsRunning:
-Result: = RelativeTime + (SDL_GetTicks() - AbsoluteTime) / cSDLCorrectionRatio;
-rtsWait: begin
-// start triggered
-State : = rtsRunning;
-AbsoluteTime: = SDL_GetTicks();
-Result: = RelativeTime;
-end;
-end;
-end;
-
-(**
-    *Sets the counter of the timer.
-    * If WaitForTrigger was true in Start() the timer will be started
-    * if it was not already running.
-    *)
-    void TRelativeTimer.SetTime(Time: double);
-begin
-RelativeTime : = Time;
-AbsoluteTime: = SDL_GetTicks();
-// start triggered
-if (State = rtsWait) then
-State : = rtsRunning;
-end;
-
-function TRelativeTimer.GetState() : TRelativeTimerState;
-begin
-Result : = State;
-end;
+	SecDouble TimeSkip;
+	SecDouble TimeMid;
+	*/
 }

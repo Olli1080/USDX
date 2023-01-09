@@ -42,7 +42,7 @@ void UNote::GetMidBeatSub(size_t BPMNum, SecDouble& Time, double& CurBeat, const
     }
 }
 
-double UNote::GetMidBeat(SecDouble Time)
+SecDouble UNote::GetMidBeat(SecDouble Time)
 {
     double CurBeat;
     int CurBPM;
@@ -59,7 +59,7 @@ double UNote::GetMidBeat(SecDouble Time)
         {
             CurBeat = 0;
             CurBPM = 0;
-            while (Time > SecDouble(0))
+            while (Time > SecDouble::zero())
             {
                 GetMidBeatSub(CurBPM, Time, CurBeat);
                 ++CurBPM;
