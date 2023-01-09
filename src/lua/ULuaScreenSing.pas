@@ -1,4 +1,4 @@
-{* UltraStar Deluxe - Karaoke Game
+/* UltraStar Deluxe - Karaoke Game
  *
  * UltraStar Deluxe is the legal property of its developers, whose names
  * are too numerous to list here. Please refer to the COPYRIGHT
@@ -21,7 +21,7 @@
  *
  * $URL: https://ultrastardx.svn.sourceforge.net/svnroot/ultrastardx/branches/experimental/Lua/src/lua/ULuaTexture.pas $
  * $Id: ULuaTexture.pas 1551 2009-01-04 14:08:33Z Hawkear $
- *}
+ */
 
 unit ULuaScreenSing;
 

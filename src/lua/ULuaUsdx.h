@@ -1,3 +1,4 @@
+#pragma once
 /* UltraStar Deluxe - Karaoke Game
  *
  * UltraStar Deluxe is the legal property of its developers, whose names
@@ -25,6 +26,7 @@
 #include "../switches.h"
 
 #include <sol/sol.hpp>
+#include "../base/UConfig.h"
 
 namespace ULuaUsdx
 {
@@ -38,7 +40,7 @@ int Time();
 
 //{ Usdx.Version - returns Usdx version string (the same that US_Version
   //language-constant does). no arguments }
-int Version();
+std::string Version();
 
 //{ Usdx.Hook - returns an hook table with name and Unhook function
               //arguments: event_name: string }
@@ -48,7 +50,7 @@ int Version();
   //unloads the calling plugin }
 int ShutMeDown();
 
-void registerUSDX(sol::state& state)
+inline void registerUSDX(sol::state& state)
 {
     state["Usdx"] = state.create_table_with
     (
@@ -58,16 +60,7 @@ void registerUSDX(sol::state& state)
         "ShutMeDown", ShutMeDown
     );
 }
-/*
-const
-  ULuaUsdx_Lib_f: array [0..4] of lual_reg = (
-    (name:'Version'; func:ULuaUsdx_Version),
-    (name:'Time'; func:ULuaUsdx_Time),
-    (name:'Hook'; func:ULuaUsdx_Hook),
-    (name:'ShutMeDown'; func:ULuaUsdx_ShutMeDown),
-    (name:nil;func:nil)
-  );
-*/
+
 //implementation
 //uses sdl2, ULuaCore, ULuaUtils, UHookableEvent, UConfig;
 
@@ -76,31 +69,16 @@ const
 int Time()
 //  var top: Integer;
 {
-  //remove arguments (if any)
-  top = lua_gettop(L);
-
-  if (top > 0) then
-    lua_pop(L, top);
-
-  //push result
-  lua_pushinteger(L, SDL_GetTicks);
-  Result = 1; //one result
+    return std::chrono::duration_cast<std::chrono::milliseconds>(
+        std::chrono::system_clock::now().time_since_epoch()).count();
 }
 
 //{ Usdx.Version - returns Usdx version string (the same that US_Version
   //language-constant does). no arguments }
-int Version()
+std::string Version()
 //  var top: Integer;
 {
-  //remove arguments (if any)
-  top = lua_gettop(L);
-
-  if (top > 0) then
-    lua_pop(L, top);
-
-  //push result
-  lua_pushstring(L, PChar(USDXVersionStr()));
-  Result = 1; //one result
+    return UConfig::USDXVersionStr();
 }
 
 //{ Usdx.Hook - returns an hook table with name and Unhook function
@@ -122,7 +100,7 @@ int Hook(const std::string& event_name/*TODO:: more arguments?*/)
   Result = 1;
 
   Event = LuaCore.GetEventByName(EventName);
-  if (Event <> nil) then
+  if (Event != nil)
   {
     Event.Hook(L, P.Id, FunctionName);
   }

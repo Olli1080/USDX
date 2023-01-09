@@ -106,6 +106,7 @@ void DebugWriteln(const std::string aString);
 class TLog
 {
 private:
+
   std::ofstream LogFile;
   bool LogFileOpened;
   std::ofstream BenchmarkFile;
@@ -122,6 +123,7 @@ private:
   int GetConsoleCount();
 
 public:
+
   std::array<std::chrono::utc_clock::time_point, 32> BenchmarkTimeStart;
   std::array<std::chrono::utc_clock::duration, 32> BenchmarkTimeLength;//TDateTime;
 
@@ -207,10 +209,10 @@ public:
   // voice
   void LogVoice(int SoundNr);
   // buffer
-  void LogBuffer(const Pointer buf, const int bufLength, const std::filesystem::path filename);
+  void LogBuffer(const std::vector<uint8_t>& buffer, const std::filesystem::path& filename);
 
   // console
-  property ConsoleCount: integer read GetConsoleCount;
+  //property ConsoleCount: integer read GetConsoleCount;
   std::string GetConsole(const int index, bool FromTheBeginning = false);
   void LogConsole(const std::string Text);
   void ClearConsoleLog();

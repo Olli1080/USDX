@@ -3,6 +3,7 @@
 #include <iostream>
 #include <cstdint>
 
+#include "UCommandLine.h"
 #include "UPathUtils.h"
 
 namespace ULog
@@ -67,7 +68,7 @@ void TLog::LogBenchmark(const std::string Text, int Number)
 {
   std::unique_lock lock(mtx);
   
-  if (FileOutputEnabled && Params.Benchmark)
+  if (FileOutputEnabled && UCommandLine::Params.Benchmark)
   {
     if (!BenchmarkFileOpened)
     {
@@ -348,26 +349,17 @@ void TLog::LogVoice(int SoundNr)
   Stream.Free;
 }
 
-void TLog::LogBuffer(const Pointer buf, const int bufLength, const std::filesystem::path filename)
-/*var
-  f : TBinaryFileStream;*/
+void TLog::LogBuffer(const std::vector<uint8_t>& buffer, const std::filesystem::path& filename)
 {
-  try
-  {
-    f = TBinaryFileStream.Create( filename, fmCreate);
     try
     {
-      f.Write( buf^, bufLength);
+        auto f = std::basic_ofstream<uint8_t>(filename, std::fstream::binary);
+        f.write(buffer.data(), buffer.size());
     }
-    catch(...)
+    catch (const std::exception& e)
     {
-      f.Free;
+        Log.LogError("TLog::LogBuffer: Failed to log buffer into file \"" + filename.string() + "\". ErrMsg: " + std::string(e.what()));
     }
-  }
-  catch (const std::exception& e)
-  {
-    Log.LogError("TLog::LogBuffer: Failed to log buffer into file "" + filename.ToNative + "". ErrMsg: " + std::string(e.what()));
-  }
 }
 
 void TLog::ClearConsoleLog()
