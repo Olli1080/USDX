@@ -23,37 +23,22 @@ namespace UTexture
     /* TTextureDatabase */
     void TTextureDatabase::AddTexture(TextureWrapper::SPtr& Tex, TTextureType Typ, uint32_t Color, bool Cache)
     {
-        size_t TextureIndex;
-        if (const auto TextureIndexOpt = FindTexture(Tex->Name, Typ, Color); TextureIndexOpt)
-            TextureIndex = TextureIndexOpt.value();
-        else
+        auto maybeTexture = FindTexture(Tex->Name, Typ, Color);
+        if (!maybeTexture)
         {
-            TextureIndex = Texture.size();
-            Texture.emplace_back(std::make_shared<TTextureEntry>(Tex->Name, Typ, Color, nullptr, nullptr));
+            auto id = TextureEntryID{ Tex->Name, Typ, Color };
+            maybeTexture = Texture.emplace(id, std::make_shared<TTextureEntry>(id)).first->second;
         }
         if (Cache)
-            Texture[TextureIndex]->TextureCache = Tex;
+            maybeTexture->TextureCache = Tex;
         else
-            Texture[TextureIndex]->Texture = Tex;
+            maybeTexture->Texture = Tex;
     }
 
-    std::optional<size_t> TTextureDatabase::FindTexture(const std::filesystem::path& Name, TTextureType Typ, uint32_t Color) const
+    PTextureEntry TTextureDatabase::FindTexture(const std::filesystem::path& Name, TTextureType Typ, uint32_t Color) const
     {
-        for (size_t TextureIndex = 0; TextureIndex < Texture.size(); ++TextureIndex)
-        {
-            const auto CurrentTexture = Texture[TextureIndex];
-            if (
-                CurrentTexture->Name == Name && CurrentTexture->Typ == Typ &&
-                (
-                    // colorized textures must match in their color too
-                    CurrentTexture->Typ != TTextureType::TEXTURE_TYPE_COLORIZED ||
-                    CurrentTexture->Color == Color)
-                )
-            {
-                return TextureIndex;
-            }
-        }
-        return std::nullopt;
+        const auto it = Texture.find({ Name, Typ, Color });
+        return (it != Texture.end()) ? it->second : nullptr;
     }
 
     /* TTextureUnit */
@@ -160,31 +145,20 @@ namespace UTexture
         if (FromCache)
         {
             // use texture
-            if (const auto TextureIndexOpt = TextureDatabase.FindTexture(Name, Typ, Col); TextureIndexOpt)
-                return TextureDatabase.Texture[TextureIndexOpt.value()]->TextureCache;
+            if (const auto maybeTexture = TextureDatabase.FindTexture(Name, Typ, Col); maybeTexture)
+                return maybeTexture->TextureCache;
         }
 
-        size_t TextureIndex;
         // find texture entry in database
-        if (const auto& TextureIndexOpt = TextureDatabase.FindTexture(Name, Typ, Col); TextureIndexOpt)
-            TextureIndex = TextureIndexOpt.value();
-        else
+        auto maybeTexture = TextureDatabase.FindTexture(Name, Typ, Col);
+        if (!maybeTexture)
         {
-            // create texture entry in database
-            TextureIndex = TextureDatabase.Texture.size();
-
-            auto NewEntry = std::make_shared<TTextureEntry>(Name, Typ, Col,
-                // inform database that no textures have been loaded into memory by setting TexNum 0
-                std::make_shared<TextureWrapper>(0, Name), 
-                std::make_shared<TextureWrapper>(0, Name)
-                );
-            
-            NewEntry->Texture->TexNum = 0;
-            NewEntry->TextureCache->TexNum = 0;
-            TextureDatabase.Texture.emplace_back(NewEntry);
+            auto id = TextureEntryID(Name, Typ, Col);
+            maybeTexture = TextureDatabase.Texture.emplace(id, std::make_shared<TTextureEntry>(id)).first->second;
+            maybeTexture->Texture = std::make_shared<TextureWrapper>(0, Name);
+            maybeTexture->TextureCache = std::make_shared<TextureWrapper>(0, Name);
         }
-        auto& texture = TextureDatabase.Texture[TextureIndex]->Texture;
-        // load full texture
+        auto& texture = maybeTexture->Texture;
         if (texture->TexNum == 0)
             texture = LoadTexture(Name, Typ, Col);
 
@@ -215,27 +189,26 @@ namespace UTexture
         return std::make_shared<TextureWrapper>(ActTex, Name);
     }
 
-    void TTextureUnit::UnloadTexture(const std::filesystem::path Name, TTextureType Typ, uint32_t Col, bool FromCache)
+    void TTextureUnit::UnloadTexture(const std::filesystem::path& Name, TTextureType Typ, uint32_t Col, bool FromCache)
     {
         if (Name.empty())
             return;
-        const auto T = TextureDatabase.FindTexture(Name, Typ, Col);
-        if (!T)
-            return;
 
-        const auto& texture = TextureDatabase.Texture[T.value()];
+        const auto maybeTexture = TextureDatabase.FindTexture(Name, Typ, Col);
+        if (!maybeTexture)
+            return;
 
         GLuint* TexNum;
         if (!FromCache)
-            TexNum = &texture->Texture->TexNum;
+            TexNum = &maybeTexture->Texture->TexNum;
         else
-            TexNum = &texture->TextureCache->TexNum;
+            TexNum = &maybeTexture->TextureCache->TexNum;
         
-        if (*TexNum > 0)
-        {
-            glDeleteTextures(1, TexNum);
-            *TexNum = 0;
-        }
+        if (TexNum <= 0)
+            return;
+
+        glDeleteTextures(1, TexNum);
+        *TexNum = 0;
     }
 
     /* This needs some work

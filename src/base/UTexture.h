@@ -159,11 +159,14 @@ namespace UTexture
 
     struct TTextureEntry : TextureEntryID
     {
+        TTextureEntry(TextureEntryID id) : TextureEntryID(std::move(id))
+        {}
+
         //[[nodiscard]] std::filesystem::path Name() const { return Texture->Name; };
 
         // we use normal TTexture, it's easier to implement and if needed - we copy ready data
-        TextureWrapper::SPtr Texture; // Full-size texture
-        TextureWrapper::SPtr TextureCache; // Thumbnail texture
+        TextureWrapper::SPtr Texture = nullptr; // Full-size texture
+        TextureWrapper::SPtr TextureCache = nullptr; // Thumbnail texture
     };
     typedef std::shared_ptr<TTextureEntry> PTextureEntry;
 
@@ -173,13 +176,13 @@ namespace UTexture
 
         friend class TTextureUnit;
 
-        std::vector<PTextureEntry> Texture;
-        //std::map<TextureEntryID, TTextureEntry> Texture;
+        //std::vector<PTextureEntry> Texture;
+        std::map<TextureEntryID, PTextureEntry> Texture;
 
     public:
 
         void AddTexture(TextureWrapper::SPtr& Tex, TTextureType Typ, uint32_t Color, bool Cache);
-        [[nodiscard]] std::optional<size_t> FindTexture(const std::filesystem::path& Name, TTextureType Typ, uint32_t Color) const;
+        [[nodiscard]] PTextureEntry FindTexture(const std::filesystem::path& Name, TTextureType Typ, uint32_t Color) const;
     };
 
     class TTextureUnit
@@ -195,7 +198,7 @@ namespace UTexture
         void AddTexture(TextureWrapper::SPtr& Tex, TTextureType Typ, uint32_t Color = 0, bool Cache = false);
         TextureWrapper::SPtr GetTexture(const std::filesystem::path& Name, TTextureType Typ, uint32_t Col = 0, bool FromCache = false);
         TextureWrapper::SPtr LoadTexture(const std::filesystem::path& Identifier, TTextureType Typ = TTextureType::TEXTURE_TYPE_PLAIN, uint32_t Col = 0);
-        void UnloadTexture(const std::filesystem::path Name, TTextureType Typ, uint32_t Col = 0, bool FromCache);
+        void UnloadTexture(const std::filesystem::path& Name, TTextureType Typ, uint32_t Col = 0, bool FromCache);
 
         TextureWrapper::SPtr CreateTexture(const std::vector<uint8_t>& Data, const std::filesystem::path& Name, uint16_t Width, uint16_t Height);
         //void FlushTextureDatabase();
