@@ -55,10 +55,14 @@ namespace UTexture
     std::string TextureTypeToStr(TTextureType TexType);
     TTextureType ParseTextureType(const std::string& TypeStr, TTextureType Default);
 
-    struct Position
+    struct Position2D
     {
         double X = 0.0;
         double Y = 0.0;
+    };
+
+    struct Position3D : Position2D
+    {
         double Z = 0.0;
     };
 
@@ -94,14 +98,14 @@ namespace UTexture
         double H = 1.0; // percentage of height to use [0..1]
     };
 
-    struct Texture
+    struct TTexture
     {
-        Position position;
+        Position3D position;
         Size size;
-        UCommon::TRGBA Color = { 1.0, 1.0, 1.0, 1.0 };
+        UCommon::TRGBA Color = {{1.0, 1.0, 1.0}, 1.0 };
         TTextureCoords coords;
 
-        typedef std::shared_ptr<Texture> SPtr;
+        typedef std::shared_ptr<TTexture> SPtr;
     };
 
     /*struct TextureID
@@ -111,7 +115,7 @@ namespace UTexture
 
     };*/
 
-    struct TextureWrapper : Texture
+    struct TextureWrapper : TTexture
     {
         TextureWrapper(GLuint TexNum, std::filesystem::path name)
 	        : TexNum(TexNum), Name(std::move(name))

@@ -113,12 +113,21 @@ TRGB<T> convertNormalized(const TRGB<uint8_t>& in)
     }) / 255.0;
 }
 
-struct TRGBA
+struct TRGBA : TRGB<double>
 {
-  double R;
-  double G;
-  double B;
-  double A;
+   double A;
+
+   template <typename ScalarType>
+   friend TRGBA operator*(const TRGBA& lhs, const ScalarType& s)
+   {
+       return { lhs.R * s, lhs.G * s, lhs.B, lhs.A * s };
+   }
+
+   template <typename ScalarType>
+   static TRGBA intensity(const TRGBA& lhs, const ScalarType& s)
+   {
+       return { lhs.R * s, lhs.G * s, lhs.B, lhs.A };
+   }
 };
 
 struct TTexCoords
