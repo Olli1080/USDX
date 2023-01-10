@@ -31,6 +31,7 @@
 #include <string>
 #include <vector>
 #include <array>
+#include <map>
 #include <filesystem>
 #include <memory>
 #include <cstdint>
@@ -39,71 +40,130 @@
 #include <SDL2/SDL_surface.h>
 #include <boost/algorithm/string/predicate.hpp>
 
+#include "UCommon.h"
+
 namespace UTexture
 {
-    struct TTextureCoords
-    {
-        double X1;
-        double Y1;
-        double X2;
-        double Y2;
-    };
-
-    struct TTexture
-    {
-        GLuint TexNum;
-        double X;
-        double Y;
-        double Z;
-        double W;
-        double H;
-        double ScaleW; // for dynamic scaling while leaving width constant
-        double ScaleH; // for dynamic scaling while leaving height constant
-        double Rot; // 0 - 2*pi
-        double RightScale; //
-        double LeftScale; //
-        double Int; // intensity
-        double ColR;
-        double ColG;
-        double ColB;
-        double TexW; // percentage of width to use [0..1]
-        double TexH; // percentage of height to use [0..1]
-        double TexX1;
-        double TexY1;
-        double TexX2;
-        double TexY2;
-        double Alpha;
-        std::filesystem::path Name; // experimental for handling cache images. maybe it's useful for dynamic skins
-    };
-
-    typedef std::shared_ptr<TTexture> PTexture;
-
-
-    enum TTextureType
+    enum class TTextureType
     {
         TEXTURE_TYPE_PLAIN,        // Plain (alpha == 1)
         TEXTURE_TYPE_TRANSPARENT,  // Alpha is used
         TEXTURE_TYPE_COLORIZED     // Alpha is used; Hue of the HSV color-model will be replaced by a new value
     };
-
     const std::array<std::string, 3> TextureTypeStr = { "Plain", "Transparent", "Colorized" };
 
     std::string TextureTypeToStr(TTextureType TexType);
-    TTextureType ParseTextureType(const std::string TypeStr, TTextureType Default);
+    TTextureType ParseTextureType(const std::string& TypeStr, TTextureType Default);
 
+    struct Position
+    {
+        double X = 0.0;
+        double Y = 0.0;
+        double Z = 0.0;
+    };
+
+    struct Size
+    {
+        double W = 0.0;
+        double H = 0.0;
+    };
+
+    struct SizeScale
+    {
+        double W = 1.0; // for dynamic scaling while leaving width constant 
+        double H = 1.0; // for dynamic scaling while leaving height constant
+    };
+
+    struct ExtentScale
+    {
+        double right = 1.0;
+        double left = 1.0;
+    };
+
+    struct TTextureCoords
+    {
+        double X1 = 0.0;
+        double Y1 = 0.0;
+        double X2 = 1.0;
+        double Y2 = 1.0;
+    };
+
+    struct SizeRatio
+    {
+        double W = 1.0; // percentage of width to use [0..1]
+        double H = 1.0; // percentage of height to use [0..1]
+    };
+
+    struct Texture
+    {
+        Position position;
+        Size size;
+        UCommon::TRGBA Color = { 1.0, 1.0, 1.0, 1.0 };
+        TTextureCoords coords;
+
+        typedef std::shared_ptr<Texture> SPtr;
+    };
+
+    /*struct TextureID
+    {
+        std::filesystem::path Name; // experimental for handling cache images. maybe it's useful for dynamic skins
+        TTextureType Typ;
+
+    };*/
+
+    struct TextureWrapper : Texture
+    {
+        TextureWrapper(GLuint TexNum, std::filesystem::path name)
+	        : TexNum(TexNum), Name(std::move(name))
+        {}
+
+        TextureWrapper(GLuint TexNum, std::filesystem::path name, Size actualSize, Size scaledSize)
+	        : TexNum(TexNum), Name(std::move(name))
+        {
+            size = actualSize;
+            ratio = { size.W / scaledSize.W, size.H / scaledSize.H };
+        }
+
+        GLuint TexNum;
+        SizeScale sizeScale;
+        double Rot = 0.0; // 0 - 2*pi
+        ExtentScale extentScale;
+        double Int = 1.0; // intensity
+        
+        SizeRatio ratio;
+        std::filesystem::path Name; // experimental for handling cache images. maybe it's useful for dynamic skins
+
+        typedef std::shared_ptr<TextureWrapper> SPtr;
+    };
+
+    //typedef std::shared_ptr<TTexture> PTexture;
     void AdjustPixelFormat(SDL_Surface& TexSurface, TTextureType Typ);
 
-
-
-    struct TTextureEntry
+    struct TextureEntryID
     {
         std::filesystem::path Name;
         TTextureType Typ;
         uint32_t Color;
 
+        bool operator<(const TextureEntryID& rhs) const
+        {
+            if (Name > rhs.Name)
+                return false;
+            if (static_cast<size_t>(Typ) > static_cast<size_t>(rhs.Typ))
+                return false;
+            if (Typ == TTextureType::TEXTURE_TYPE_COLORIZED && Color > rhs.Color)
+                return false;
+            return true;
+        }
+    };
+
+    struct TTextureEntry : TextureEntryID
+    {
+        //[[nodiscard]] std::filesystem::path Name() const { return Texture->Name; };
+
         // we use normal TTexture, it's easier to implement and if needed - we copy ready data
-        PTexture Texture; // Full-size texture
-        PTexture TextureCache; // Thumbnail texture
+        TextureWrapper::SPtr Texture; // Full-size texture
+        TextureWrapper::SPtr TextureCache; // Thumbnail texture
     };
     typedef std::shared_ptr<TTextureEntry> PTextureEntry;
 
@@ -114,11 +174,12 @@ namespace UTexture
         friend class TTextureUnit;
 
         std::vector<PTextureEntry> Texture;
+        //std::map<TextureEntryID, TTextureEntry> Texture;
 
     public:
 
-        void AddTexture(PTexture& Tex, TTextureType Typ, uint32_t Color, bool Cache);
-        [[nodiscard]] std::optional<size_t> FindTexture(const std::filesystem::path Name, TTextureType Typ, uint32_t Color) const;
+        void AddTexture(TextureWrapper::SPtr& Tex, TTextureType Typ, uint32_t Color, bool Cache);
+        [[nodiscard]] std::optional<size_t> FindTexture(const std::filesystem::path& Name, TTextureType Typ, uint32_t Color) const;
     };
 
     class TTextureUnit
@@ -130,16 +191,13 @@ namespace UTexture
     public:
 
         int Limit;
+        
+        void AddTexture(TextureWrapper::SPtr& Tex, TTextureType Typ, uint32_t Color = 0, bool Cache = false);
+        TextureWrapper::SPtr GetTexture(const std::filesystem::path& Name, TTextureType Typ, uint32_t Col = 0, bool FromCache = false);
+        TextureWrapper::SPtr LoadTexture(const std::filesystem::path& Identifier, TTextureType Typ = TTextureType::TEXTURE_TYPE_PLAIN, uint32_t Col = 0);
+        void UnloadTexture(const std::filesystem::path Name, TTextureType Typ, uint32_t Col = 0, bool FromCache);
 
-        void AddTexture(PTexture& Tex, TTextureType Typ, bool Cache = false);
-        void AddTexture(PTexture& Tex, TTextureType Typ, uint32_t Color, bool Cache = false);
-        PTexture GetTexture(const std::filesystem::path Name, TTextureType Typ, bool FromCache = false);
-        PTexture GetTexture(const std::filesystem::path Name, TTextureType Typ, uint32_t Col, bool FromCache = false);
-        PTexture LoadTexture(const std::filesystem::path& Identifier, TTextureType Typ, uint32_t Col);
-        PTexture LoadTexture(const std::filesystem::path& Identifier);
-        PTexture CreateTexture(const std::vector<uint8_t>& Data, const std::filesystem::path Name, uint16_t Width, uint16_t Height);
-        void UnloadTexture(const std::filesystem::path Name, TTextureType Typ, bool FromCache);
-        void UnloadTexture(const std::filesystem::path Name, TTextureType Typ, uint32_t Col, bool FromCache);
+        TextureWrapper::SPtr CreateTexture(const std::vector<uint8_t>& Data, const std::filesystem::path& Name, uint16_t Width, uint16_t Height);
         //void FlushTextureDatabase();
 
         TTextureUnit();
