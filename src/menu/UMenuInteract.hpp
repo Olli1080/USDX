@@ -1,4 +1,5 @@
-{* UltraStar Deluxe - Karaoke Game
+#pragma once
+/* UltraStar Deluxe - Karaoke Game
  *
  * UltraStar Deluxe is the legal property of its developers, whose names
  * are too numerous to list here. Please refer to the COPYRIGHT
@@ -21,34 +22,24 @@
  *
  * $URL: svn://basisbit@svn.code.sf.net/p/ultrastardx/svn/trunk/src/menu/UMenuInteract.pas $
  * $Id: UMenuInteract.pas 1950 2009-11-18 14:42:34Z whiteshark0 $
- *}
+ */
+#include "../switches.h"
 
-unit UMenuInteract;
+namespace UMenuInteract
+{
+    struct TInteract // for moving through menu
+    {
+		int Typ;  // 0 - button, 1 - select, 2 - Text, 3 - Select SLide, 5 - ButtonCollection Child
+		int Num;  // number of this item in proper list like buttons, selects
+    };
 
-interface
+    // to handle the area where the mouse is over a control
+    struct TMouseOverRect
+    {
+        double X, Y;
+        double W, H;
+    };
 
-{$IFDEF FPC}
-  {$MODE Delphi}
-{$ENDIF}
-
-{$I switches.inc}
-
-type
-  TInteract = record // for moving thru menu
-    Typ: integer;  // 0 - button, 1 - select, 2 - Text, 3 - Select SLide, 5 - ButtonCollection Child
-    Num: integer;  // number of this item in proper list like buttons, selects
-  end;
-
-  { to handle the area where the mouse is over a control }
-  TMouseOverRect = record
-    X, Y: Real;
-    W, H: Real;
-  end;
-
-  { to handle the on click action }
-  TMouseClickAction = (maNone, maReturn, maLeft, maRight);
-
-implementation
-
-end.
- 
+    // to handle the on click action
+    enum class TMouseClickAction { maNone, maReturn, maLeft, maRight };
+}

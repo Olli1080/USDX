@@ -41,6 +41,7 @@
 #include <boost/algorithm/string/predicate.hpp>
 
 #include "UCommon.h"
+#include "types.hpp"
 
 namespace UTexture
 {
@@ -54,23 +55,6 @@ namespace UTexture
 
     std::string TextureTypeToStr(TTextureType TexType);
     TTextureType ParseTextureType(const std::string& TypeStr, TTextureType Default);
-
-    struct Position2D
-    {
-        double X = 0.0;
-        double Y = 0.0;
-    };
-
-    struct Position3D : Position2D
-    {
-        double Z = 0.0;
-    };
-
-    struct Size
-    {
-        double W = 0.0;
-        double H = 0.0;
-    };
 
     struct SizeScale
     {
@@ -100,8 +84,9 @@ namespace UTexture
 
     struct TTexture
     {
-        Position3D position;
-        Size size;
+        Position2D position;
+        double Z;
+        Size2D size;
         UCommon::TRGBA Color = {{1.0, 1.0, 1.0}, 1.0 };
         TTextureCoords coords;
 
@@ -121,7 +106,7 @@ namespace UTexture
 	        : TexNum(TexNum), Name(std::move(name))
         {}
 
-        TextureWrapper(GLuint TexNum, std::filesystem::path name, Size actualSize, Size scaledSize)
+        TextureWrapper(GLuint TexNum, std::filesystem::path name, Size2D actualSize, Size2D scaledSize)
 	        : TexNum(TexNum), Name(std::move(name))
         {
             size = actualSize;

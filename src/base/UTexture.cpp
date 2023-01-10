@@ -133,8 +133,8 @@ namespace UTexture
 
         // setup texture struct
         return std::make_shared<TextureWrapper>(ActTex, Identifier, 
-            Size{ (double)oldWidth, (double)oldHeight },
-            Size{ (double)newWidth, (double)newHeight });
+            Size2D{ (double)oldWidth, (double)oldHeight },
+            Size2D{ (double)newWidth, (double)newHeight });
     }
 
     TextureWrapper::SPtr TTextureUnit::GetTexture(const std::filesystem::path& Name, TTextureType Typ, uint32_t Col, bool FromCache)
