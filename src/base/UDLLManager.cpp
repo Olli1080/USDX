@@ -49,7 +49,7 @@ std::optional<UWebSDK::TWebsiteInfo> TDLLMan::LoadWebsiteInfo(const std::filesys
     }
   }
   else
-    ULog::Log.LogError("Could not load website \"" + Filename.string() + "\": Libary not loaded");
+    ULog::Log.LogError("Could not load website \"" + Filename.string() + "\": Library not loaded");
   return std::nullopt;
 }
 
@@ -81,7 +81,7 @@ bool TDLLMan::LoadWebsite(uint32_t No)
     }
   }
   else
-    ULog::Log.LogError("Could not load website \"" + WebsitePaths[No].string() + "\": Libary not loaded");
+    ULog::Log.LogError("Could not load website \"" + WebsitePaths[No].string() + "\": Library not loaded");
   return Result;
 }
 

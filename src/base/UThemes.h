@@ -112,14 +112,15 @@ struct TThemePosition
 
 struct TThemeStatic
 {
+    std::string Color;
+    std::string Tex;
+
     TThemePosition pos;
     double Z;
-    std::string Color;
     UCommon::TRGBA Col;
-    std::string Tex;
     UTexture::TTextureType Typ;
     UCommon::TTexCoords TexC;
-    //Reflection
+    //Reflection    TODO::check if Text only!
     bool Reflection;
     double Reflectionspacing;
 };
