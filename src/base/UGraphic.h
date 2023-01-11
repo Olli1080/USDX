@@ -31,6 +31,7 @@
 
 #include "types.hpp"
 #include "UIni.h"
+#include "UImage.h"
 
 namespace UGraphic
 {
@@ -132,6 +133,9 @@ namespace UGraphic
         int Act;
         int X;
         std::unique_ptr<SDL_Window, WindowDeleter> window;
+
+        void SetTitle(const std::string& str);
+        void SetIcon(SDL_Surface& icon);
     };    
 
     SDL_GLContext glcontext;

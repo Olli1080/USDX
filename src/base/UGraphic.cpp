@@ -1,6 +1,5 @@
 #include "UGraphic.h"
 
-#include "UImage.h"
 #include "TextGL.h"
 #include "UAvatars.h"
 #include "UCommandLine.h"
@@ -8,6 +7,7 @@
 #include "UPathUtils.h"
 #include "USongs.h"
 #include "../menu/UDisplay.h"
+#include "USkins.h"
 
 namespace UGraphic
 {
@@ -17,7 +17,16 @@ namespace UGraphic
       UDisplay,
       UCommandLine,
       UPathUtils;*/
+    void TScreen::SetTitle(const std::string& str)
+    {
+        SDL_SetWindowTitle(window.get(), str.c_str());
+    }
 
+    void TScreen::SetIcon(SDL_Surface& icon)
+    {
+        SDL_SetWindowIcon(window.get(), &icon);
+    }
+    
     void LoadFontTextures()
     {
         ULog::Log.LogStatusLocation("Building Fonts");
@@ -40,30 +49,30 @@ namespace UGraphic
 
         ULog::Log.LogStatus("Loading Textures - A", "LoadTextures");
 
-        Tex_Note_Perfect_Star = UTexture::Texture.LoadTexture(Skin.GetTextureFileName("NotePerfectStar"), UTexture::TTextureType::TEXTURE_TYPE_TRANSPARENT, 0);
-        Tex_Note_Star = UTexture::Texture.LoadTexture(Skin.GetTextureFileName("NoteStar"), UTexture::TTextureType::TEXTURE_TYPE_TRANSPARENT, 0xffffff);
-        Tex_Ball = UTexture::Texture.LoadTexture(Skin.GetTextureFileName("Ball"), UTexture::TTextureType::TEXTURE_TYPE_TRANSPARENT, 0xff00ff);
-        Tex_Lyric_Help_Bar = UTexture::Texture.LoadTexture(Skin.GetTextureFileName("LyricHelpBar"), UTexture::TTextureType::TEXTURE_TYPE_TRANSPARENT, 0);
+        Tex_Note_Perfect_Star = UTexture::Texture.LoadTexture(USkins::Skin.GetTextureFileName("NotePerfectStar"), UTexture::TTextureType::TEXTURE_TYPE_TRANSPARENT, 0);
+        Tex_Note_Star = UTexture::Texture.LoadTexture(USkins::Skin.GetTextureFileName("NoteStar"), UTexture::TTextureType::TEXTURE_TYPE_TRANSPARENT, 0xffffff);
+        Tex_Ball = UTexture::Texture.LoadTexture(USkins::Skin.GetTextureFileName("Ball"), UTexture::TTextureType::TEXTURE_TYPE_TRANSPARENT, 0xff00ff);
+        Tex_Lyric_Help_Bar = UTexture::Texture.LoadTexture(USkins::Skin.GetTextureFileName("LyricHelpBar"), UTexture::TTextureType::TEXTURE_TYPE_TRANSPARENT, 0);
 
-        Tex_SelectS_ArrowL = UTexture::Texture.LoadTexture(Skin.GetTextureFileName("Select_ArrowLeft"), UTexture::TTextureType::TEXTURE_TYPE_TRANSPARENT, 0);
-        Tex_SelectS_ArrowR = UTexture::Texture.LoadTexture(Skin.GetTextureFileName("Select_ArrowRight"), UTexture::TTextureType::TEXTURE_TYPE_TRANSPARENT, 0);
+        Tex_SelectS_ArrowL = UTexture::Texture.LoadTexture(USkins::Skin.GetTextureFileName("Select_ArrowLeft"), UTexture::TTextureType::TEXTURE_TYPE_TRANSPARENT, 0);
+        Tex_SelectS_ArrowR = UTexture::Texture.LoadTexture(USkins::Skin.GetTextureFileName("Select_ArrowRight"), UTexture::TTextureType::TEXTURE_TYPE_TRANSPARENT, 0);
 
-        Tex_Cursor_Unpressed = UTexture::Texture.LoadTexture(Skin.GetTextureFileName("Cursor"), UTexture::TTextureType::TEXTURE_TYPE_TRANSPARENT, 0);
+        Tex_Cursor_Unpressed = UTexture::Texture.LoadTexture(USkins::Skin.GetTextureFileName("Cursor"), UTexture::TTextureType::TEXTURE_TYPE_TRANSPARENT, 0);
 
-        if (Skin.GetTextureFileName("Cursor_Pressed").IsSet)
-            Tex_Cursor_Pressed = UTexture::Texture.LoadTexture(Skin.GetTextureFileName("Cursor_Pressed"), UTexture::TTextureType::TEXTURE_TYPE_TRANSPARENT, 0);
+        if (USkins::Skin.GetTextureFileName("Cursor_Pressed").IsSet)
+            Tex_Cursor_Pressed = UTexture::Texture.LoadTexture(USkins::Skin.GetTextureFileName("Cursor_Pressed"), UTexture::TTextureType::TEXTURE_TYPE_TRANSPARENT, 0);
         else
             Tex_Cursor_Pressed.TexNum = 0;
 
         //TimeBar mod
-        Tex_TimeProgress = UTexture::Texture.LoadTexture(Skin.GetTextureFileName("TimeBar"));
-        Tex_JukeboxTimeProgress = UTexture::Texture.LoadTexture(Skin.GetTextureFileName("JukeboxTimeBar"));
+        Tex_TimeProgress = UTexture::Texture.LoadTexture(USkins::Skin.GetTextureFileName("TimeBar"));
+        Tex_JukeboxTimeProgress = UTexture::Texture.LoadTexture(USkins::Skin.GetTextureFileName("JukeboxTimeBar"));
         //eoa TimeBar mod
 
         //SingBar Mod
-        Tex_SingBar_Back = UTexture::Texture.LoadTexture(Skin.GetTextureFileName("SingBarBack"), UTexture::TTextureType::TEXTURE_TYPE_PLAIN, 0);
-        Tex_SingBar_Bar = UTexture::Texture.LoadTexture(Skin.GetTextureFileName("SingBarBar"), UTexture::TTextureType::TEXTURE_TYPE_PLAIN, 0);
-        Tex_SingBar_Front = UTexture::Texture.LoadTexture(Skin.GetTextureFileName("SingBarFront"), UTexture::TTextureType::TEXTURE_TYPE_PLAIN, 0);
+        Tex_SingBar_Back = UTexture::Texture.LoadTexture(USkins::Skin.GetTextureFileName("SingBarBack"), UTexture::TTextureType::TEXTURE_TYPE_PLAIN, 0);
+        Tex_SingBar_Bar = UTexture::Texture.LoadTexture(USkins::Skin.GetTextureFileName("SingBarBar"), UTexture::TTextureType::TEXTURE_TYPE_PLAIN, 0);
+        Tex_SingBar_Front = UTexture::Texture.LoadTexture(USkins::Skin.GetTextureFileName("SingBarFront"), UTexture::TTextureType::TEXTURE_TYPE_PLAIN, 0);
         //end Singbar Mod
 
         ULog::Log.LogStatus("Loading Textures - B", "LoadTextures");
@@ -116,7 +125,7 @@ namespace UGraphic
             }
 
             Col = 0x10000 * std::round(R * 255) + 0x100 * std::round(G * 255) + std::round(B * 255);
-            Tex_SingLineBonusBack[P] = UTexture::Texture.LoadTexture(Skin.GetTextureFileName("LineBonusBack"), UTexture::TTextureType::TEXTURE_TYPE_COLORIZED, Col);
+            Tex_SingLineBonusBack[P] = UTexture::Texture.LoadTexture(USkins::Skin.GetTextureFileName("LineBonusBack"), UTexture::TTextureType::TEXTURE_TYPE_COLORIZED, Col);
         }
 
         ULog::Log.LogStatus("Loading Textures - C", "LoadTextures");
@@ -124,7 +133,7 @@ namespace UGraphic
         //## rating pictures that show a picture according to your rate ##
         for (size_t P = 0; P < 8; ++P)
         {
-            Tex_Score_Ratings[P] = UTexture::Texture.LoadTexture(Skin.GetTextureFileName("Rating_" + IntToStr(P)), UTexture::TTextureType::TEXTURE_TYPE_TRANSPARENT, 0);
+            Tex_Score_Ratings[P] = UTexture::Texture.LoadTexture(USkins::Skin.GetTextureFileName("Rating_" + IntToStr(P)), UTexture::TTextureType::TEXTURE_TYPE_TRANSPARENT, 0);
         }
 
         ULog::Log.LogStatus("Loading Textures - Done", "LoadTextures");
@@ -133,8 +142,6 @@ namespace UGraphic
     const std::filesystem::path WINDOW_ICON = "icons/ultrastardx-icon.png";
 
     void Initialize3D(const std::string& Title)
-        /*var
-            Icon : PSDL_Surface;*/
     {
         ULog::Log.LogStatus("SDL_Init", "UGraphic.Initialize3D");
         if (SDL_InitSubSystem(SDL_INIT_VIDEO) == -1)
@@ -143,44 +150,42 @@ namespace UGraphic
         }
         InitializeScreen();
         // load icon image (must be 32x32 for win32)
-        auto Icon = UImage::ImageLoad(UPathUtils::ResourcesPath / WINDOW_ICON);
-        if (Icon)
-            SDL_SetWindowIcon(Screen.get(), Icon.get());
+        if (const auto Icon = UImage::ImageLoad(UPathUtils::ResourcesPath / WINDOW_ICON); Icon)
+            screen.SetIcon(*Icon);
 
-        SDL_SetWindowTitle(Screen.get(), Title.c_str());
-
+        screen.SetTitle(Title);
         // workaround for buggy Intel 3D driver on Linux
         //SDL_putenv("texture_tiling=false");  //ToDo: on linux, check if this is still necessary with SDL 2
 
-        SDL_SetWindowTitle(Screen.get(), (Title + " - Initializing screen").c_str());
+        screen.SetTitle(Title + " - Initializing screen");
 
 
-        SDL_SetWindowTitle(Screen.get(), (Title + " - Initializing texturizer").c_str());
+        screen.SetTitle(Title + " - Initializing texturizer");
         Texture = TTextureUnit.Create;
         UTexture::Texture.Limit = 1920; //currently, Full HD is all we want. switch to 64bit target before going further up
 
         //LoadTextures;
-        SDL_SetWindowTitle(Screen.get(), (Title + " - Initializing video modules").c_str());
+        screen.SetTitle(Title + " - Initializing video modules");
         // Note: do not initialize video modules earlier. They might depend on some
         // SDL video functions or OpenGL extensions initialized in InitializeScreen()
         InitializeVideo();
 
-        SDL_SetWindowTitle(Screen.get(), (Title + " - Initializing 3D").c_str());
+        screen.SetTitle(Title + " - Initializing 3D");
         ULog::Log.LogStatus("TDisplay.Create", "UGraphic.Initialize3D");
         UDisplay::Display = TDisplay.Create;
         //Display.SetCursor;
 
-        SDL_SetWindowTitle(Screen.get(), (Title + " - Loading font textures").c_str());
+        screen.SetTitle(Title + " - Loading font textures");
         ULog::Log.LogStatus("Loading Font Textures", "UGraphic.Initialize3D");
         LoadFontTextures();
 
         // Show the Loading Screen
-        SDL_SetWindowTitle(Screen.get(), (Title + " - Loading first screen").c_str());
+        screen.SetTitle(Title + " - Loading first screen");
         ULog::Log.LogStatus("Loading Loading Screen", "UGraphic.Initialize3D");
         LoadLoadingScreen;
 
         // Covers Cache
-        SDL_SetWindowTitle(Screen.get(), (Title + " - Loading and checking songs").c_str());
+        screen.SetTitle(Title + " - Loading and checking songs");
         ULog::Log.LogStatus("Loading and checking songs", "UGraphic.Initialize3D");
         Covers = TCoverDatabase.Create;
 
@@ -199,16 +204,16 @@ namespace UGraphic
         ULog::Log.LogStatus("Creating 2nd Song Array", "Initialization");
         USongs::CatSongs = TCatSongs.Create;
 
-        SDL_SetWindowTitle(Screen.get(), (Title + " - Loading textures").c_str());
+        screen.SetTitle(Title + " - Loading textures");
         ULog::Log.LogStatus(" Loading Textures", "UGraphic.Initialize3D");
         LoadTextures();
 
         // this would be run in the loadingthread
-        SDL_SetWindowTitle(Screen.get(), (Title + " - Loading screens").c_str());
+        screen.SetTitle(Title + " - Loading screens");
         ULog::Log.LogStatus(" Loading Screens", "UGraphic.Initialize3D");
         LoadScreens(Title);
 
-        SDL_SetWindowTitle(Screen.get(), Title.c_str());
+        screen.SetTitle(Title);
         UDisplay::Display.CurrentScreen^ .FadeTo(@ScreenMain);
 
         // work around to force a good screen initialization on MacOS
@@ -351,9 +356,9 @@ else
 if SDL_GetWindowDisplayMode(screen, @Disp) = 0 then
 {
 if (Disp.w < W) or (Disp.h < H) then
-    {
+{
     ULog::Log.LogStatus(Format("Video resolution (%s) exceeded possible size (%s). Override stored config resolution!", [BuildResolutionString(W, H), BuildResolutionString(Disp.w, Disp.h)]), "SDL_SetVideoMode");
-Ini.SetResolution(Disp.w, Disp.h, true);
+    UIni::Ini.SetResolution(Disp.w, Disp.h, true);
 }
 else if Fullscreen and ((Disp.w > W) or (Disp.h > H)) then
 {
@@ -424,10 +429,10 @@ function HasWindowState(Flag: int) : boolean;
 Result  = SDL_GetWindowFlags(screen) and Flag < > 0;
 }
 
-void UpdateResolution();
-var
+void UpdateResolution()
+/*var
 Disp : TSDL_DisplayMode;
-Event: TSDL_event;
+Event: TSDL_event;*/
 {
 if CurrentWindowMode = Mode_Borderless then Exit;
 case CurrentWindowMode of
