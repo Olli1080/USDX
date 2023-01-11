@@ -1,4 +1,5 @@
-{* UltraStar Deluxe - Karaoke Game
+#pragma once
+/* UltraStar Deluxe - Karaoke Game
  *
  * UltraStar Deluxe is the legal property of its developers, whose names
  * are too numerous to list here. Please refer to the COPYRIGHT
@@ -21,53 +22,32 @@
  *
  * $URL$
  * $Id$
- *}
+ */
+#include "../switches.h"
 
-unit UMenuBackgroundColor;
+#include "../base/UCommon.h"
+#include "UMenuBackground.hpp"
+#include "../base/UThemes.h"
 
-interface
+namespace UMenuBackgroundColor
+{
+    /*uses
+      UCommon,
+      UThemes,
+      UMenuBackground;*/
 
-{$IFDEF FPC}
-  {$MODE Delphi}
-{$ENDIF}
+      //TMenuBackgroundColor - Background Color
+      //--------
 
-{$I switches.inc}
+    class TMenuBackgroundColor : public UMenuBackground::TMenuBackground
+    {
+    private:
 
-uses
-  UCommon,
-  UThemes,
-  UMenuBackground;
+        UCommon::TRGB<double> Color;
 
-//TMenuBackgroundColor - Background Color
-//--------
+    public:
 
-type
-  TMenuBackgroundColor = class (TMenuBackground)
-    private
-      Color: TRGB;
-    public
-      constructor Create(const ThemedSettings: TThemeBackground); override;
-      procedure   Draw; override;
-  end;
-
-implementation
-uses
-  dglOpenGL,
-  UGraphic;
-
-constructor TMenuBackgroundColor.Create(const ThemedSettings: TThemeBackground);
-begin
-  inherited;
-  Color := ThemedSettings.Color;
-end;
-
-procedure   TMenuBackgroundColor.Draw;
-begin
-  if (ScreenAct = 1) then
-  begin //just clear once, even when using two screens
-   glClearColor(Color.R, Color.G, Color.B, 0);
-   glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT);
-  end;
-end;
-
-end.
+        TMenuBackgroundColor(const UThemes::TThemeBackground& ThemedSettings);
+        void Draw() override;
+    };
+}
