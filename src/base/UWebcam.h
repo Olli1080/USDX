@@ -34,7 +34,7 @@
 #include <mutex>
 #include <condition_variable>
 
-#include <gl/GL.h>
+#include <GL/gl.h>
 #include <opencv2/core/base.hpp>
 #include <opencv2/videoio.hpp>
 #include <opencv2/core.hpp>

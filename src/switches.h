@@ -69,10 +69,12 @@ typedef std::chrono::duration<double, std::ratio<60, 1>> MinDouble;
   #if defined(__FreeBSD__)
     #include "config-freebsd.h"
   #elif defined(__linux__)
-    #include "config-linux.h"
+    //#include "config-linux.h"
   #endif
   #define CONSOLE
 #endif
+
+#include "config-win.h"
 
 // audio config
 #if defined(HaveBASS)
