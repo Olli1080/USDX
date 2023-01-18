@@ -1,4 +1,4 @@
-{* UltraStar Deluxe - Karaoke Game
+/* UltraStar Deluxe - Karaoke Game
  *
  * UltraStar Deluxe is the legal property of its developers, whose names
  * are too numerous to list here. Please refer to the COPYRIGHT
@@ -21,11 +21,12 @@
  *
  * $URL: svn://basisbit@svn.code.sf.net/p/ultrastardx/svn/trunk/src/media/UAudioDecoder_FFmpeg.pas $
  * $Id: UAudioDecoder_FFmpeg.pas 3107 2014-11-23 00:02:56Z k-m_schindler $
- *}
+ */
+#include "../switches.h"
 
-unit UAudioDecoder_FFmpeg;
-
-(*******************************************************************************
+namespace UAudioDecoder_FFmpeg
+{
+/*******************************************************************************
  *
  * This unit is primarily based upon -
  *   http://www.dranger.com/ffmpeg/ffmpegtutorial_all.html
@@ -34,15 +35,7 @@ unit UAudioDecoder_FFmpeg;
  *
  *   http://www.inb.uni-luebeck.de/~boehme/using_libavcodec.html
  *
- *******************************************************************************)
-
-interface
-
-{$IFDEF FPC}
-  {$MODE Delphi}
-{$ENDIF}
-
-{$I switches.inc}
+ *******************************************************************************/
 
 // show FFmpeg specific debug output
 {.$DEFINE DebugFFmpegDecode}
@@ -78,16 +71,16 @@ uses
   UConfig,
   UPath;
 
-{$IFDEF UseSWResample}
-  {$IF LIBAVCODEC_VERSION >= 54041100}
+#ifdef UseSWResample
+  #if LIBAVCODEC_VERSION >= 54041100}
     {$DEFINE UseFrameDecoderAPI}
     {$DEFINE ConvertPlanar}
-  {$ENDIF}
-{$ELSE}
-  {$IF LIBAVCODEC_VERSION >= 57000000}
+  #endif
+#else
+  #if LIBAVCODEC_VERSION >= 57000000}
     {$DEFINE UseFrameDecoderAPI}
-  {$ENDIF}
-{$ENDIF}
+  #endif
+#endif
 
 const
   MAX_AUDIOQ_SIZE = (5 * 16 * 1024);
@@ -223,7 +216,7 @@ var
 function ParseThreadMain(Data: Pointer): integer; cdecl; forward;
 
 
-{ TFFmpegDecodeStream }
+// TFFmpegDecodeStream }
 
 constructor TFFmpegDecodeStream.Create();
 begin
@@ -711,9 +704,9 @@ begin
 end;
 
 
-(********************************************
+/********************************************
  * Parser section
- ********************************************)
+ ********************************************/
 
 function TFFmpegDecodeStream.PauseParser(): boolean;
 begin
@@ -794,7 +787,7 @@ begin
   SDL_UnlockMutex(fStateLock);
 end;
 
-(**
+/**
  * Parser main loop.
  * Will not return until parsing of the stream is finished.
  * Reasons for the parser to return are:
@@ -805,7 +798,7 @@ end;
  * be terminated.
  * Must be called and returns with fStateLock locked but temporarily
  * unlocks it.
- *)
+ */
 function TFFmpegDecodeStream.ParseLoop(): boolean;
 var
   Packet: TAVPacket;
@@ -1018,9 +1011,9 @@ begin
 end;
 
 
-(********************************************
+/********************************************
  * Decoder section
- ********************************************)
+ ********************************************/
 
 procedure TFFmpegDecodeStream.PauseDecoderUnlocked();
 begin
@@ -1399,7 +1392,7 @@ begin
 end;
 
 
-{ TAudioDecoder_FFmpeg }
+// TAudioDecoder_FFmpeg }
 
 function TAudioDecoder_FFmpeg.GetName: String;
 begin
@@ -1455,5 +1448,4 @@ end;
 
 initialization
   MediaManager.Add(TAudioDecoder_FFmpeg.Create);
-
-end.
+}

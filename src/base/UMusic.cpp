@@ -1,11 +1,11 @@
 #include "UMusic.h"
 
+#include "UPathUtils.h"
+
 namespace UMusic
 {
-
     TAudioFormatInfo::TAudioFormatInfo(uint8_t Channels, double SampleRate, TAudioSampleFormat Format)
     {
-        inherited Create();
         fChannels = Channels;
         fSampleRate = SampleRate;
         fFormat = Format;
@@ -50,43 +50,41 @@ namespace UMusic
             (TargetInfo.SampleRate() / SampleRate());
     }
 
-
+/*
     TInterfaceList MediaManager()
     {
         if (!assigned(MediaInterfaceList))
             MediaInterfaceList = TInterfaceList.Create();
         return MediaInterfaceList;
     }
-
-    IVideoPlayback VideoPlayback()
+*/
+    IVideoPlayback::SPtr VideoPlayback()
     {
         return DefaultVideoPlayback;
     }
 
-    IVideoPlayback Visualization()
+    IVideoPlayback::SPtr Visualization()
     {
         return DefaultVisualization;
     }
 
-    IAudioPlayback AudioPlayback()
+    IAudioPlayback::SPtr AudioPlayback()
     {
         return DefaultAudioPlayback;
     }
 
-    IAudioInput AudioInput()
+    IAudioInput::SPtr AudioInput()
     {
         return DefaultAudioInput;
     }
 
-    TInterfaceList AudioDecoders()
+    std::list<IAudioDecoder::SPtr> AudioDecoders()
     {
         return AudioDecoderList;
     }
 
+/*
     void FilterInterfaceList(const TGUID IID, TInterfaceList InList, TInterfaceList OutList)
-        /*var
-        i: int;
-        obj: IInterface;*/
     {
         if (!assigned(OutList))
             return;
@@ -102,7 +100,7 @@ namespace UMusic
             }
         }
     }
-
+*/
     void InitializeSound()
         /*var
         i: int;
@@ -110,57 +108,49 @@ namespace UMusic
         CurrentAudioDecoder: IAudioDecoder;
         CurrentAudioPlayback: IAudioPlayback;
         CurrentAudioInput: IAudioInput;*/
-    {
-        // create a temporary list for interface enumeration
-        TInterfaceList InterfaceList = TInterfaceList.Create();
-
+    {        
         // initialize all audio-decoders first
-        FilterInterfaceList(IAudioDecoder, MediaManager, InterfaceList);
-        for (auto& il : InterfaceList)
+        std::erase_if(AudioDecoderList, [](IAudioDecoder::SPtr& decoder)
         {
-            CurrentAudioDecoder = il as IAudioDecoder;
-            if (not CurrentAudioDecoder.InitializeDecoder()) then
-            {
-                ULog::Log.LogError("Initialize failed, Removing - " + CurrentAudioDecoder.GetName);
-              MediaManager.Remove(CurrentAudioDecoder);
-            }
-        }
-
-        // create and setup decoder-list (see AudioDecoders())
-        AudioDecoderList = TInterfaceList.Create;
-        FilterInterfaceList(IAudioDecoder, MediaManager, AudioDecoders);
-
-        // find and initialize playback interface
-        DefaultAudioPlayback = nil;
-        FilterInterfaceList(IAudioPlayback, MediaManager, InterfaceList);
-        for i : = 0 to InterfaceList.Count - 1 do
+            if (decoder->InitializeDecoder())
+                return false;
+            ULog::Log.LogError("Initialize failed, Removing - " + decoder->GetName());
+            return true;
+        });
+        
+        bool first = true;
+        // initialize playback interface
+        std::erase_if(AudioPlaybackList, [&first](IAudioPlayback::SPtr& playback)
         {
-            CurrentAudioPlayback = InterfaceList[i] as IAudioPlayback;
-            if (CurrentAudioPlayback.InitializePlayback()) then
+            if (playback->InitializePlayback())
             {
-              DefaultAudioPlayback = CurrentAudioPlayback;
-              break;
+                if (first)
+                {
+                    DefaultAudioPlayback = playback;
+                    first = false;
+                }
+                return false;
             }
-            Log.LogError("Initialize failed, Removing - " + CurrentAudioPlayback.GetName);
-            MediaManager.Remove(CurrentAudioPlayback);
-        }
+            ULog::Log.LogError("Initialize failed, Removing - " + playback->GetName());
+            return true;
+        });
 
-        // find and initialize input interface
-        DefaultAudioInput = nil;
-        FilterInterfaceList(IAudioInput, MediaManager, InterfaceList);
-        for i : = 0 to InterfaceList.Count - 1 do
+        first = true;
+        // initialize input interface
+        std::erase_if(AudioInputList, [&first](IAudioInput::SPtr& input)
         {
-            CurrentAudioInput = InterfaceList[i] as IAudioInput;
-            if (CurrentAudioInput.InitializeRecord()) then
+            if (input->InitializeRecord())
             {
-              DefaultAudioInput = CurrentAudioInput;
-              break;
+                if (first)
+                {
+                    DefaultAudioInput = input;
+                    first = false;
+                }
+                return false;
             }
-            Log.LogError("Initialize failed, Removing - " + CurrentAudioInput.GetName);
-            MediaManager.Remove(CurrentAudioInput);
-        }
-
-        InterfaceList.Free;
+            ULog::Log.LogError("Initialize failed, Removing - " + input->GetName());
+            return true;
+        });
 
         // Update input-device list with registered devices
         AudioInputProcessor.UpdateInputDeviceConfig();
@@ -181,7 +171,7 @@ namespace UMusic
         // initialize and set video-playback singleton
         DefaultVideoPlayback = nil;
         FilterInterfaceList(IVideoPlayback, MediaManager, InterfaceList);
-        for i : = 0 to InterfaceList.Count - 1 do
+        for i = 0 to InterfaceList.Count - 1 do
         {
             VideoInterface = InterfaceList[i] as IVideoPlayback;
             if (VideoInterface.Init()) then
@@ -196,7 +186,7 @@ namespace UMusic
         // initialize and set visualization singleton
         DefaultVisualization = nil;
         FilterInterfaceList(IVideoVisualization, MediaManager, InterfaceList);
-        for i : = 0 to InterfaceList.Count - 1 do
+        for i = 0 to InterfaceList.Count - 1 do
         {
             VisualInterface = InterfaceList[i] as IVideoVisualization;
             if (VisualInterface.Init()) then
@@ -235,27 +225,27 @@ namespace UMusic
 
         // finalize audio playback interfaces (should be done before the decoders)
         FilterInterfaceList(IAudioPlayback, MediaManager, InterfaceList);
-        for i : = 0 to InterfaceList.Count - 1 do
+        for i = 0 to InterfaceList.Count - 1 do
             (InterfaceList[i] as IAudioPlayback).FinalizePlayback();
 
         // finalize audio input interfaces
         FilterInterfaceList(IAudioInput, MediaManager, InterfaceList);
-        for i : = 0 to InterfaceList.Count - 1 do
+        for i = 0 to InterfaceList.Count - 1 do
             (InterfaceList[i] as IAudioInput).FinalizeRecord();
 
         // finalize audio decoder interfaces
         FilterInterfaceList(IAudioDecoder, MediaManager, InterfaceList);
-        for i : = 0 to InterfaceList.Count - 1 do
+        for i = 0 to InterfaceList.Count - 1 do
             (InterfaceList[i] as IAudioDecoder).FinalizeDecoder();
 
         // finalize video interfaces
         FilterInterfaceList(IVideoPlayback, MediaManager, InterfaceList);
-        for i : = 0 to InterfaceList.Count - 1 do
+        for i = 0 to InterfaceList.Count - 1 do
             (InterfaceList[i] as IVideoPlayback).Finalize();
 
         // finalize audio decoder interfaces
         FilterInterfaceList(IVideoVisualization, MediaManager, InterfaceList);
-        for i : = 0 to InterfaceList.Count - 1 do
+        for i = 0 to InterfaceList.Count - 1 do
             (InterfaceList[i] as IVideoVisualization).Finalize();
 
         InterfaceList.Free;
@@ -298,8 +288,7 @@ namespace UMusic
     }
 
 
-    //{ TSoundLibrary }
-
+    // TSoundLibrary
     TSoundLibrary::TSoundLibrary()
     {
         inherited;
@@ -316,18 +305,20 @@ namespace UMusic
     {
         UnloadSounds();
 
-        Start = AudioPlayback.OpenSound(SoundPath.Append("Common start.mp3"));
-        Back = AudioPlayback.OpenSound(SoundPath.Append("Common back.mp3"));
-        Swoosh = AudioPlayback.OpenSound(SoundPath.Append("menu swoosh.mp3"));
-        Change = AudioPlayback.OpenSound(SoundPath.Append("select music change music 50.mp3"));
-        Option = AudioPlayback.OpenSound(SoundPath.Append("option change col.mp3"));
-        Click = AudioPlayback.OpenSound(SoundPath.Append("rimshot022b.mp3"));
-        Applause = AudioPlayback.OpenSound(SoundPath.Append("Applause.mp3"));
+        auto& playback = *AudioPlayback();
 
-        BGMusic = AudioPlayback.OpenSound(SoundPath.Append("background track.mp3"));
+        Start = playback.OpenSound(UPathUtils::SoundPath / "Common start.mp3");
+        Back = playback.OpenSound(UPathUtils::SoundPath / "Common back.mp3");
+        Swoosh = playback.OpenSound(UPathUtils::SoundPath / "menu swoosh.mp3");
+        Change = playback.OpenSound(UPathUtils::SoundPath / "select music change music 50.mp3");
+        Option = playback.OpenSound(UPathUtils::SoundPath / "option change col.mp3");
+        Click = playback.OpenSound(UPathUtils::SoundPath / "rimshot022b.mp3");
+        Applause = playback.OpenSound(UPathUtils::SoundPath / "Applause.mp3");
 
-        if (BGMusic != nil)
-            BGMusic.Loop = True;
+        BGMusic = playback.OpenSound(UPathUtils::SoundPath / "background track.mp3");
+
+        if (BGMusic)
+            BGMusic->Loop = true;
     }
 
     void TSoundLibrary::UnloadSounds()
@@ -354,7 +345,7 @@ namespace UMusic
 
     void TSoundLibrary::StartBgMusic()
     {
-        if (TBackgroundMusicOption(Ini.BackgroundMusicOption) == bmoOn) &&
+        if (TBackgroundMusicOption(UIni::Ini.BackgroundMusicOption) == bmoOn) &&
             (Soundlib.BGMusic != nil) and not (Soundlib.BGMusic.Status == ssPlaying)
         {
             AudioPlayback.PlaySound(Soundlib.BGMusic);
@@ -371,14 +362,14 @@ namespace UMusic
 
     //{ TVoiceRemoval }
 
-    void TVoiceRemoval::Callback(PByteArray Buffer, int BufSize)
+    void TVoiceRemoval::Callback(const std::vector<uint8_t>& Buffer)
         /*var
         FrameIndex, FrameSize: int;
         Value: int;
         Sample: PPCMStereoSample;*/
     {
         FrameSize = 2 * sizeof(int16_t);
-        for FrameIndex : = 0 to(BufSize div FrameSize) - 1 do
+        for FrameIndex = 0 to(BufSize div FrameSize) - 1 do
         {
             Sample = PPCMStereoSample(Buffer);
             // channel difference
@@ -389,15 +380,14 @@ namespace UMusic
             else if (Value < Low(int16_t)) then
                 Value = Low(int16_t);
             // assign result
-            Sample[0] : = Value;
-            Sample[1] : = Value;
+            Sample[0] = Value;
+            Sample[1] = Value;
             // increase to next frame
             Inc(PByte(Buffer), FrameSize);
         }
     }
 
-    //{ TAudioConverter }
-
+    // TAudioConverter
     bool TAudioConverter::Init(TAudioFormatInfo SrcFormatInfo, TAudioFormatInfo DstFormatInfo)
     {
         fSrcFormatInfo = SrcFormatInfo.Copy();
@@ -413,36 +403,26 @@ namespace UMusic
 
 
     //{ TAudioProcessingStream }
-
+/*
     void TAudioProcessingStream::AddOnCloseHandler(TOnCloseHandler Handler)
     {
         if (@Handler != nil)
         {
             SetLength(OnCloseHandlers, System.Length(OnCloseHandlers) + 1);
-            OnCloseHandlers[High(OnCloseHandlers)] : = @Handler;
+            OnCloseHandlers[High(OnCloseHandlers)] = @Handler;
         }
     }
+*/
+    // TAudioPlaybackStream
 
-    void TAudioProcessingStream::PerformOnClose()
-        //var i: int;
-    {
-        for (size_t i = 0; i < OnCloseHandlers.size(); ++i)
-        {
-            OnCloseHandlers[i](Self);
-        }
-    }
-
-
-    //{ TAudioPlaybackStream }
-
-    TAudioSourceStream TAudioPlaybackStream::GetSourceStream()
+    TAudioSourceStream::SPtr TAudioPlaybackStream::GetSourceStream() const
     {
         return SourceStream;
     }
 
-    void TAudioPlaybackStream::SetSyncSource(TSyncSource SyncSource)
+    void TAudioPlaybackStream::SetSyncSource(UTime::TSyncSource::SPtr syncSource)
     {
-        Self.SyncSource = SyncSource;
+        this->SyncSource = syncSource;
         AvgSyncDiff = -1;
     }
 
@@ -477,14 +457,14 @@ namespace UMusic
 
         int Result = BufferSize;
 
-        if (!assigned(SyncSource))
+        if (!SyncSource)
             return Result;
 
         if (BufferSize <= 0)
             return Result;
 
         auto CurPosition = Position();
-        auto MasterClock = SyncSource.GetClock();
+        auto MasterClock = SyncSource->GetClock();
 
         // difference between sync-source and stream position
         // (negative if the music-stream's position is ahead of the master clock)
@@ -545,37 +525,37 @@ namespace UMusic
     /*
     *Fills a buffer with copies of the given Frame or with 0 if Frame is nil.
     */
-    void TAudioPlaybackStream::FillBufferWithFrame(PByteArray Buffer, int BufferSize, PByteArray Frame, int FrameSize)
+    void TAudioPlaybackStream::FillBufferWithFrame(std::vector<uint8_t>& Buffer, const std::vector<uint8_t>& Frame)
         /*var
         i : int;
         FrameCopyCount: int;*/
     {
         // the buffer must at least contain place for one copy of the frame.
-        if (Buffer == nil || BufferSize <= 0 || BufferSize < FrameSize)
+        if (Buffer.empty() || Buffer.size() < Frame.size())
             return;
 
         // no valid frame -> fill with 0
-        if ((Frame = nil) or (FrameSize <= 0))
+        if (Frame.empty())
         {
-            FillChar(Buffer[0], BufferSize, 0);
+            Buffer = std::vector<uint8_t>(Buffer.size(), 0);
             return;
         }
 
         // number of frames to copy
-        FrameCopyCount = BufferSize div FrameSize;
+        int FrameCopyCount = Buffer.size() / Frame.size();
         // insert as many copies of frame into the buffer as possible
-        for (i = 0 to FrameCopyCount - 1)
+        for (size_t i = 0; i < FrameCopyCount; ++i)
             Move(Frame[0], Buffer[i * FrameSize], FrameSize);
+            //src, dist, bytes
     }
 
-    //{ TAudioVoiceStream }
-
+    // TAudioVoiceStream
     bool TAudioVoiceStream::Open(int ChannelMap, TAudioFormatInfo FormatInfo)
     {
         this->ChannelMap = ChannelMap;
         this->FormatInfo = FormatInfo.Copy();
         // a voice stream is always mono, reassure the the format is correct
-        this->FormatInfo.Channels = 1;
+        this->FormatInfo.Channels(1);
         return true;
     }
 
@@ -585,10 +565,9 @@ namespace UMusic
         inherited;
     }
 
-    void TAudioVoiceStream::Close();
+    void TAudioVoiceStream::Close()
     {
-        PerformOnClose();
-        FreeAndNil(FormatInfo);
+        close(*this);
     }
 
     TAudioFormatInfo TAudioVoiceStream::GetAudioFormatInfo()
@@ -596,21 +575,21 @@ namespace UMusic
         return FormatInfo;
     }
 
-    double TAudioVoiceStream::GetLength()
+    std::optional<double> TAudioVoiceStream::GetLength() const
     {
-        return  -1;
+        return std::nullopt;
     }
 
-    double TAudioVoiceStream::GetPosition()
+    std::optional<double> TAudioVoiceStream::GetPosition() const
     {
-        return -1;
+        return std::nullopt;
     }
 
     void TAudioVoiceStream::SetPosition(double Time)
     {
     }
 
-    bool TAudioVoiceStream::GetLoop()
+    bool TAudioVoiceStream::GetLoop() const
     {
         return false;
     }
@@ -619,49 +598,18 @@ namespace UMusic
     {
     }
 
-    //{ TLineFragment }
-
+    // TLineFragment
     int TLineFragment::GetEnd() const
     {
         return StartBeat + Duration;
     }
 
-    //{ TLine }
-
-    bool TLine::HasLength()
-        //var tempi : int;
+    // TLine 
+    std::optional<int> TLine::GetLength() const
     {
-        //TODO:: dunno why?!?
-        return HasLength(tempi);
-    }
-
-    bool TLine::HasLength(int& Len)
-    {
-        if (Length(Notes) >= 0)
-        {
-            Len = EndBeat - Notes[0].StartBeat;
-            return true;
-        }
-        return false;
-    }
-
-    bool TLine::HasLength(double& Len)
-        //var tempi : int;
-    {
-        Result = HasLength(tempi);
-        Len = tempi;
-    }
-
-    bool TLine::HasLength(double& Len)
-        //var tempi : int;
-    {
-        Result = HasLength(tempi);
-        Len = tempi;
-    }
-
-    int TLine::GetLength() const
-    {
-        return (Length(Notes) < 0) ? 0 : EndBeat - Notes[0].StartBeat;
+        return (Notes.empty()) 
+            ? std::nullopt
+            : EndBeat - Notes[0].StartBeat;
     }
 
     TPos FindNote(int beat)
@@ -694,9 +642,9 @@ namespace UMusic
 
         if (CurrentSong.isDuet && PlayersPlay != 1)
         {
-            for LineIndex : = 0 to High(Tracks[1].Lines) do
+            for LineIndex = 0 to High(Tracks[1].Lines) do
             {
-                for NoteIndex : = 0 to High(Tracks[1].Lines[LineIndex].Notes) do
+                for NoteIndex = 0 to High(Tracks[1].Lines[LineIndex].Notes) do
                 {
                     if (beat >= Tracks[1].Lines[LineIndex].Notes[NoteIndex].StartBeat) and
                         (beat <= Tracks[1].Lines[LineIndex].Notes[NoteIndex].StartBeat + Tracks[1].Lines[LineIndex].Notes[NoteIndex].Duration) then
@@ -716,9 +664,9 @@ namespace UMusic
 
         min = high(int);
         //second try (approximating)
-        for LineIndex : = 0 to High(Tracks[0].Lines) do
+        for LineIndex = 0 to High(Tracks[0].Lines) do
         {
-            for NoteIndex : = 0 to High(Tracks[0].Lines[LineIndex].Notes) do
+            for NoteIndex = 0 to High(Tracks[0].Lines[LineIndex].Notes) do
             {
                 diff = abs(Tracks[0].Lines[LineIndex].Notes[NoteIndex].StartBeat - beat);
                 if (diff < min)
@@ -733,9 +681,9 @@ namespace UMusic
 
         if (CurrentSong.isDuet && PlayersPlay != 1)
         {
-            for LineIndex : = 0 to High(Tracks[1].Lines) do
+            for LineIndex = 0 to High(Tracks[1].Lines) do
             {
-                for NoteIndex : = 0 to High(Tracks[1].Lines[LineIndex].Notes) do
+                for NoteIndex = 0 to High(Tracks[1].Lines[LineIndex].Notes) do
                 {
                     diff = abs(Tracks[1].Lines[LineIndex].Notes[NoteIndex].StartBeat - beat);
                     if diff < min then

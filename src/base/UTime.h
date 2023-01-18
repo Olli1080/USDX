@@ -67,6 +67,8 @@ namespace UTime
         virtual ~TSyncSource() = default;
 
         virtual double GetClock() = 0;
+
+        typedef std::shared_ptr<TSyncSource> SPtr;
     };
 
     void CountSkipTimeSet();

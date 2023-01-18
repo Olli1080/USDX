@@ -36,7 +36,7 @@
 #include <memory>
 #include <cstdint>
 
-#include <gl/GL.h>
+#include <GL/gl.h>
 #include <SDL2/SDL_surface.h>
 #include <boost/algorithm/string/predicate.hpp>
 
@@ -187,7 +187,7 @@ namespace UTexture
         void AddTexture(TextureWrapper::SPtr& Tex, TTextureType Typ, uint32_t Color = 0, bool Cache = false);
         TextureWrapper::SPtr GetTexture(const std::filesystem::path& Name, TTextureType Typ, uint32_t Col = 0, bool FromCache = false);
         TextureWrapper::SPtr LoadTexture(const std::filesystem::path& Identifier, TTextureType Typ = TTextureType::TEXTURE_TYPE_PLAIN, uint32_t Col = 0);
-        void UnloadTexture(const std::filesystem::path& Name, TTextureType Typ, uint32_t Col = 0, bool FromCache);
+        void UnloadTexture(const std::filesystem::path& Name, TTextureType Typ, uint32_t Col = 0, bool FromCache = false);
 
         TextureWrapper::SPtr CreateTexture(const std::vector<uint8_t>& Data, const std::filesystem::path& Name, uint16_t Width, uint16_t Height);
         //void FlushTextureDatabase();

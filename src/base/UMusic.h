@@ -33,12 +33,18 @@
 #include <functional>
 #include <filesystem>
 #include <iostream>
+#include <optional>
+
+#include <boost/signals2.hpp>
 
 #include "ULog.h"
 #include "UTime.h"
+#include "UBeatTimer.h"
 
 namespace UMusic
 {
+    typedef std::unique_ptr<void, std::function<void(void*)>> EngineDataPtr;
+
     enum TNoteType
     {
         ntFreestyle, ntNormal, ntGolden, ntRap, ntRapGolden, Size
@@ -142,17 +148,19 @@ namespace UMusic
 
     private:
 
-        [[nodiscard]] int GetLength() const;
+        
 
     public:
+
+        [[nodiscard]] std::optional<int> GetLength() const;
         // Returns whether the line has a valid length. }
-        [[nodiscard]] bool HasLength() const;
+        /*[[nodiscard]] bool HasLength() const;
         // Returns whether the line has a valid length and passes length. }
         [[nodiscard]] bool HasLength(int& Len) const;
         // Returns whether the line has a valid length and passes length.Output converted to Double }
         [[nodiscard]] bool HasLength(double& Len) const;
 
-        [[nodiscard]] int Length_() const { return GetLength(); }
+        [[nodiscard]] int Length_() const { return GetLength(); }*/
     };
 
     typedef std::shared_ptr<TLine> PLine;
@@ -226,7 +234,9 @@ namespace UMusic
         void UpdateFrameSize();
         [[nodiscard]] double GetBytesPerSec() const;
         [[nodiscard]] int GetSampleSize() const;
+
     public:
+
         TAudioFormatInfo(uint8_t Channels, double SampleRate, TAudioSampleFormat Format);
         TAudioFormatInfo Copy(); //TODO::copy constructor
 
@@ -254,51 +264,55 @@ namespace UMusic
     class TSoundEffect
     {
     public:
-        Pointer EngineData; // can be used for engine-specific data
-        virtual void Callback(PByteArray Buffer, int BufSize) = 0;
+        EngineDataPtr EngineData; // can be used for engine-specific data
+        virtual void Callback(const std::vector<uint8_t>& Buffer) = 0;
+
+        typedef std::shared_ptr<TSoundEffect> SPtr;
     };
 
     class TVoiceRemoval : public TSoundEffect
     {
     public:
-        void Callback(PByteArray Buffer, int BufSize) override;
+        void Callback(const std::vector<uint8_t>& Buffer) override;
     };
 
     class TSoundFX
     {
     public:
-        Pointer EngineData; // can be used for engine-specific data
+
+        EngineDataPtr EngineData; // can be used for engine-specific data
         virtual void Init() = 0;
         virtual void Removed() = 0;
 
-        virtual static bool CanEnable() = 0;
+        virtual bool CanEnable() = 0;
 
         virtual uint32_t GetType() = 0;
         virtual int32_t GetPriority() = 0;
         virtual std::string GetName() = 0;
+
+        typedef std::shared_ptr<TSoundFX> SPtr;
     };
     class TReplayGain : public TSoundFX
     {};
 
-
-    class TAudioProcessingStream;
-    typedef std::function<void(TAudioProcessingStream Stream)> TOnCloseHandler;
-
     class TAudioProcessingStream
     {
+    public:
+
+        //typedef std::function<void(TAudioProcessingStream Stream)> TOnCloseHandler;
     protected:
 
-        std::vector<TOnCloseHandler> OnCloseHandlers;
+        //std::vector<TOnCloseHandler> OnCloseHandlers;
 
-        [[nodiscard]] virtual double GetLength() const = 0;
-        [[nodiscard]] virtual double GetPosition() const = 0;
+        [[nodiscard]] virtual std::optional<double> GetLength() const = 0;
+        [[nodiscard]] virtual std::optional<double> GetPosition() const = 0;
         virtual void SetPosition(double Time) = 0;
         [[nodiscard]] virtual bool GetLoop() const = 0;
         virtual void SetLoop(bool Enabled) = 0;
 
-        void PerformOnClose();
+    public: 
 
-    public:
+        boost::signals2::signal<void(TAudioProcessingStream&)> close;
 
         virtual TAudioFormatInfo GetAudioFormatInfo() = 0;
         virtual void Close() = 0;
@@ -310,12 +324,12 @@ namespace UMusic
          * already. So do not use any member (variable/method/...) if you are not
          * sure it is valid.
          */
-        void AddOnCloseHandler(TOnCloseHandler Handler);
+        //void AddOnCloseHandler(TOnCloseHandler Handler);
 
-        [[nodiscard]] double Length() const { return GetLength(); }
+        [[nodiscard]] std::optional<double> Length() const { return GetLength(); }
 
         void Position(double pos) { SetPosition(pos); }
-        [[nodiscard]] double Position() const { return GetPosition(); }
+        [[nodiscard]] std::optional<double> Position() const { return GetPosition(); }
 
         void Loop(bool l) { SetLoop(l); }
         [[nodiscard]] bool Loop() const { return GetLoop(); }
@@ -329,10 +343,12 @@ namespace UMusic
     public:
 
         virtual ~TAudioSourceStream() = default;
-        virtual int ReadData(PByteArray Buffer, int BufferSize) = 0;
+        virtual int ReadData(const std::vector<uint8_t>& Buffer, int BufferSize) = 0;
 
-        property EOF: bool read IsEOF;
-        property Error: bool read IsError;
+        typedef std::shared_ptr<TAudioSourceStream> SPtr;
+
+        //property EOF: bool read IsEOF;
+        //property Error: bool read IsError;
     };
 
     /*
@@ -351,16 +367,18 @@ namespace UMusic
     class TAudioPlaybackStream : public TAudioProcessingStream
     {
     protected:
+
         double AvgSyncDiff;  //** average difference between stream and sync clock
-        UTime::TSyncSource SyncSource;
-        TAudioSourceStream SourceStream;
+        UTime::TSyncSource::SPtr SyncSource;
+        TAudioSourceStream::SPtr SourceStream;
 
         virtual double GetLatency() = 0;
         virtual TStreamStatus GetStatus() = 0;
         virtual float GetVolume() = 0;
         virtual void SetVolume(float Volume) = 0;
         int Synchronize(int BufferSize, TAudioFormatInfo FormatInfo);
-        void FillBufferWithFrame(PByteArray Buffer, int BufferSize, PByteArray Frame, int FrameSize);
+        void FillBufferWithFrame(std::vector<uint8_t>& Buffer, const std::vector<uint8_t>& Frame);
+
     public:
         /**
            * Opens a SourceStream for playback.
@@ -370,7 +388,7 @@ namespace UMusic
            * guarantees to deliver this method's SourceStream parameter to
            * the OnClose-handler. Freeing SourceStream at OnClose is allowed.
            */
-        virtual bool Open(TAudioSourceStream SourceStream) = 0;
+        virtual bool Open(TAudioSourceStream::SPtr SourceStream) = 0;
 
         virtual void Play() = 0;
         virtual void Pause() = 0;
@@ -381,17 +399,18 @@ namespace UMusic
         virtual void GetFFTData(TFFTData& data) = 0;
         virtual uint32_t GetPCMData(TPCMData& data) = 0;
 
-        virtual void AddSoundEffect(TSoundEffect Effect) = 0;
-        virtual void RemoveSoundEffect(TSoundEffect Effect) = 0;
+        virtual void AddSoundEffect(TSoundEffect::SPtr Effect) = 0;
+        virtual void RemoveSoundEffect(TSoundEffect::SPtr Effect) = 0;
 
-        virtual void AddSoundFX(TSoundFX FX) = 0;
-        virtual void RemoveSoundFX(TSoundFX FX) = 0;
+        virtual void AddSoundFX(TSoundFX::SPtr FX) = 0;
+        virtual void RemoveSoundFX(TSoundFX::SPtr FX) = 0;
 
-        void SetSyncSource(UTime::TSyncSource SyncSource);
-        TAudioSourceStream GetSourceStream();
+        void SetSyncSource(UTime::TSyncSource::SPtr syncSource);
+        TAudioSourceStream::SPtr GetSourceStream() const;
 
         //property Status: TStreamStatus read GetStatus;
         //property Volume: single read GetVolume write SetVolume;
+        typedef std::shared_ptr<TAudioPlaybackStream> SPtr;
     };
 
     class TAudioDecodeStream : public TAudioSourceStream
@@ -400,21 +419,24 @@ namespace UMusic
     class TAudioVoiceStream : public TAudioSourceStream
     {
     protected:
+
         TAudioFormatInfo FormatInfo;
         int ChannelMap;
+
     public:
+
         ~TAudioVoiceStream() override;
 
         virtual bool Open(int ChannelMap, TAudioFormatInfo FormatInfo);
         void Close() override;
 
-        virtual void WriteData(PByteArray Buffer, int BufferSize) = 0;
+        virtual void WriteData(const std::vector<uint8_t>& Buffer) = 0;
         TAudioFormatInfo GetAudioFormatInfo() override;
 
-        double GetLength() override;
-        double GetPosition() override;
+        std::optional<double> GetLength() const override;
+        std::optional<double> GetPosition() const override;
         void SetPosition(double Time) override;
-        bool GetLoop() override;
+        bool GetLoop() const override;
         void SetLoop(bool Enabled) override;
     };
 
@@ -498,6 +520,8 @@ namespace UMusic
         virtual bool Finalize() = 0;
 
         virtual IVideo Open(const std::filesystem::path FileName) = 0;
+
+        typedef std::shared_ptr<IVideoPlayback> SPtr;
     };
 
     struct IVideoVisualization : IVideoPlayback
@@ -516,7 +540,7 @@ namespace UMusic
 
         virtual void FadeIn(double Time, float TargetVolume) = 0;
         virtual void Fade(double Time, float TargetVolume) = 0;
-        virtual void SetSyncSource(UTime::TSyncSource SyncSource) = 0;
+        virtual void SetSyncSource(UTime::TSyncSource::SPtr SyncSource) = 0;
 
         virtual void Rewind() = 0;
         virtual bool Finished() = 0;
@@ -543,8 +567,8 @@ namespace UMusic
         // CreateSound.
         virtual TAudioPlaybackStream OpenSound(const std::filesystem::path Filename) = 0;
         virtual TAudioPlaybackStream OpenSoundBuffer(TStream Buffer, TAudioFormatInfo Format) = 0;
-        virtual void PlaySound(TAudioPlaybackStream Stream) = 0;
-        virtual void StopSound(TAudioPlaybackStream Stream) = 0;
+        virtual void PlaySound(const TAudioPlaybackStream& Stream) = 0;
+        virtual void StopSound(const TAudioPlaybackStream& Stream) = 0;
 
         // Equalizer
         virtual void GetFFTData(TFFTData& Data) = 0;
@@ -553,6 +577,8 @@ namespace UMusic
         virtual uint32_t GetPCMData(TPCMData& Data) = 0;
 
         virtual TAudioVoiceStream CreateVoiceStream(int ChannelMap, TAudioFormatInfo FormatInfo) = 0;
+
+        typedef std::shared_ptr<IAudioPlayback> SPtr;
     };
 
     struct IGenericDecoder
@@ -580,7 +606,9 @@ namespace UMusic
 
     struct IAudioDecoder : IGenericDecoder
     {
-        virtual TAudioDecodeStream Open(const std::filesystem::path Filename) = 0;
+        virtual TAudioDecodeStream Open(const std::filesystem::path& Filename) = 0;
+
+        typedef std::shared_ptr<IAudioDecoder> SPtr;
     };
 
     struct IAudioInput
@@ -591,6 +619,8 @@ namespace UMusic
 
         virtual void CaptureStart() = 0;
         virtual void CaptureStop() = 0;
+
+        typedef std::shared_ptr<IAudioInput> SPtr;
     };
 
     class TAudioConverter
@@ -608,7 +638,7 @@ namespace UMusic
          * input-buffer bytes used.
          * Returns the number of bytes written to the output-buffer or -1 if an error occured.
          */
-        virtual int Convert(PByteArray InputBuffer, PByteArray OutputBuffer, int& InputSize) = 0;
+        virtual int Convert(const std::vector<uint8_t>& InputBuffer, std::vector<uint8_t>& OutputBuffer, int& InputSize) = 0;
 
         /**
          * Destination/Source size ratio
@@ -654,14 +684,14 @@ namespace UMusic
     public:
         // TODO: move sounds to the private section
         // and provide IDs instead.
-        TAudioPlaybackStream Start;
-        TAudioPlaybackStream Back;
-        TAudioPlaybackStream Swoosh;
-        TAudioPlaybackStream Change;
-        TAudioPlaybackStream Option;
-        TAudioPlaybackStream Click;
-        TAudioPlaybackStream Applause;
-        TAudioPlaybackStream BGMusic;
+        TAudioPlaybackStream::SPtr Start;
+        TAudioPlaybackStream::SPtr Back;
+        TAudioPlaybackStream::SPtr Swoosh;
+        TAudioPlaybackStream::SPtr Change;
+        TAudioPlaybackStream::SPtr Option;
+        TAudioPlaybackStream::SPtr Click;
+        TAudioPlaybackStream::SPtr Applause;
+        TAudioPlaybackStream::SPtr BGMusic;
 
         TSoundLibrary();
         ~TSoundLibrary();
@@ -681,7 +711,7 @@ namespace UMusic
     // TODO: JB --- THESE SHOULD NOT BE GLOBAL
     typedef std::vector<TLines> TrackVec;
 	TrackVec Tracks;
-    TLyricsState LyricsState;
+    TLyricsState<std::chrono::system_clock> LyricsState;
     TSoundLibrary SoundLib;
 
 
@@ -689,13 +719,13 @@ namespace UMusic
     void InitializeVideo();
     void FinalizeMedia();
 
-    IVideoPlayback Visualization();
-    IVideoPlayback VideoPlayback();
-    IAudioPlayback AudioPlayback();
-    IAudioInput AudioInput();
-    TInterfaceList AudioDecoders();
+    IVideoPlayback::SPtr Visualization();
+    IVideoPlayback::SPtr VideoPlayback();
+    IAudioPlayback::SPtr AudioPlayback();
+    IAudioInput::SPtr AudioInput();
+    std::list<IAudioDecoder::SPtr> AudioDecoders();
 
-    TInterfaceList MediaManager();
+    //TInterfaceList MediaManager();
 
     void DumpMediaInterfaces();
 
@@ -713,10 +743,12 @@ namespace UMusic
     UPathUtils;
     */
 
-    IVideoPlayback DefaultVideoPlayback;
-    IVideoPlayback DefaultVisualization;
-    IAudioPlayback DefaultAudioPlayback;
-    IAudioInput DefaultAudioInput;
-    TInterfaceList AudioDecoderList;
-    TInterfaceList MediaInterfaceList;
+    IVideoPlayback::SPtr DefaultVideoPlayback;
+    IVideoPlayback::SPtr DefaultVisualization;
+    IAudioPlayback::SPtr DefaultAudioPlayback;
+    IAudioInput::SPtr DefaultAudioInput;
+    std::list<IAudioDecoder::SPtr> AudioDecoderList;
+    std::list<IAudioPlayback::SPtr> AudioPlaybackList;
+    std::list<IAudioInput::SPtr> AudioInputList;
+    //TInterfaceList MediaInterfaceList;
 }
