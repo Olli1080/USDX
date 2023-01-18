@@ -98,14 +98,14 @@ namespace UMenu
         void AddBackground(TThemeBackground ThemedSettings);
 
         // static
-        int AddStatic(ThemeStatic: TThemeStatic) 
-        int AddStatic(X, Y, W, H: real; const TexName : IPath) : int; 
-        int AddStatic(X, Y, W, H: real; const TexName : IPath; Typ: TTextureType) : int; 
-        int AddStatic(X, Y, W, H: real; ColR, ColG, ColB: real; const TexName : IPath; Typ: TTextureType) : int; 
-        int AddStatic(X, Y, W, H, Z: real; ColR, ColG, ColB: real; const TexName : IPath; Typ: TTextureType) : int; 
-        int AddStatic(X, Y, W, H: real; ColR, ColG, ColB: real; const TexName : IPath; Typ: TTextureType; Color: int) : int; 
-        int AddStatic(X, Y, W, H, Z: real; ColR, ColG, ColB: real; const TexName : IPath; Typ: TTextureType; Color: int) : int; 
-        int AddStatic(X, Y, W, H, Z: real; ColR, ColG, ColB: real; TexX1, TexY1, TexX2, TexY2: real; Alpha: real; const TexName : IPath; Typ: TTextureType; Color: int; Reflection: bool; ReflectionSpacing: real) : int; 
+        int AddStatic(ThemeStatic: TThemeStatic);
+        int AddStatic(X, Y, W, H: real; const TexName : IPath);
+        int AddStatic(X, Y, W, H: real; const TexName : IPath; Typ: TTextureType);
+        int AddStatic(X, Y, W, H: real; ColR, ColG, ColB: real; const TexName : IPath; Typ: TTextureType);
+        int AddStatic(X, Y, W, H, Z: real; ColR, ColG, ColB: real; const TexName : IPath; Typ: TTextureType);
+        int AddStatic(X, Y, W, H: real; ColR, ColG, ColB: real; const TexName : IPath; Typ: TTextureType; Color: int); 
+        int AddStatic(X, Y, W, H, Z: real; ColR, ColG, ColB: real; const TexName : IPath; Typ: TTextureType; Color: int); 
+        int AddStatic(X, Y, W, H, Z: real; ColR, ColG, ColB: real; TexX1, TexY1, TexX2, TexY2: real; Alpha: real; const TexName : IPath; Typ: TTextureType; Color: int; Reflection: bool; ReflectionSpacing: real); 
 
         // list
         function AddListItem(X, Y, W, H, Z: real; ColR, ColG, ColB: real; DColR, DColG, DColB: real; const TexName : IPath; const DTexName : IPath; Typ: TTextureType; Reflection: bool; ReflectionSpacing: real) : int;

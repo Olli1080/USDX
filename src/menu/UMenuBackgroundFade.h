@@ -20,28 +20,46 @@
  * the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
  * Boston, MA 02110-1301, USA.
  *
- * $URL: svn://basisbit@svn.code.sf.net/p/ultrastardx/svn/trunk/src/menu/UMenuInteract.pas $
- * $Id: UMenuInteract.pas 1950 2009-11-18 14:42:34Z whiteshark0 $
+ * $URL$
+ * $Id$
  */
 #include "../switches.h"
 
-#include "../base/types.hpp"
 
-namespace UMenuInteract
+#include "UMenuBackground.hpp"
+
+namespace UMenuBackgroundFade
 {
-    struct TInteract // for moving through menu
+/*uses
+  UCommon,
+  UThemes,
+  UTexture,
+  UMenuBackground,
+  UPath;*/
+
+//TMenuBackgroundFade - Background Fade In for Overlay screens
+//--------
+
+//type
+    class TMenuBackgroundFade : public UMenuBackground::TMenuBackground
     {
-		int Typ;  // 0 - button, 1 - select, 2 - Text, 3 - Select SLide, 5 - ButtonCollection Child
-		int Num;  // number of this item in proper list like buttons, selects
+    private:
+        Tex : TTexture;
+	    Color:      TRGB;
+	    Alpha:      real;
+
+		useTexture: boolean;
+
+		FadeTime:   cardinal;
+
+    public:
+
+        constructor Create(const ThemedSettings : TThemeBackground); override;
+        procedure   OnShow; override;
+        procedure   Draw; override;
+        destructor  Destroy; override;
     };
 
-    // to handle the area where the mouse is over a control
-    typedef Rect<double> TMouseOverRect;
-    /*{
-        double X, Y;
-        double W, H;
-    };*/
-
-    // to handle the on click action
-    enum class TMouseClickAction { maNone, maReturn, maLeft, maRight };
+const
+  FADEINTIME = 1500; //Time the bg fades in
 }

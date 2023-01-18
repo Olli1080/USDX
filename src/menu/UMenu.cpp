@@ -21,7 +21,7 @@ uses
 
 namespace UMenu
 {
-destructor TMenu.Destroy;
+destructor TMenu::Destroy;
 var
 I : integer;
 begin
@@ -42,7 +42,7 @@ Background.Free;
 inherited;
 end;
 
-constructor TMenu.Create;
+constructor TMenu::Create;
 begin
 inherited;
 
@@ -59,7 +59,7 @@ Background: = nil;
 RightMbESC: = true;
 end;
 {
-    constructor TMenu.Create(Back: string);
+    constructor TMenu::Create(Back: string);
     begin
         inherited Create;
 
@@ -79,7 +79,7 @@ BackH: = 1;
 ButtonPos: = -1;
     end;
 
-    constructor TMenu.Create(Back: string; W, H: integer);
+    constructor TMenu::Create(Back: string; W, H: integer);
     begin
         Create(Back);
     BackImg.W : = BackImg.W / W;
@@ -95,7 +95,7 @@ Result : = (Trunc(255 * R) shl 16) or
 Trunc(255 * B);
 end;
 
-procedure TMenu.AddInteraction(Typ, Num: integer);
+void TMenu::AddInteraction(Typ, Num: integer);
 var
 IntNum : integer;
 begin
@@ -106,7 +106,7 @@ Interactions[IntNum].Num : = Num;
 Interaction: = 0;
 end;
 
-procedure TMenu.SetInteraction(Num: integer);
+void TMenu::SetInteraction(Num: integer);
 var
 OldNum, OldTyp: integer;
 NewNum, NewTyp: integer;
@@ -160,7 +160,7 @@ iBCollectionChild:
     //LoadFromTheme - Load BG, Texts, Statics and
     //Button Collections from ThemeBasic
     //----------------------
-    procedure TMenu.LoadFromTheme(const ThemeBasic : TThemeBasic);
+    void TMenu::LoadFromTheme(const ThemeBasic : TThemeBasic);
     var
         I : integer;
     begin
@@ -179,7 +179,7 @@ iBCollectionChild:
         AddText(ThemeBasic.Text[I]);
     end;
 
-    procedure TMenu.AddBackground(ThemedSettings: TThemeBackground);
+    void TMenu::AddBackground(ThemedSettings: TThemeBackground);
     var
         FileExt : string;
 
@@ -319,7 +319,7 @@ end;
 //PrepareButtonCollections:
 //Add Button Collections (Set Button CollectionsLength)
 //----------------------
-procedure TMenu.PrepareButtonCollections(const Collections : AThemeButtonCollection);
+void TMenu::PrepareButtonCollections(const Collections : AThemeButtonCollection);
 var
 I : integer;
 begin
@@ -332,7 +332,7 @@ end;
 //AddButtonCollection:
 //Create a Button Collection;
 //----------------------
-procedure TMenu.AddButtonCollection(const ThemeCollection : TThemeButtonCollection; const Num : byte);
+void TMenu::AddButtonCollection(const ThemeCollection : TThemeButtonCollection; const Num : byte);
 var
 BT, BTLen:         integer;
 TempCol, TempDCol: cardinal;
@@ -423,7 +423,7 @@ AddButtonText(ButtonCollection[Num], ThemeCollection.Style.Text[BT].X, ThemeColl
 end;
 end;
 
-function TMenu.AddStatic(ThemeStatic: TThemeStatic) : integer;
+function TMenu::AddStatic(ThemeStatic: TThemeStatic) : integer;
 begin
 Result : = AddStatic(ThemeStatic.X, ThemeStatic.Y, ThemeStatic.W, ThemeStatic.H, ThemeStatic.Z,
     ThemeStatic.ColR, ThemeStatic.ColG, ThemeStatic.ColB,
@@ -432,12 +432,12 @@ Result : = AddStatic(ThemeStatic.X, ThemeStatic.Y, ThemeStatic.W, ThemeStatic.H,
     ThemeStatic.Typ, $FFFFFF, ThemeStatic.Reflection, ThemeStatic.Reflectionspacing);
 end;
 
-function TMenu.AddStatic(X, Y, W, H: real; const TexName : IPath) : integer;
+function TMenu::AddStatic(X, Y, W, H: real; const TexName : IPath) : integer;
 begin
 Result : = AddStatic(X, Y, W, H, TexName, TEXTURE_TYPE_PLAIN);
 end;
 
-function TMenu.AddStatic(X, Y, W, H: real;
+function TMenu::AddStatic(X, Y, W, H: real;
 ColR, ColG, ColB: real;
 const TexName : IPath;
 Typ: TTextureType) : integer;
@@ -445,7 +445,7 @@ begin
 Result : = AddStatic(X, Y, W, H, ColR, ColG, ColB, TexName, Typ, $FFFFFF);
 end;
 
-function TMenu.AddStatic(X, Y, W, H, Z: real;
+function TMenu::AddStatic(X, Y, W, H, Z: real;
 ColR, ColG, ColB: real;
 const TexName : IPath;
 Typ: TTextureType) : integer;
@@ -453,7 +453,7 @@ begin
 Result : = AddStatic(X, Y, W, H, Z, ColR, ColG, ColB, TexName, Typ, $FFFFFF);
 end;
 
-function TMenu.AddStatic(X, Y, W, H: real;
+function TMenu::AddStatic(X, Y, W, H: real;
 const TexName : IPath;
 Typ: TTextureType) : integer;
 var
@@ -473,7 +473,7 @@ Statics[StatNum].Visible : = true;
 Result: = StatNum;
 end;
 
-function TMenu.AddStatic(X, Y, W, H: real;
+function TMenu::AddStatic(X, Y, W, H: real;
 ColR, ColG, ColB: real;
 const TexName : IPath;
 Typ: TTextureType;
@@ -482,7 +482,7 @@ begin
 Result : = AddStatic(X, Y, W, H, 0, ColR, ColG, ColB, TexName, Typ, Color);
 end;
 
-function TMenu.AddStatic(X, Y, W, H, Z: real;
+function TMenu::AddStatic(X, Y, W, H, Z: real;
 ColR, ColG, ColB: real;
 const TexName : IPath;
 Typ: TTextureType;
@@ -491,7 +491,7 @@ begin
 Result : = AddStatic(X, Y, W, H, Z, ColR, ColG, ColB, 0, 0, 1, 1, 1, TexName, Typ, Color, false, 0);
 end;
 
-function TMenu.AddStatic(X, Y, W, H, Z: real;
+function TMenu::AddStatic(X, Y, W, H, Z: real;
 ColR, ColG, ColB: real;
 TexX1, TexY1, TexX2, TexY2: real; Alpha: real;
 const TexName : IPath;
@@ -553,7 +553,7 @@ Statics[StatNum].ReflectionSpacing : = ReflectionSpacing;
 Result: = StatNum;
 end;
 
-function TMenu.AddListItem(X, Y, W, H, Z: real;
+function TMenu::AddListItem(X, Y, W, H, Z: real;
 ColR, ColG, ColB: real;
 DColR, DColG, DColB: real;
 const TexName : IPath;
@@ -605,13 +605,13 @@ StaticsList[StatNum].ReflectionSpacing : = ReflectionSpacing;
 Result: = StatNum;
 end;
 
-function TMenu.AddText(ThemeText: TThemeText) : integer;
+function TMenu::AddText(ThemeText: TThemeText) : integer;
 begin
 Result : = AddText(ThemeText.X, ThemeText.Y, ThemeText.W, ThemeText.H, ThemeText.Font, ThemeText.Style, ThemeText.Size,
     ThemeText.ColR, ThemeText.ColG, ThemeText.ColB, ThemeText.Align, ThemeText.Text, ThemeText.Reflection, ThemeText.ReflectionSpacing, ThemeText.Z, ThemeText.Writable);
 end;
 
-function TMenu.AddText(X, Y: real; const Text_ : UTF8String) : integer;
+function TMenu::AddText(X, Y: real; const Text_ : UTF8String) : integer;
 var
 TextNum : integer;
 begin
@@ -622,7 +622,7 @@ Text[TextNum] : = TText.Create(X, Y, Text_);
 Result: = TextNum;
 end;
 
-function TMenu.AddText(X, Y: real;
+function TMenu::AddText(X, Y: real;
 Font, Style: integer;
 Size, ColR, ColG, ColB: real;
 const Text : UTF8String) : integer;
@@ -630,7 +630,7 @@ begin
 Result : = AddText(X, Y, 0, 0, Font, Style, Size, ColR, ColG, ColB, 0, Text, false, 0, 0, false);
 end;
 
-function TMenu.AddText(X, Y, W, H: real;
+function TMenu::AddText(X, Y, W, H: real;
 Font, Style: integer;
 Size, ColR, ColG, ColB: real;
 Align: integer;
@@ -650,7 +650,7 @@ Result: = TextNum;
 end;
 
 //Function that Set Length of Button boolean in one Step instead of register new Memory for every Button
-procedure TMenu.SetButtonLength(Length: cardinal);
+void TMenu::SetButtonLength(Length: cardinal);
 begin
 if (ButtonPos = -1) and (Length > 0) then
 begin
@@ -662,8 +662,8 @@ ButtonPos: = 0;
 end;
 end;
 
-// Method to add a button in our TMenu. It returns the assigned ButtonNumber
-function TMenu.AddButton(ThemeButton: TThemeButton) : integer;
+// Method to add a button in our TMenu:: It returns the assigned ButtonNumber
+function TMenu::AddButton(ThemeButton: TThemeButton) : integer;
 var
 BT : integer;
 BTLen: integer;
@@ -727,17 +727,17 @@ end;
 end;
 end;
 
-function TMenu.AddButton(X, Y, W, H: real; const TexName : IPath) : integer;
+function TMenu::AddButton(X, Y, W, H: real; const TexName : IPath) : integer;
 begin
 Result : = AddButton(X, Y, W, H, TexName, TEXTURE_TYPE_PLAIN, false);
 end;
 
-function TMenu.AddButton(X, Y, W, H: real; const TexName : IPath; Typ: TTextureType; Reflection: boolean) : integer;
+function TMenu::AddButton(X, Y, W, H: real; const TexName : IPath; Typ: TTextureType; Reflection: boolean) : integer;
 begin
 Result : = AddButton(X, Y, W, H, 1, 1, 1, 1, 1, 1, 1, 0.5, TexName, TEXTURE_TYPE_PLAIN, Reflection, 15, 15);
 end;
 
-function TMenu.AddButton(X, Y, W, H, ColR, ColG, ColB, Int, DColR, DColG, DColB, DInt: real;
+function TMenu::AddButton(X, Y, W, H, ColR, ColG, ColB, Int, DColR, DColG, DColB, DInt: real;
 const TexName : IPath;
 Typ: TTextureType;
 Reflection: boolean;
@@ -802,19 +802,19 @@ AddInteraction(iButton, Result);
 Interaction: = 0;
 end;
 
-procedure TMenu.ClearButtons;
+void TMenu::ClearButtons;
 begin
 Setlength(Button, 0);
 end;
 
 // method to draw our tmenu and all his child buttons
-function TMenu.DrawBG: boolean;
+function TMenu::DrawBG: boolean;
 begin
 Background.Draw;
 Result: = true;
 end;
 
-function TMenu.DrawFG: boolean;
+function TMenu::DrawFG: boolean;
 var
 J : integer;
 begin
@@ -843,7 +843,7 @@ SelectsS[J].Draw;
 Result: = true;
 end;
 
-function TMenu.Draw: boolean;
+function TMenu::Draw: boolean;
 begin
 DrawBG;
 DrawFG;
@@ -851,14 +851,14 @@ Result: = true;
 end;
 
 {
-    function TMenu.GetNextScreen() : PMenu;
+    function TMenu::GetNextScreen() : PMenu;
     begin
         Result : = NextScreen;
     end;
 }
 
 {
-    function TMenu.AddWidget(X, Y: UInt16; WidgetSrc: PSDL_Surface) : Int16;
+    function TMenu::AddWidget(X, Y: UInt16; WidgetSrc: PSDL_Surface) : Int16;
     var
         WidgetNum : Int16;
     begin
@@ -884,7 +884,7 @@ Result: = WidgetNum;
 }
 
 {
-    procedure TMenu.ClearWidgets(MinNumber: Int16);
+    void TMenu::ClearWidgets(MinNumber: Int16);
     var
         J : Int16;
     begin
@@ -899,7 +899,7 @@ Result: = WidgetNum;
     end;
 }
 
-function TMenu.IsSelectable(Int: cardinal) : boolean;
+function TMenu::IsSelectable(Int: cardinal) : boolean;
 begin
 Result : = true;
 case Interactions[Int].Typ of
@@ -918,7 +918,7 @@ Result: = (ButtonCollection[Button[Interactions[Int].Num].Parent - 1].FirstChild
     // implemented for the sake of usablility
     // [curser down] picks the button left to the actual atm
     // this behaviour doesn't make sense for two rows of buttons
-    procedure TMenu.InteractPrevRow;
+    void TMenu::InteractPrevRow;
     var
         Int : integer;
     begin
@@ -935,7 +935,7 @@ Int: = Int - 4;//ceil(Length(Interactions) / 2);
         Interaction : = Int;        // select row above
     end;
 
-    procedure TMenu.InteractNextRow;
+    void TMenu::InteractNextRow;
     var
         Int : integer;
     begin
@@ -951,7 +951,7 @@ Int: = Int + 4; //ceil(Length(Interactions) / 2);
 
     end;
 
-    procedure TMenu.InteractNext;
+    void TMenu::InteractNext;
     var
         Int : integer;
     begin
@@ -971,7 +971,7 @@ Int: = Int + 4; //ceil(Length(Interactions) / 2);
 Interaction: = Int;
     end;
 
-    procedure TMenu.InteractPrev;
+    void TMenu::InteractPrev;
     var
         Int : integer;
     begin
@@ -996,7 +996,7 @@ Interaction: = Int;
 Interaction: = Int
 end;
 
-procedure TMenu.InteractCustom(CustomSwitch: integer);
+void TMenu::InteractCustom(CustomSwitch: integer);
 { needed only for below
 var
 Num : integer;
@@ -1055,19 +1055,19 @@ end; // while
   end }
 end;
 
-procedure TMenu.FadeTo(Screen: PMenu);
+void TMenu::FadeTo(Screen: PMenu);
 begin
 Display.Fade : = 0;
 Display.NextScreen : = Screen;
 end;
 
-procedure TMenu.FadeTo(Screen: PMenu; aSound: TAudioPlaybackStream);
+void TMenu::FadeTo(Screen: PMenu; aSound: TAudioPlaybackStream);
 begin
 FadeTo(Screen);
 AudioPlayback.PlaySound(aSound);
 end;
 
-procedure OnSaveEncodingError(Value: boolean; Data: Pointer);
+void OnSaveEncodingError(Value: boolean; Data: Pointer);
 begin
 Display.CheckOK : = Value;
 if (Value) then
@@ -1088,7 +1088,7 @@ end;
 end;
 
 //popup hack
-procedure TMenu.CheckFadeTo(Screen: PMenu; Msg: UTF8String);
+void TMenu::CheckFadeTo(Screen: PMenu; Msg: UTF8String);
 begin
 Display.Fade : = 0;
 Display.NextScreenWithCheck : = Screen;
@@ -1096,12 +1096,12 @@ Display.CheckOK : = false;
 ScreenPopupCheck.ShowPopup(msg, OnSaveEncodingError, nil, false);
 end;
 
-procedure TMenu.AddButtonText(AddX, AddY: real; const AddText : UTF8String);
+void TMenu::AddButtonText(AddX, AddY: real; const AddText : UTF8String);
 begin
 AddButtonText(AddX, AddY, 1, 1, 1, AddText);
 end;
 
-procedure TMenu.AddButtonText(AddX, AddY: real; ColR, ColG, ColB: real; const AddText : UTF8String);
+void TMenu::AddButtonText(AddX, AddY: real; ColR, ColG, ColB: real; const AddText : UTF8String);
 var
 Il : integer;
 begin
@@ -1117,7 +1117,7 @@ Text[Il].Int : = 1;//0.5;
 end;
 end;
 
-procedure TMenu.AddButtonText(AddX, AddY: real; ColR, ColG, ColB: real; Font, Style: integer; Size: integer; Align: integer; const AddText : UTF8String);
+void TMenu::AddButtonText(AddX, AddY: real; ColR, ColG, ColB: real; Font, Style: integer; Size: integer; Align: integer; const AddText : UTF8String);
 var
 Il : integer;
 begin
@@ -1137,7 +1137,7 @@ Text[Il].Align : = Align;
 end;
 end;
 
-procedure TMenu.AddButtonText(CustomButton: TButton; AddX, AddY: real; ColR, ColG, ColB: real; Font, Style: integer; Size: integer; Align: integer; const AddText : UTF8String);
+void TMenu::AddButtonText(CustomButton: TButton; AddX, AddY: real; ColR, ColG, ColB: real; Font, Style: integer; Size: integer; Align: integer; const AddText : UTF8String);
 var
 Il : integer;
 begin
@@ -1157,7 +1157,7 @@ Text[Il].Align : = Align;
 end;
 end;
 
-function TMenu.AddSelectSlide(ThemeSelectS: TThemeSelectSlide; var Data : integer; const Values : array of UTF8String) : integer;
+function TMenu::AddSelectSlide(ThemeSelectS: TThemeSelectSlide; var Data : integer; const Values : array of UTF8String) : integer;
 var
 SO : integer;
 begin
@@ -1193,7 +1193,7 @@ SelectsS[High(SelectsS)].GenLines;
 SelectsS[High(SelectsS)].SelectedOption : = SelectsS[High(SelectsS)].SelectOptInt; // refresh
 end;
 
-function TMenu.AddSelectSlide(X, Y, W, H, SkipX, SBGW, ColR, ColG, ColB, Int, DColR, DColG, DColB, DInt,
+function TMenu::AddSelectSlide(X, Y, W, H, SkipX, SBGW, ColR, ColG, ColB, Int, DColR, DColG, DColB, DInt,
     TColR, TColG, TColB, TInt, TDColR, TDColG, TDColB, TDInt,
     SBGColR, SBGColG, SBGColB, SBGInt, SBGDColR, SBGDColG, SBGDColB, SBGDInt,
     STColR, STColG, STColB, STInt, STDColR, STDColG, STDColB, STDInt: real;
@@ -1350,12 +1350,12 @@ AddInteraction(iSelectS, S);
 Result: = S;
 end;
 
-procedure TMenu.AddSelectSlideOption(const AddText : UTF8String);
+void TMenu::AddSelectSlideOption(const AddText : UTF8String);
 begin
 AddSelectSlideOption(High(SelectsS), AddText);
 end;
 
-procedure TMenu.AddSelectSlideOption(SelectNo: cardinal; const AddText : UTF8String);
+void TMenu::AddSelectSlideOption(SelectNo: cardinal; const AddText : UTF8String);
 var
 SO : integer;
 begin
@@ -1371,7 +1371,7 @@ SelectsS[SelectNo].TextOptT[SO] : = AddText;
 }
 end;
 
-procedure TMenu.UpdateSelectSlideOptions(ThemeSelectSlide: TThemeSelectSlide;
+void TMenu::UpdateSelectSlideOptions(ThemeSelectSlide: TThemeSelectSlide;
 SelectNum: integer; const Values : array of UTF8String; var Data : integer);
 var
 SO : integer;
@@ -1393,7 +1393,7 @@ SelectsS[SelectNum].PData : = @Data;
 SelectsS[SelectNum].SelectedOption : = Data;
 end;
 
-procedure TMenu.InteractInc;
+void TMenu::InteractInc;
 var
 Num : integer;
 Value: integer;
@@ -1434,7 +1434,7 @@ else InteractNext;
 end;
 end;
 
-procedure TMenu.InteractDec;
+void TMenu::InteractDec;
 var
 Num : integer;
 Value: integer;
@@ -1491,13 +1491,13 @@ end;
 end;
 end;
 
-procedure TMenu.AddBox(X, Y, W, H: real);
+void TMenu::AddBox(X, Y, W, H: real);
 begin
 AddStatic(X, Y, W, H, 0, 0, 0, Skin.GetTextureFileName('MainBar'), TEXTURE_TYPE_COLORIZED);
 AddStatic(X + 2, Y + 2, W - 4, H - 4, 1, 1, 1, Skin.GetTextureFileName('MainBar'), TEXTURE_TYPE_COLORIZED);
 end;
 
-procedure TMenu.OnShow;
+void TMenu::OnShow;
 begin
 // FIXME: this needs some work. First, there should be a variable like
 // VideoBackground so we can check whether a video-background is enabled or not.
@@ -1526,35 +1526,35 @@ AddBackground(DEFAULT_BACKGROUND);
 Background.OnShow;
 end;
 
-procedure TMenu.OnShowFinish;
+void TMenu::OnShowFinish;
 begin
 // nothing
 end;
 
-procedure TMenu.OnHide;
+void TMenu::OnHide;
 begin
 // nothing
 Background.OnFinish;
 end;
 
-procedure TMenu.OnWindowResized;
+void TMenu::OnWindowResized;
 begin
 // nothing
 end;
 
-function TMenu.ShouldHandleInput(PressedKey: cardinal; CharCode: UCS4Char; PressedDown: boolean; out SuppressKey : boolean) : boolean;
-begin
-// nothing
-Result : = true;
-end;
-
-function TMenu.ParseInput(PressedKey: Cardinal; CharCode: UCS4Char; PressedDown: boolean) : boolean;
+function TMenu::ShouldHandleInput(PressedKey: cardinal; CharCode: UCS4Char; PressedDown: boolean; out SuppressKey : boolean) : boolean;
 begin
 // nothing
 Result : = true;
 end;
 
-function TMenu.ParseMouse(MouseButton: integer; BtnDown: boolean; X, Y: integer) : boolean;
+function TMenu::ParseInput(PressedKey: Cardinal; CharCode: UCS4Char; PressedDown: boolean) : boolean;
+begin
+// nothing
+Result : = true;
+end;
+
+function TMenu::ParseMouse(MouseButton: integer; BtnDown: boolean; X, Y: integer) : boolean;
 var
 nBut : integer;
 Action: TMouseClickAction;
@@ -1637,19 +1637,19 @@ end;
 end;
 end;
 
-function TMenu.InRegion(X, Y: real; A: TMouseOverRect) : boolean;
+function TMenu::InRegion(X, Y: real; A: TMouseOverRect) : boolean;
 begin
 // check whether A contains X and Y
 Result : = (X >= A.X) and (X <= A.X + A.W) and (Y >= A.Y) and (Y <= A.Y + A.H);
 end;
 
-function TMenu.InRegionX(X: real; A: TMouseOverRect) : boolean;
+function TMenu::InRegionX(X: real; A: TMouseOverRect) : boolean;
 begin
 // check whether A contains X
 Result : = (X >= A.X) and (X <= A.X + A.W);
 end;
 
-function TMenu.InRegionY(Y: real; A: TMouseOverRect) : boolean;
+function TMenu::InRegionY(Y: real; A: TMouseOverRect) : boolean;
 begin
 // check whether A contains Y
 Result : = (Y >= A.Y) and (Y <= A.Y + A.H);
@@ -1657,7 +1657,7 @@ end;
 
 //takes x,y coordinates and returns the interaction number
 //of the control at this position
-function TMenu.InteractAt(X, Y: real) : integer;
+function TMenu::InteractAt(X, Y: real) : integer;
 var
 i, nBut: integer;
 begin
@@ -1689,7 +1689,7 @@ end;
 end;
 
 //takes x,y coordinates and returns the button collection id
-function TMenu.CollectionAt(X, Y: real) : integer;
+function TMenu::CollectionAt(X, Y: real) : integer;
 var
 i, nBut: integer;
 begin
@@ -1705,7 +1705,7 @@ end;
 end;
 end;
 
-procedure TMenu.SetAnimationProgress(Progress: real);
+void TMenu::SetAnimationProgress(Progress: real);
 begin
 // nothing
 end;

@@ -1,16 +1,19 @@
 #pragma once
 
+template<typename T = double>
 struct Position2D
 {
-	double X = 0.0;
-	double Y = 0.0;
+	T X = 0.0;
+	T Y = 0.0;
 };
 
+template<typename T = double>
 struct Size2D
 {
-	double W = 0.0;
-	double H = 0.0;
+	T W = 0.0;
+	T H = 0.0;
 };
 
-struct Rect : Position2D, Size2D
+template<typename T = double>
+struct Rect : Position2D<T>, Size2D<T>
 {};

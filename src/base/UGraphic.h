@@ -126,6 +126,14 @@ namespace UGraphic
         }
     };
 
+    struct ContextDeleter
+    {
+	    void operator()(SDL_GLContext* ctx)
+	    {
+            SDL_GL_DeleteContext(ctx);
+	    }
+    };
+
     struct TScreen
     {
         Size2D<int> size;
@@ -133,12 +141,13 @@ namespace UGraphic
         int Act;
         int X;
         std::unique_ptr<SDL_Window, WindowDeleter> window;
+        std::unique_ptr<std::remove_pointer_t<SDL_GLContext>, ContextDeleter> glcontext;
 
         void SetTitle(const std::string& str);
         void SetIcon(SDL_Surface& icon);
+        void CreateContext();
     };    
 
-    SDL_GLContext glcontext;
     std::unique_ptr<std::thread> LoadingThread;
     std::mutex Mutex;
 

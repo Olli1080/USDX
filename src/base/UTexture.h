@@ -84,9 +84,9 @@ namespace UTexture
 
     struct TTexture
     {
-        Position2D position;
-        double Z;
-        Size2D size;
+        Position2D<double> position;
+        double Z = 0.0;
+        Size2D<double> size;
         UCommon::TRGBA Color = {{1.0, 1.0, 1.0}, 1.0 };
         TTextureCoords coords;
 

@@ -87,7 +87,7 @@ void TFont::Print(const TUCS4StringArray& Text)
     glEnable(GL_TEXTURE_2D);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-    {
+    /*{
         // TODO: just draw texels with alpha > 0 to avoid setting z-buffer for them?
         glAlphaFunc(GL_GREATER, 0);
         glEnable(GL_ALPHA_TEST);
@@ -98,7 +98,7 @@ void TFont::Print(const TUCS4StringArray& Text)
             glDepthMask(0);
             glEnable(GL_DEPTH_TEST);
         }
-    }
+    }*/
 
 #ifdef FLIP_Y_AXIS
     glPushMatrix();

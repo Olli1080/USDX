@@ -26,7 +26,15 @@ namespace UGraphic
     {
         SDL_SetWindowIcon(window.get(), &icon);
     }
-    
+
+    void TScreen::CreateContext()
+    {
+        //LoadOpenGL();
+        glcontext = std::unique_ptr<std::remove_pointer_t<SDL_GLContext>, ContextDeleter>(SDL_GL_CreateContext(window.get()), ContextDeleter());
+        //InitOpenGL();
+    }
+
+
     void LoadFontTextures()
     {
         ULog::Log.LogStatusLocation("Building Fonts");
@@ -59,7 +67,7 @@ namespace UGraphic
 
         Tex_Cursor_Unpressed = UTexture::Texture.LoadTexture(USkins::Skin.GetTextureFileName("Cursor"), UTexture::TTextureType::TEXTURE_TYPE_TRANSPARENT, 0);
 
-        if (USkins::Skin.GetTextureFileName("Cursor_Pressed").IsSet)
+        if (!USkins::Skin.GetTextureFileName("Cursor_Pressed").empty())
             Tex_Cursor_Pressed = UTexture::Texture.LoadTexture(USkins::Skin.GetTextureFileName("Cursor_Pressed"), UTexture::TTextureType::TEXTURE_TYPE_TRANSPARENT, 0);
         else
             Tex_Cursor_Pressed.TexNum = 0;
@@ -77,6 +85,7 @@ namespace UGraphic
 
         ULog::Log.LogStatus("Loading Textures - B", "LoadTextures");
 
+        UCommon::TRGB<double> Color;
         //Line Bonus PopUp
         for (size_t P = 0; P <= 8; ++P)
         {
@@ -84,47 +93,40 @@ namespace UGraphic
             {
             case 0:
             {
-                R = 1;
-                G = 0;
-                B = 0;
+                Color = { 1, 0, 0 };
+                break;
             }
             case 1: [[nodiscard]]
             case 2: [[nodiscard]]
             case 3:
             {
-                R = 1;
-                G = (P * 0.25);
-                B = 0;
+                Color = { 1, P * 0.25, 0 };
+                break;
             }
             case 4:
             {
-                R = 1;
-                G = 1;
-                B = 0;
+                Color = { 1, 1, 0 };
+                break;
             }
             case 5: [[nodiscard]]
             case 6: [[nodiscard]]
             case 7:
             {
-                R = 1 - ((P - 4) * 0.25);
-                G = 1;
-                B = 0;
+                Color = { 1 - (P - 4) * 0.25, 1, 0 };
+                break;
             }
             case 8:
             {
-                R = 0;
-                G = 1;
-                B = 0;
+                Color = { 0, 1, 0 };
+                break;
             }
             default:
             {
-                R = 1;
-                G = 0;
-                B = 0;
+                Color = { 1, 0, 0 };
             }
             }
 
-            Col = 0x10000 * std::round(R * 255) + 0x100 * std::round(G * 255) + std::round(B * 255);
+            int Col = 0x10000 * std::round(Color.R * 255) + 0x100 * std::round(Color.G * 255) + std::round(Color.B * 255);
             Tex_SingLineBonusBack[P] = UTexture::Texture.LoadTexture(USkins::Skin.GetTextureFileName("LineBonusBack"), UTexture::TTextureType::TEXTURE_TYPE_COLORIZED, Col);
         }
 
@@ -133,7 +135,7 @@ namespace UGraphic
         //## rating pictures that show a picture according to your rate ##
         for (size_t P = 0; P < 8; ++P)
         {
-            Tex_Score_Ratings[P] = UTexture::Texture.LoadTexture(USkins::Skin.GetTextureFileName("Rating_" + IntToStr(P)), UTexture::TTextureType::TEXTURE_TYPE_TRANSPARENT, 0);
+            Tex_Score_Ratings[P] = UTexture::Texture.LoadTexture(USkins::Skin.GetTextureFileName("Rating_" + std::to_string(P)), UTexture::TTextureType::TEXTURE_TYPE_TRANSPARENT, 0);
         }
 
         ULog::Log.LogStatus("Loading Textures - Done", "LoadTextures");
@@ -229,7 +231,7 @@ namespace UGraphic
 
     void SwapBuffers()
     {
-        SDL_GL_SwapWindow(Screen.get());
+        SDL_GL_SwapWindow(screen.window.get());
 		glMatrixMode(GL_PROJECTION);
 		glLoadIdentity();
 		glOrtho(0, Render.W, Render.H, 0, -1, 100);
@@ -286,8 +288,9 @@ Disp: TSDL_DisplayMode;
 	bool Fullscreen = ((UIni::Ini.screen_info.FullScreen == 1) || (UCommandLine::Params.ScreenMode == UCommandLine::scmFullscreen)) &&
 		(UCommandLine::Params.ScreenMode != UCommandLine::scmWindowed);
 
-// If there is a resolution in Parameters, use it, else use the Ini value
-// check for a custom resolution (in the format of WIDTHxHEIGHT) or try validating ID from TIni
+    bool triggerNoDoubleResolution = false;
+	// If there is a resolution in Parameters, use it, else use the Ini value
+	// check for a custom resolution (in the format of WIDTHxHEIGHT) or try validating ID from TIni
     int W, H;
     if (UCommon::ParseResolutionString(UCommandLine::Params.CustomResolution, W, H))
         ULog::Log.LogStatusLocation(std::format("Use custom resolution from Command line: {} x {}", W, H));
@@ -300,7 +303,7 @@ Disp: TSDL_DisplayMode;
 
 		// fullscreen resolution shouldn't be doubled as it would not allow running double fullscreen
 		// in a specific resolution if desired and required for some TVs/monitors/display devices
-		Goto NoDoubledResolution;
+        triggerNoDoubleResolution = true;
 	}
 	else
 	{
@@ -308,125 +311,124 @@ Disp: TSDL_DisplayMode;
 		S = UIni::Ini.GetResolution(W, H);
 
 		// hackfix to prevent a doubled resolution twice as GetResolution(int,int) is already doubling the resolution
-		Goto NoDoubledResolution;
+        triggerNoDoubleResolution = true;
 	}
-    // hacky fix to support multiplied resolution (in width) in multiple screen setup (Screens=2 and more)
-	// TODO: RattleSN4K3: Improve the way multiplied screen resolution is applied and stored (see UGraphics::InitializeScreen; W := W * Screens)
-	if (screen.screens > 1 && !Split)
-		W *= screen.screens;
-
-NoDoubledResolution:
-
-ULog::Log.LogStatusLocation("Creating window");
-
-// TODO: use SDL renderer (for proper scale in "double fullscreen"). Able to choose rendering mode (OpenGL, OpenGL ES, Direct3D)
-if (Borderless)
-{
-	ULog::Log.LogStatusLocation("Set Video Mode...   Borderless fullscreen");
-	CurrentWindowMode = Mode::Borderless;
-    screen.window = std::unique_ptr<SDL_Window, WindowDeleter>(SDL_CreateWindow("UltraStar Deluxe loading...",
-    SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, W, H, SDL_WINDOW_OPENGL | SDL_WINDOW_FULLSCREEN_DESKTOP | SDL_WINDOW_RESIZABLE), WindowDeleter());
-}
-else if (Fullscreen)
-{
-	ULog::Log.LogStatusLocation("Set Video Mode...   Fullscreen");
-	CurrentWindowMode = Mode::Fullscreen;
-    screen.window = std::unique_ptr<SDL_Window, WindowDeleter>(SDL_CreateWindow("UltraStar Deluxe loading...",
-    SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, W, H, SDL_WINDOW_OPENGL | SDL_WINDOW_FULLSCREEN | SDL_WINDOW_RESIZABLE), WindowDeleter());
-}
-else
-{
-	ULog::Log.LogStatusLocation("Set Video Mode...   Windowed");
-	CurrentWindowMode = Mode::WINDOWED;
-	screen.window = std::unique_ptr<SDL_Window, WindowDeleter>(SDL_CreateWindow("UltraStar Deluxe loading...",
-    SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, W, H, SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE), WindowDeleter());
-}
-
-//SDL_ShowCursor(0);    just to be able to debug while having mosue cursor
-
-if (!screen.window)
-{
-	ULog::Log.LogCriticalLocation("Creating window failed");
-}
-else
-{
-	X = 0; Y = 0;
-
-// check if created window has the desired size, otherwise override the config resolution value
-if SDL_GetWindowDisplayMode(screen, @Disp) = 0 then
-{
-if (Disp.w < W) or (Disp.h < H) then
-{
-    ULog::Log.LogStatus(Format("Video resolution (%s) exceeded possible size (%s). Override stored config resolution!", [BuildResolutionString(W, H), BuildResolutionString(Disp.w, Disp.h)]), "SDL_SetVideoMode");
-    UIni::Ini.SetResolution(Disp.w, Disp.h, true);
-}
-else if Fullscreen and ((Disp.w > W) or (Disp.h > H)) then
-{
-ULog::Log.LogStatus(Format("Video resolution not used. Using native fullscreen resolution (%s)", [BuildResolutionString(Disp.w, Disp.h)]), "SDL_SetVideoMode");
-Ini.SetResolution(Disp.w, Disp.h, false, true);
-}
-
-X = Disp.w - Screen.w;
-Y = Disp.h - Screen.h;
-}
-
-// if screen is out of the visisble desktop area, move it back
-// this likely happens when creating a Window bigger than the possible desktop size
-if (SDL_GetWindowFlags(screen) and SDL_WINDOW_FULLSCREEN = 0) and ((screen.x < 0) or (screen.Y < 0)) then
+    if (!triggerNoDoubleResolution)
     {
-    // TODO: update SDL2
-    //SDL_GetWindowBordersSize(screen, w, h, nil, nil);
-    ULog::Log.LogStatus("Bad position for window. Re-position to (0,0)", "SDL_SetVideoMode");
-SDL_SetWindowPosition(screen, x, y + x);
-}
+        // hacky fix to support multiplied resolution (in width) in multiple screen setup (Screens=2 and more)
+        // TODO: RattleSN4K3: Improve the way multiplied screen resolution is applied and stored (see UGraphics::InitializeScreen; W := W * Screens)
+        if (screen.screens > 1 && !Split)
+            W *= screen.screens;
+    }
+	ULog::Log.LogStatusLocation("Creating window");
+
+	// TODO: use SDL renderer (for proper scale in "double fullscreen"). Able to choose rendering mode (OpenGL, OpenGL ES, Direct3D)
+	if (Borderless)
+	{
+		ULog::Log.LogStatusLocation("Set Video Mode...   Borderless fullscreen");
+		CurrentWindowMode = Mode::Borderless;
+		screen.window = std::unique_ptr<SDL_Window, WindowDeleter>(SDL_CreateWindow("UltraStar Deluxe loading...",
+		SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, W, H, SDL_WINDOW_OPENGL | SDL_WINDOW_FULLSCREEN_DESKTOP | SDL_WINDOW_RESIZABLE), WindowDeleter());
+	}
+	else if (Fullscreen)
+	{
+		ULog::Log.LogStatusLocation("Set Video Mode...   Fullscreen");
+		CurrentWindowMode = Mode::Fullscreen;
+	    screen.window = std::unique_ptr<SDL_Window, WindowDeleter>(SDL_CreateWindow("UltraStar Deluxe loading...",
+	    SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, W, H, SDL_WINDOW_OPENGL | SDL_WINDOW_FULLSCREEN | SDL_WINDOW_RESIZABLE), WindowDeleter());
+	}
+	else
+	{
+		ULog::Log.LogStatusLocation("Set Video Mode...   Windowed");
+		CurrentWindowMode = Mode::WINDOWED;
+		screen.window = std::unique_ptr<SDL_Window, WindowDeleter>(SDL_CreateWindow("UltraStar Deluxe loading...",
+	    SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, W, H, SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE), WindowDeleter());
+	}
+
+	//SDL_ShowCursor(0);    just to be able to debug while having mosue cursor
+
+	if (!screen.window)
+	{
+		ULog::Log.LogCriticalLocation("Creating window failed");
+	}
+	else
+	{
+	    int X = 0;
+		int Y = 0;
+
+		SDL_DisplayMode Disp;
+		// check if created window has the desired size, otherwise override the config resolution value
+		if (SDL_GetWindowDisplayMode(screen.window.get(), &Disp) == 0)
+		{
+			if (Disp.w < W || Disp.h < H)
+			{
+			    ULog::Log.LogStatus(Format("Video resolution (%s) exceeded possible size (%s). Override stored config resolution!", [BuildResolutionString(W, H), BuildResolutionString(Disp.w, Disp.h)]), "SDL_SetVideoMode");
+			    UIni::Ini.SetResolution(Disp.w, Disp.h, true);
+			}
+			else if (Fullscreen && (Disp.w > W || Disp.h > H))
+			{
+				ULog::Log.LogStatus(Format("Video resolution not used. Using native fullscreen resolution (%s)", [BuildResolutionString(Disp.w, Disp.h)]), "SDL_SetVideoMode");
+				UIni::Ini.SetResolution(Disp.w, Disp.h, false, true);
+			}
+
+			X = Disp.w - Screen.w;
+			Y = Disp.h - Screen.h;
+		}
+		// if screen is out of the visible desktop area, move it back
+		// this likely happens when creating a Window bigger than the possible desktop size
+		if (SDL_GetWindowFlags(screen) && SDL_WINDOW_FULLSCREEN == 0) and ((screen.x < 0) or (screen.Y < 0))
+		{
+			// TODO: update SDL2
+			//SDL_GetWindowBordersSize(screen, w, h, nil, nil);
+			ULog::Log.LogStatus("Bad position for window. Re-position to (0,0)", "SDL_SetVideoMode");
+			SDL_SetWindowPosition(screen, x, y + x);
+		}
+	}
+
+    screen.CreateContext();
+
+	//ActivateRenderingContext(
+	ReadExtensions;
+	ReadImplementationProperties;
+	ULog::Log.LogInfo("OpenGL vendor " + glGetString(GL_VENDOR), "UGraphic.InitializeScreen");
+	if (glGetError != GL_NO_ERROR)
+	{
+		ULog::Log.LogInfo("an OpenGL Error happened.", "UGraphic.InitializeScreen");
+	}
+	S = glGetString(GL_RENDERER);
+	ULog::Log.LogInfo("OpenGL renderer " + S, "UGraphic.InitializeScreen");
+	ULog::Log.LogInfo("OpenGL version " + glGetString(GL_VERSION), "UGraphic.InitializeScreen");
+
+	if (Pos("GDI Generic", S) > 0) or // Microsoft
+	(Pos("Software Renderer", S) > 0) or // Apple
+	(Pos("Software Rasterizer", S) > 0) or // Mesa (-Ddri-drivers=swrast)
+	(Pos("softpipe", S) > 0) or // Mesa (-Dgallium-drivers=swrast -Dllvm=false)
+	(Pos("llvmpipe", S) > 0) or // Mesa (-Dgallium-drivers=swrast -Dllvm=true)
+	(Pos("SWR", S) > 0) or // Mesa (-Dgallium-drivers=swr)
+	(Pos("Mesa X11", S) > 0) or // Mesa (-Dglx=xlib)
+	(Pos("SwiftShader", S) > 0) then // Google; OpenGL ES, D3D9 & Vulkan only so far, but who knows...
+	SoftwareRendering = true;
+	else
+	SoftwareRendering  = false;
+
+	// define virtual (Render) and double (Screen) screen size
+	RenderW = 800;
+	RenderH = 600;
+	ScreenW = Screen.w;
+	ScreenH = Screen.h;
+	// Ausganswerte für die State-Machine setzen
+	SDL_GL_SetSwapInterval(1); // VSYNC (currently Windows only)
+
+	{// clear screen once window is being shown
+	// Note: SwapBuffers uses RenderW/H, so they must be defined before
+	    glClearColor(1, 1, 1, 1);
+	    glClear(GL_COLOR_BUFFER_BIT);
+	    SwapBuffers; }
 }
 
-//LoadOpenGL();
-glcontext = SDL_GL_CreateContext(Screen);
-InitOpenGL();
-
-//   ActivateRenderingContext(
-ReadExtensions;
-ReadImplementationProperties;
-ULog::Log.LogInfo("OpenGL vendor " + glGetString(GL_VENDOR), "UGraphic.InitializeScreen");
-if not (glGetError = GL_NO_ERROR) then
+bool HasWindowState(int Flag)
 {
-ULog::Log.LogInfo("an OpenGL Error happened.", "UGraphic.InitializeScreen");
-}
-S = glGetString(GL_RENDERER);
-ULog::Log.LogInfo("OpenGL renderer " + S, "UGraphic.InitializeScreen");
-ULog::Log.LogInfo("OpenGL version " + glGetString(GL_VERSION), "UGraphic.InitializeScreen");
-
-if (Pos("GDI Generic", S) > 0) or // Microsoft
-(Pos("Software Renderer", S) > 0) or // Apple
-(Pos("Software Rasterizer", S) > 0) or // Mesa (-Ddri-drivers=swrast)
-(Pos("softpipe", S) > 0) or // Mesa (-Dgallium-drivers=swrast -Dllvm=false)
-(Pos("llvmpipe", S) > 0) or // Mesa (-Dgallium-drivers=swrast -Dllvm=true)
-(Pos("SWR", S) > 0) or // Mesa (-Dgallium-drivers=swr)
-(Pos("Mesa X11", S) > 0) or // Mesa (-Dglx=xlib)
-(Pos("SwiftShader", S) > 0) then // Google; OpenGL ES, D3D9 & Vulkan only so far, but who knows...
-SoftwareRendering  = true
-else
-SoftwareRendering  = false;
-
-// define virtual (Render) and double (Screen) screen size
-RenderW = 800;
-RenderH = 600;
-ScreenW = Screen.w;
-ScreenH = Screen.h;
-// Ausganswerte für die State-Machine setzen
-SDL_GL_SetSwapInterval(1); // VSYNC (currently Windows only)
-
-{// clear screen once window is being shown
-// Note: SwapBuffers uses RenderW/H, so they must be defined before
-    glClearColor(1, 1, 1, 1);
-    glClear(GL_COLOR_BUFFER_BIT);
-    SwapBuffers; }
-}
-
-function HasWindowState(Flag: int) : boolean;
-{
-Result  = SDL_GetWindowFlags(screen) and Flag < > 0;
+	return SDL_GetWindowFlags(screen.window.get()) && Flag != 0;
 }
 
 void UpdateResolution()

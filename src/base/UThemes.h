@@ -110,6 +110,12 @@ struct TThemePosition
     int W;
 };
 
+struct Reflection
+{
+    bool active;
+    double spacing;
+};
+
 struct TThemeStatic
 {
     std::string Color;
@@ -121,8 +127,7 @@ struct TThemeStatic
     UTexture::TTextureType Typ;
     UCommon::TTexCoords TexC;
     //Reflection    TODO::check if Text only!
-    bool Reflection;
-    double Reflectionspacing;
+    Reflection reflection;
 };
 typedef std::vector<TThemeStatic> AThemeStatic;
 
