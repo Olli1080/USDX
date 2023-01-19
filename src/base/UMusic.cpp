@@ -4,11 +4,9 @@
 
 namespace UMusic
 {
-    TAudioFormatInfo::TAudioFormatInfo(uint8_t Channels, double SampleRate, TAudioSampleFormat Format)
+    TAudioFormatInfo::TAudioFormatInfo(uint8_t Channels, unsigned int SampleRate, TAudioSampleFormat Format)
+	    : fSampleRate(SampleRate), fChannels(Channels), fFormat(Format)
     {
-        fChannels = Channels;
-        fSampleRate = SampleRate;
-        fFormat = Format;
         UpdateFrameSize();
     }
 
@@ -24,12 +22,12 @@ namespace UMusic
         UpdateFrameSize();
     }
 
-    double TAudioFormatInfo::GetBytesPerSec() const
+    unsigned int TAudioFormatInfo::GetBytesPerSec() const
     {
         return FrameSize() * SampleRate();
     }
 
-    int TAudioFormatInfo::GetSampleSize() const
+    unsigned int TAudioFormatInfo::GetSampleSize() const
     {
         return AudioSampleSize[static_cast<size_t>(fFormat)];
     }
@@ -575,12 +573,12 @@ namespace UMusic
         return FormatInfo;
     }
 
-    std::optional<double> TAudioVoiceStream::GetLength() const
+    std::optional<AudioDuration> TAudioVoiceStream::GetLength() const
     {
         return std::nullopt;
     }
 
-    std::optional<double> TAudioVoiceStream::GetPosition() const
+    std::optional<AudioDuration> TAudioVoiceStream::GetPosition() const
     {
         return std::nullopt;
     }

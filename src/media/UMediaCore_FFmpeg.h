@@ -112,11 +112,17 @@ namespace UMediaCore_FFmpeg
         return T(mem, AVMemDeleter());
     }
 
+    inline std::mutex codecMtx;
     struct AVCodecContextDeleter
     {
         void operator()(AVCodecContext* ctx)
         {
+            std::unique_lock lock(codecMtx);
+#if LIBAVFORMAT_VERSION_INT < AV_VERSION_INT(58, 0, 0)
+            avcodec_close(fCodecCtx);
+#else
             avcodec_free_context(&ctx);
+#endif
         }
     };
     typedef std::unique_ptr<AVCodecContext, AVCodecContextDeleter> AVCodecContextU;
@@ -135,6 +141,16 @@ namespace UMediaCore_FFmpeg
         if (!res)
             ULog::Log.LogErrorLocation("Failed to allocate context");
         return res;
+#endif
+    }
+
+    int open_avcodec(const AVCodecContextU& ctx, AVCodec* codec)
+    {
+        std::unique_lock lock(codecMtx);
+#if LIBAVCODEC_VERSION_INT >= AV_VERSION_INT(53, 5, 0)
+        return avcodec_open2(ctx.get(), codec, nullptr);
+#else
+        return avcodec_open(ctx.get(), codec);
 #endif
     }
 
@@ -176,15 +192,82 @@ namespace UMediaCore_FFmpeg
     {
     public:
 
+        typedef std::ratio<1, AV_TIME_BASE> AVTimeRatio;
+        typedef std::chrono::duration<long long, AVTimeRatio> AVDuration;
+
         Stream_Wrapper() = default;
         Stream_Wrapper(const std::filesystem::path& filename)
         {
-            AVFormatOpenInput(filename);
+            auto res = AVFormatOpenInput(filename);
+            if (res < 0)
+                throw std::exception(std::to_string(res).c_str());
+        }
+        ~Stream_Wrapper()
+        {
+            AVFormatCloseInput();
         }
 
         int AVFormatOpenInput(const std::filesystem::path& filename);
 
         void AVFormatCloseInput();
+
+        bool is_open() { return stream.is_open(); }
+        int& flags() { return formatCtx->flags; }
+
+        int findStreamInfo()
+        {
+#if LIBAVFORMAT_VERSION_INT >= AV_VERSION_INT(53, 2, 0)
+            return avformat_find_stream_info(formatCtx.get(), nullptr);
+#else
+            return av_find_stream_info(formatCtx.get());
+#endif
+        }
+
+        std::optional<int> findAudioStreamIndex()
+        {
+            // find the first audio stream
+            for (size_t i = 0; i < formatCtx->nb_streams; ++i)
+            {
+                auto& Stream = formatCtx->streams[i];
+
+#if LIBAVCODEC_VERSION_INT < AV_VERSION_INT(52, 64, 0) // < 52.64.0
+                if (Stream->codec->codec_type == CODEC_TYPE_AUDIO)
+#elif defined(FF_API_LAVF_AVCTX) && FF_API_LAVF_AVCTX
+                if (Stream->codec->codec_type == AVMEDIA_TYPE_AUDIO)
+#else
+                if (Stream->codecpar->codec_type == AVMEDIA_TYPE_AUDIO)
+#endif
+                {
+                    return i;
+                }
+            }
+            return std::nullopt;
+        }
+
+        [[nodiscard]] AVStream* get_stream(int idx) const
+        {
+            return formatCtx->streams[idx];
+        }
+
+        [[nodiscard]] AVDuration get_start_time() const
+        {
+            return AVDuration(formatCtx->start_time);
+        }
+
+        [[nodiscard]] AVDuration get_duration() const
+        {
+            return AVDuration(formatCtx->duration);
+        }
+
+        [[nodiscard]] AVDuration get_end_time() const
+        {
+            return get_start_time() + get_end_time();
+        }
+
+        static AVDuration invalid_time()
+        {
+            return AVDuration(AV_NOPTS_VALUE);
+        }
 
     private:
 
@@ -202,6 +285,10 @@ namespace UMediaCore_FFmpeg
         AVMemU<uint8_t> buffer;
     };
 
+    static std::optional<UMusic::TAudioSampleFormat> ConvertFFmpegToAudioFormat(AVSampleFormat FFmpegFormat);
+    static std::optional<AVSampleFormat> ConvertAudioFormatToFFmpeg(UMusic::TAudioSampleFormat Format);
+    static std::string GetErrorString(int ErrorNum);
+
     //type
     class TMediaCore_FFmpeg
     {
@@ -215,11 +302,8 @@ namespace UMediaCore_FFmpeg
         ~TMediaCore_FFmpeg();
         static TMediaCore_FFmpeg GetInstance();
 
-        std::string GetErrorString(int ErrorNum);
         bool FindStreamIDs(const AVFormatContext& FormatCtx, int& FirstVideoStream, int& FirstAudioStream);
         int FindAudioStreamIndex(const AVFormatContext& FormatCtx);
-        static std::optional<UMusic::TAudioSampleFormat> ConvertFFmpegToAudioFormat(AVSampleFormat FFmpegFormat);
-        static std::optional<AVSampleFormat> ConvertAudioFormatToFFmpeg(UMusic::TAudioSampleFormat Format);
         std::unique_lock<std::mutex>&& LockAVCodec();
         //int AVFormatOpenInput(AVFormatContextU& ps, const std::filesystem::path& filename);
         //void AVFormatCloseInput(ps: PPAVFormatContext);

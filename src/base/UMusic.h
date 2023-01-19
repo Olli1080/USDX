@@ -44,6 +44,7 @@
 namespace UMusic
 {
     typedef std::unique_ptr<void, std::function<void(void*)>> EngineDataPtr;
+    typedef std::chrono::nanoseconds AudioDuration;
 
     enum TNoteType
     {
@@ -224,20 +225,21 @@ namespace UMusic
     class TAudioFormatInfo
     {
     private:
-        double fSampleRate;
+
+        unsigned int fSampleRate;
         uint8_t fChannels;
         TAudioSampleFormat fFormat;
-        int fFrameSize;
+        unsigned int fFrameSize;
 
         void SetChannels(uint8_t Channels);
         void SetFormat(TAudioSampleFormat Format);
         void UpdateFrameSize();
-        [[nodiscard]] double GetBytesPerSec() const;
-        [[nodiscard]] int GetSampleSize() const;
+        [[nodiscard]] unsigned int GetBytesPerSec() const;
+        [[nodiscard]] unsigned int GetSampleSize() const;
 
     public:
 
-        TAudioFormatInfo(uint8_t Channels, double SampleRate, TAudioSampleFormat Format);
+        TAudioFormatInfo(uint8_t Channels, unsigned int SampleRate, TAudioSampleFormat Format);
         TAudioFormatInfo Copy(); //TODO::copy constructor
 
         /**
@@ -247,8 +249,8 @@ namespace UMusic
             */
         double GetRatio(TAudioFormatInfo TargetInfo);
 
-        [[nodiscard]] double SampleRate() const { return fSampleRate; }
-        void SampleRate(double rate) { fSampleRate = rate; }
+        [[nodiscard]] unsigned int SampleRate() const { return fSampleRate; }
+        void SampleRate(unsigned int rate) { fSampleRate = rate; }
 
         [[nodiscard]] uint8_t Channels() const { return fChannels; }
         void Channels(uint8_t channel) { SetChannels(channel); }
@@ -256,9 +258,9 @@ namespace UMusic
         [[nodiscard]] TAudioSampleFormat Format() const { return fFormat; }
         void Format(TAudioSampleFormat format) { SetFormat(format); }
 
-        [[nodiscard]] int FrameSize() const { return fFrameSize; }
-        [[nodiscard]] int SampleSize() const { return GetSampleSize(); }
-        [[nodiscard]] double BytesPerSec() const { return GetBytesPerSec(); }
+        [[nodiscard]] unsigned int FrameSize() const { return fFrameSize; }
+        [[nodiscard]] unsigned int SampleSize() const { return GetSampleSize(); }
+        [[nodiscard]] unsigned int BytesPerSec() const { return GetBytesPerSec(); }
     };
 
     class TSoundEffect
@@ -304,9 +306,9 @@ namespace UMusic
 
         //std::vector<TOnCloseHandler> OnCloseHandlers;
 
-        [[nodiscard]] virtual std::optional<double> GetLength() const = 0;
-        [[nodiscard]] virtual std::optional<double> GetPosition() const = 0;
-        virtual void SetPosition(double Time) = 0;
+        [[nodiscard]] virtual std::optional<AudioDuration> GetLength() const = 0;
+        [[nodiscard]] virtual std::optional<AudioDuration> GetPosition() const = 0;
+        virtual void SetPosition(AudioDuration Time) = 0;
         [[nodiscard]] virtual bool GetLoop() const = 0;
         virtual void SetLoop(bool Enabled) = 0;
 
@@ -320,13 +322,13 @@ namespace UMusic
         /**
          * Adds a new OnClose action handler.
          * The handlers are performed in the order they were added.
-         * If not stated explicitely, member-variables might have been invalidated
+         * If not stated explicitly, member-variables might have been invalidated
          * already. So do not use any member (variable/method/...) if you are not
          * sure it is valid.
          */
         //void AddOnCloseHandler(TOnCloseHandler Handler);
 
-        [[nodiscard]] std::optional<double> Length() const { return GetLength(); }
+        [[nodiscard]] std::optional<AudioDuration> Length() const { return GetLength(); }
 
         void Position(double pos) { SetPosition(pos); }
         [[nodiscard]] std::optional<double> Position() const { return GetPosition(); }
@@ -433,10 +435,10 @@ namespace UMusic
         virtual void WriteData(const std::vector<uint8_t>& Buffer) = 0;
         TAudioFormatInfo GetAudioFormatInfo() override;
 
-        std::optional<double> GetLength() const override;
-        std::optional<double> GetPosition() const override;
+        [[nodiscard]] std::optional<AudioDuration> GetLength() const override;
+        [[nodiscard]] std::optional<double> GetPosition() const override;
         void SetPosition(double Time) override;
-        bool GetLoop() const override;
+        [[nodiscard]] bool GetLoop() const override;
         void SetLoop(bool Enabled) override;
     };
 
@@ -565,8 +567,8 @@ namespace UMusic
         // nil-pointers is not neccessary anymore.
         // PlaySound/StopSound will be removed then, OpenSound will be renamed to
         // CreateSound.
-        virtual TAudioPlaybackStream OpenSound(const std::filesystem::path Filename) = 0;
-        virtual TAudioPlaybackStream OpenSoundBuffer(TStream Buffer, TAudioFormatInfo Format) = 0;
+        virtual TAudioPlaybackStream::SPtr OpenSound(const std::filesystem::path Filename) = 0;
+        virtual TAudioPlaybackStream::SPtr OpenSoundBuffer(TStream Buffer, TAudioFormatInfo Format) = 0;
         virtual void PlaySound(const TAudioPlaybackStream& Stream) = 0;
         virtual void StopSound(const TAudioPlaybackStream& Stream) = 0;
 
@@ -576,7 +578,7 @@ namespace UMusic
         // Interface for Visualizer
         virtual uint32_t GetPCMData(TPCMData& Data) = 0;
 
-        virtual TAudioVoiceStream CreateVoiceStream(int ChannelMap, TAudioFormatInfo FormatInfo) = 0;
+        virtual TAudioVoiceStream::SPtr CreateVoiceStream(int ChannelMap, TAudioFormatInfo FormatInfo) = 0;
 
         typedef std::shared_ptr<IAudioPlayback> SPtr;
     };
@@ -711,7 +713,7 @@ namespace UMusic
     // TODO: JB --- THESE SHOULD NOT BE GLOBAL
     typedef std::vector<TLines> TrackVec;
 	TrackVec Tracks;
-    TLyricsState<std::chrono::system_clock> LyricsState;
+	UBeatTimer::TLyricsState<std::chrono::system_clock> LyricsState;
     TSoundLibrary SoundLib;
 
 

@@ -845,7 +845,7 @@ begin
   if (CurrentSong.Finish > 0) then
     LyricsState.TotalTime := CurrentSong.Finish / 1000
   else
-  begin
+  {
     LyricsState.TotalTime := AudioPlayback.Length;
   }
 

@@ -206,7 +206,7 @@ namespace UMediaCore_FFmpeg
         return -1;
     }
 
-    std::optional<UMusic::TAudioSampleFormat> TMediaCore_FFmpeg::ConvertFFmpegToAudioFormat(AVSampleFormat FFmpegFormat)
+    std::optional<UMusic::TAudioSampleFormat> ConvertFFmpegToAudioFormat(AVSampleFormat FFmpegFormat)
     {
         switch (FFmpegFormat)
         {
@@ -225,7 +225,7 @@ namespace UMediaCore_FFmpeg
         }
     }
 
-    std::optional<AVSampleFormat> TMediaCore_FFmpeg::ConvertAudioFormatToFFmpeg(UMusic::TAudioSampleFormat Format)
+    std::optional<AVSampleFormat> ConvertAudioFormatToFFmpeg(UMusic::TAudioSampleFormat Format)
     {
         switch (Format)
         {

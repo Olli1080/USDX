@@ -34,6 +34,19 @@
 
 #include "UMediaCore_FFmpeg.h"
 
+#ifdef UseSWResample
+#include <libswresample/swresample.h>
+#if LIBAVCODEC_VERSION_INT >= AV_VERSION_INT(54, 41, 100)
+#define UseFrameDecoderAPI
+#define ConvertPlanar
+#include <libavutil/opt.h>
+#endif
+#else
+#if LIBAVCODEC_VERSION_INT >= AV_VERSION_INT(57, 0, 0)
+#define UseFrameDecoderAPI
+#endif
+#endif
+
 namespace UAudioDecoder_FFmpeg
 {
 /*******************************************************************************
@@ -82,17 +95,6 @@ uses
   UPath;
 */
 
-#ifdef UseSWResample
-  #if LIBAVCODEC_VERSION_INT >= AV_VERSION_INT(54, 41, 100}
-    #define UseFrameDecoderAPI
-    #define ConvertPlanar
-  #endif
-#else
-  #if LIBAVCODEC_VERSION_INT >= AV_VERSION_INT(57, 0, 0)
-    #define UseFrameDecoderAPI
-  #endif
-#endif
-
 constexpr int MAX_AUDIOQ_SIZE = (5 * 16 * 1024);
 
 const int
@@ -103,6 +105,20 @@ const int
 #else
   AUDIO_BUFFER_SIZE = (AVCODEC_MAX_AUDIO_FRAME_SIZE * 3) / 2;
 #endif
+
+struct SwrContextDeleter
+{
+	void operator()(SwrContext* ctx)
+	{
+        swr_free(&ctx);
+	}
+};
+typedef std::unique_ptr<SwrContext, SwrContextDeleter> SwrContextU;
+template<typename T, typename K>
+T makeSwrContext(K ctx)
+{
+    return T(ctx, SwrContextDeleter());
+}
 
 //type
 class TFFmpegDecodeStream : public UMusic::TAudioDecodeStream
@@ -139,17 +155,19 @@ private:
     int fBytesPerSample;
 #endif
 #ifdef ConvertPlanar
-    PSwrContext fSwrContext;
+    SwrContextU fSwrContext;
 #endif
 
     // FFmpeg specific data
-    UMediaCore_FFmpeg::AVFormatContextU fFormatCtx;
+    UMediaCore_FFmpeg::Stream_Wrapper fileStream;
+
+    //UMediaCore_FFmpeg::AVFormatContextU fFormatCtx;
     UMediaCore_FFmpeg::AVCodecContextU fCodecCtx;
     AVCodec* fCodec;
 
     int fAudioStreamIndex;
-    UMediaCore_FFmpeg::Stream_Wrapper fAudioStream;
-    double fAudioStreamPos; // stream position in seconds (locked by DecoderLock)
+    AVStream* fAudioStream;
+    UMusic::AudioDuration fAudioStreamPos = std::chrono::seconds::zero(); // stream position in seconds (locked by DecoderLock)
 
     // decoder pause/resume data
     bool fDecoderLocked;
@@ -178,7 +196,7 @@ private:
     void SetError(bool State);
     bool IsSeeking();
     bool IsQuit();
-    bool GetLoopInternal();
+    bool GetLoopInternal() const;
 
     void Reset();
 
@@ -202,11 +220,11 @@ public:
     bool Open(const std::filesystem::path& Filename) override;
     void Close() override;
 
-    double GetLength() override;
+    std::optional<UMusic::AudioDuration> GetLength() const override;
     UMusic::TAudioFormatInfo GetAudioFormatInfo() override;
-    double GetPosition() override;
+    std::optional<UMusic::AudioDuration> GetPosition() const override;
     void SetPosition(double Time) override;
-    bool GetLoop() override;
+    bool GetLoop() const override;
     void SetLoop(bool Enabled) override;
     bool IsEOF() override;
     bool IsError() override;
@@ -225,9 +243,9 @@ public:
     UMusic::TAudioDecodeStream::SPtr Open(const std::filesystem::path& Filename) override;
 };
 
-UMediaCore_FFmpeg::TMediaCore_FFmpeg FFmpegCore;
+//UMediaCore_FFmpeg::TMediaCore_FFmpeg FFmpegCore;
 
-function ParseThreadMain(Data: Pointer);
+void ParseThreadMain(Data);
 
 
 }
