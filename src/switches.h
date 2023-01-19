@@ -129,3 +129,7 @@ typedef std::chrono::duration<double, std::ratio<60, 1>> MinDouble;
 #endif
 
 #endif
+
+#define FF_API_AVPACKET_OLD_API false
+#define FF_API_LAVF_AVCTX false
+#define FF_API_INIT_PACKET false

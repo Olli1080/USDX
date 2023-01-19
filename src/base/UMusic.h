@@ -606,7 +606,7 @@ namespace UMusic
 
     struct IAudioDecoder : IGenericDecoder
     {
-        virtual TAudioDecodeStream Open(const std::filesystem::path& Filename) = 0;
+        virtual TAudioDecodeStream::SPtr Open(const std::filesystem::path& Filename) = 0;
 
         typedef std::shared_ptr<IAudioDecoder> SPtr;
     };
