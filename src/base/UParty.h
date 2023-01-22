@@ -705,7 +705,7 @@ void TPartyGame::RoundPlayed()
     return;
   
   // set rounds ranking by score if it was not set by plugin
-  if (not Rounds[CurRound].RankingSet)
+  if (!Rounds[CurRound].RankingSet)
     SetRankingByScore();
 
   Rounds[CurRound].AlreadyPlayed = true;
@@ -730,14 +730,14 @@ bool TPartyGame::CallLua(int Parent, std::string Func)
   Result = true;
 
   // check for core plugin and empty function name
-  if (Parent >= 0) and (Length(Func) > 0) then
+  if (Parent >= 0 && Length(Func) > 0)
   {
     // get plugin that registred the mode
     P = LuaCore.GetPluginById(Parent);
 
-    if (P <> nil) then
+    if (P <> nil)
     {
-      if (P.CallFunctionByName(Func, 0, 1)) then
+      if (P.CallFunctionByName(Func, 0, 1))
         // check result
         Result = (lua_toboolean(P.LuaState, 1));
     }
@@ -752,9 +752,9 @@ void TPartyGame::CallBeforeSongSelect()
   //var
     //ExecuteDefault: bool;
 {
-  if not bPartyStarted then
-    ExecuteDefault = true
-  else if (CurRound >= 0) then
+  if (!bPartyStarted)
+    ExecuteDefault = true;
+  else if (CurRound >= 0)
   {
     // we set screen song to party mode
     // plugin should not have to do this if it
@@ -768,7 +768,7 @@ void TPartyGame::CallBeforeSongSelect()
     ExecuteDefault = true;
 
   // execute default function:
-  if ExecuteDefault then
+  if (ExecuteDefault)
   {
     // display song select screen
     Display.FadeTo(@ScreenSong);
@@ -776,8 +776,8 @@ void TPartyGame::CallBeforeSongSelect()
 }
 
 void TPartyGame::CallAfterSongSelect()
-  var
-    ExecuteDefault: bool; 
+  //var
+    //ExecuteDefault: bool; 
 {
   if not bPartyStarted then
     ExecuteDefault = true
@@ -885,13 +885,14 @@ void TPartyGame::CallAfterSing()
 
 /* returns an array[1..6] of int. the index stands for the placing,
   value is the team number (in the team array) */
-AParty_TeamRanking TPartyGame::GetTeamRanking()
-  var
+AParty_TeamRanking TPartyGame::GetTeamRanking() //TODO:: check duplicate
+/*  var
     I, J: int;
     Temp: TParty_TeamRanking;
-    Rank: int;
+    Rank: int;*/
 {
-  SetLength(Result, Length(Teams));
+  AParty_TeamRanking res;
+  res.reserve(Teams.size());
 
   // fill ranking array
   for I = 0 to High(Result) do
@@ -930,55 +931,49 @@ AParty_TeamRanking TPartyGame::GetTeamRanking()
   if Round is -1 the result is name of winners of
   the whole party game*/
 std::string TPartyGame::GetWinnerString(int Round)
-var
+/*var
   Winners: array of UTF8String;
   I: int;
-  Ranking: AParty_TeamRanking;
-{
-  Result = "";
-  Ranking = nil;
-  
-  if (Round >= 0) and (Round <= High(Rounds)) then
+  Ranking: AParty_TeamRanking;*/
+{  
+  AParty_TeamRanking Ranking;
+  if (Round >= 0 && Round < Rounds.size())
   {
-    if (not Rounds[Round].AlreadyPlayed) then
-      Result = Language.Translate('PARTY_NOTPLAYEDYET')
+    if (!Rounds[Round].AlreadyPlayed)
+      return Language.Translate('PARTY_NOTPLAYEDYET');
     else
       Ranking = Rounds[Round].Ranking;
   }
-  else if (Round = -1) then
-    Ranking = GetTeamRanking;
+  else if (Round = -1)
+    Ranking = GetTeamRanking();
 
 
-  if (Ranking <> nil) then
+  if (!Ranking.empty())
   {
-    SetLength(Winners, 0);
-    for I = 0 to High(Ranking) do
+    std::vector<std::string> Winners;
+    for (size_t i = 0; i < Ranking.size(); ++i)
     {
-      if (Ranking[I].Rank = PR_First) and (Ranking[I].Team >= 0) and (Ranking[I].Team <= High(Teams)) then
-      {
-        SetLength(Winners, Length(Winners) + 1);
-        Winners[high(Winners)] = UTF8String(Teams[Ranking[I].Team].Name);
-      }
+      if (Ranking[i].Rank != PR_First || Ranking[i].Team < 0 || Ranking[i].Team >= Teams.size())
+        continue;
+
+      Winners.emplace_back(Teams[Ranking[i].Team].Name);
     }
 
-    if (Length(Winners) > 0) then
-      Result = Language.Implode(Winners);
+    if (!Winners.empty())
+      return Language.Implode(Winners);
   }
-
-  if (Length(Result) = 0) then
-    Result = Language.Translate('PARTY_NOBODY');
+  return Language.Translate('PARTY_NOBODY');
 }
 
 void TPartyGame::SaveSungPartySong(int ID)
 {
-  SetLength(SungPartySongs, Length(SungPartySongs) + 1);
-  SungPartySongs[High(SungPartySongs)] = ID;
+  SungPartySongs.emplace_back(ID);
 }
 
 bool TPartyGame::SongNotSungAndNotDuet(int ID, int N_DuetSongs)
-var
-  I: int;
-  Sung: bool;
+//var
+  //I: int;
+  //Sung: bool;
 {
   Sung = false;
 
