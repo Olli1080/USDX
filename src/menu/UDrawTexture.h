@@ -31,6 +31,6 @@
 namespace UDrawTexture
 {
     void DrawLine(const UTexture::TTextureCoords& coords, const UCommon::TRGB<double>& Col);
-    void DrawQuad(const UTexture::Position2D& position, const UTexture::Size& size, const UCommon::TRGB<double>& Col);
+    void DrawQuad(const Position2D<double>& position, const Size2D<double>& size, const UCommon::TRGB<double>& Col);
     void DrawTexture(const UTexture::TextureWrapper& texture);
 }

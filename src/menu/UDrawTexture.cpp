@@ -14,7 +14,7 @@ namespace UDrawTexture
         glEnd();
     }
 
-    void DrawQuad(const UTexture::Position2D& position, const UTexture::Size& size, const UCommon::TRGB<double>& Col)
+    void DrawQuad(const Position2D<double>& position, const Size2D<double>& size, const UCommon::TRGB<double>& Col)
     {
         glColor3f(Col.R, Col.G, Col.B);
         glBegin(GL_QUADS);

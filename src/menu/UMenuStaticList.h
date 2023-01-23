@@ -54,7 +54,7 @@ namespace UMenuStaticList
         void Draw();
 
         TStaticList(UTexture::TTexture::SPtr Texture);
-        TMouseOverRect GetMouseOverArea();
+        UMenuInteract::TMouseOverRect GetMouseOverArea();
     };
 
     /*
@@ -125,15 +125,15 @@ namespace UMenuStaticList
 		}
     }
 
-    constructor TStaticList::Create(Textura: TTexture)
+    TStaticList::TStaticList(UTexture::TextureWrapper::SPtr Texture)
     {
-        inherited Create;
+        //inherited Create;
 
-		Texture = Textura;
-		DeSelectTexture = Textura;
+		this->Texture = Texture;
+		DeSelectTexture = Texture;
     }
 
-    function TStaticList::GetMouseOverArea: TMouseOverRect;
+    UMenuInteract::TMouseOverRect TStaticList::GetMouseOverArea()
     {
         if (!Display.Cursor_HiddenByScreen) 
         {

@@ -1261,6 +1261,10 @@ void glColorRGB(UCommon::TRGBA Color, double Alpha);
 
 int ColorExists(std::string Name);
 void LoadColor(double& R, double& G, double& B, std::string ColorName);
+void LoadColor(UCommon::TRGB<double>& Col, std::string ColorName)
+{
+    LoadColor(Col.R, Col.G, Col.B, ColorName);
+}
 UCommon::TRGB<double> GetSystemColor(int Color);
 //UCommon::TRGB<double> ColorSqrt(UCommon::TRGB<double> RGB);
 
