@@ -25,8 +25,10 @@
  */
 #include "../switches.h"
 
+#include "../base/types.hpp"
 
 #include "UMenuBackground.hpp"
+#include "../base/UTexture.h"
 
 namespace UMenuBackgroundFade
 {
@@ -44,22 +46,22 @@ namespace UMenuBackgroundFade
     class TMenuBackgroundFade : public UMenuBackground::TMenuBackground
     {
     private:
-        Tex : TTexture;
-	    Color:      TRGB;
-	    Alpha:      real;
 
-		useTexture: boolean;
+	    UTexture::TextureWrapper::SPtr Tex;
+	    UCommon::TRGBA Color;
 
-		FadeTime:   cardinal;
+        bool useTexture;
+
+		std::chrono::system_clock::time_point FadeTimeStart;
 
     public:
 
-        constructor Create(const ThemedSettings : TThemeBackground); override;
-        procedure   OnShow; override;
-        procedure   Draw; override;
-        destructor  Destroy; override;
+        TMenuBackgroundFade(const UThemes::TThemeBackground ThemedSettings);
+        ~TMenuBackgroundFade() override = default;
+
+        void OnShow() override;
+        void Draw() override;
     };
 
-const
-  FADEINTIME = 1500; //Time the bg fades in
+	constexpr auto FADEINTIME = std::chrono::milliseconds(1500); //Time the bg fades in
 }

@@ -99,7 +99,7 @@ namespace UDrawTexture
         double leftScaled = yN[1] * (1.0 - texture.extentScale.left);
         double rightScaled = yN[1] * (1.0 - texture.extentScale.right);
 
-        const auto& z = texture.position.Z;
+        const auto& z = texture.Z;
 
         glBegin(GL_QUADS);
         glTexCoord2f(X1, Y1);

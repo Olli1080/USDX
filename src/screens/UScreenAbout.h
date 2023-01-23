@@ -34,6 +34,7 @@
 #include "../base/UIni.h"
 #include "../base/ULog.h"
 #include "../base/UThemes.h"
+#include "../menu/UMenu.h"
 
 namespace UScreenAbout
 {
@@ -48,7 +49,7 @@ namespace UScreenAbout
         SysUtils;
         */
         //type
-    class TScreenAbout : public TMenu
+    class TScreenAbout : public UMenu::TMenu
     {
     public:
 
