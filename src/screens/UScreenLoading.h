@@ -1,4 +1,5 @@
-{* UltraStar Deluxe - Karaoke Game
+#pragma once
+/* UltraStar Deluxe - Karaoke Game
  *
  * UltraStar Deluxe is the legal property of its developers, whose names
  * are too numerous to list here. Please refer to the COPYRIGHT
@@ -21,59 +22,53 @@
  *
  * $URL: svn://basisbit@svn.code.sf.net/p/ultrastardx/svn/trunk/src/screens/UScreenLoading.pas $
  * $Id: UScreenLoading.pas 1939 2009-11-09 00:27:55Z s_alexander $
- *}
+ */
 
-unit UScreenLoading;
+#include "../menu/UMenu.h"
 
-interface
-
-{$IFDEF FPC}
-  {$MODE Delphi}
-{$ENDIF}
-
-{$I switches.inc}
-
+namespace UScreenLoading
+{
+  /*
 uses
   UMenu,
   sdl2,
   SysUtils,
   UThemes,
   dglOpenGL;
+*/
+  class TScreenLoading : public UMenu::TMenu
+  {
+  public:
+      bool Fadeout;
+      int TextDescription;
 
-type
-  TScreenLoading = class(TMenu)
-    public
-      Fadeout: boolean;
-      TextDescription: integer;
-
-      constructor Create; override;
-      procedure OnShow; override;
-      function ParseInput(PressedKey: cardinal; CharCode: UCS4Char; PressedDown: boolean): boolean; override;
-  end;
-
+      TScreenLoading();
+      void OnShow() override;
+      bool ParseInput(uint32_t PressedKey, UCS4Char CharCode, bool PressedDown) override;
+  };
+/*
 implementation
 
 uses
   UGraphic,
   UTime;
+*/
+bool TScreenLoading::ParseInput(uint32_t PressedKey, UCS4Char CharCode, bool PressedDown)
+{
+  return true;
+}
 
-function TScreenLoading.ParseInput(PressedKey: cardinal; CharCode: UCS4Char; PressedDown: boolean): boolean;
-begin
-  Result := true;
-end;
-
-constructor TScreenLoading.Create;
-begin
+TScreenLoading::TScreenLoading()
+{
   inherited Create;
 
   LoadFromTheme(Theme.Loading);
 
-  Fadeout := false;
-end;
+  Fadeout = false;
+}
 
-procedure TScreenLoading.OnShow;
-begin
+void TScreenLoading::OnShow()
+{
   inherited;
-end;
-
-end.
+}
+}
