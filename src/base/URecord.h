@@ -66,7 +66,7 @@ namespace URecord
         UMusic::TAudioVoiceStream::SPtr fVoiceStream; // stream for voice passthrough
         std::mutex fAnalysisBufferLock;
         UMusic::TAudioFormatInfo fAudioFormat;
-        TFrequencyArray Frequencies;
+        
         TDelayArray Delays;
 
         std::string GetToneString(); // converts a tone to its string representation;
@@ -74,15 +74,21 @@ namespace URecord
         void BoostBuffer(std::vector<int16_t>& Buffer);
         void ProcessNewBuffer(std::vector<int16_t>& Buffer);
 
-        void SetFrequenciesAndDelays();
+        //must be called when AudioFormat changes
+        unsigned int prevSampleRate = -1;
+        void SetDelays();
         // we call it to analyze sound by checking AMDF
         bool AnalyzePitch(TPDAType PDA);
         // use this to check one frequency by AMDF
         TCorrelationArray AverageMagnitudeDifference();
         TCorrelationArray CircularAverageMagnitudeDifference();
 
+        static constexpr TFrequencyArray generateFrequencies();
+        static constexpr TFrequencyArray Frequencies = generateFrequencies();
+
     public:
 
+        //static inline bool first = true;
 
         TCaptureBuffer();
         ~TCaptureBuffer();
@@ -105,8 +111,6 @@ namespace URecord
 
         // use to analyze sound from buffers to get new pitch
         void AnalyzeBuffer();
-        void LockAnalysisBuffer();
-        void UnlockAnalysisBuffer();
 
         float MaxSampleVolume();
         //property ToneString: string READ GetToneString;
@@ -194,7 +198,7 @@ namespace URecord
         /**
          * Handle microphone input
          */
-        void HandleMicrophoneData(std::vector<uint8_t>& Buffer, TAudioInputDevice::SPtr InputDevice);
+        void HandleMicrophoneData(std::vector<uint8_t>& Buffer, const TAudioInputDevice& InputDevice);
     };
 
     class TAudioInputBase : public UMusic::IAudioInput

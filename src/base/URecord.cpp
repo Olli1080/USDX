@@ -1,5 +1,7 @@
 #include "URecord.h"
 
+#include <bitset>
+#include <boost/algorithm/string/trim.hpp>
 /*
 	uses
 	  ULog,
@@ -64,10 +66,7 @@ CaptureChannel = nil;
         FreeAndNil(LogBuffer);
         FreeAndNil(fVoiceStream);
         FreeAndNil(fAudioFormat);
-        SDL_UnlockMutex(fAnalysisBufferLock);
-        SDL_DestroyMutex(fAnalysisBufferLock);
         fAnalysisBufferLock = nil;
-        inherited;
     }
 
     void TCaptureBuffer::Clear()
@@ -100,17 +99,19 @@ CaptureChannel = nil;
         size_t BufferOffset = 0;
         size_t SampleCount = Buffer.size();
         // check if we have more new samples than we can store
-        if (SampleCount > AnalysisBuffer.size())
+        if (SampleCount >= MaxBufferSize)
         {
             // discard the oldest of the new samples
-            AnalysisBuffer = { Buffer.end() - AnalysisBuffer.size(), Buffer.end() };
+            AnalysisBuffer = { Buffer.end() - MaxBufferSize, Buffer.end() };
         }
         else
         {
             std::unique_lock lock(fAnalysisBufferLock);
 
             // move old samples to the beginning of the array (if necessary)
-            AnalysisBuffer.erase(AnalysisBuffer.begin(), AnalysisBuffer.begin() + SampleCount);
+            const int toRemove = SampleCount - (MaxBufferSize - AnalysisBuffer.size());
+            if (toRemove > 0)
+				AnalysisBuffer.erase(AnalysisBuffer.begin(), AnalysisBuffer.begin() + toRemove);
 
             // copy new samples to analysis buffer
             AnalysisBuffer.insert_range(AnalysisBuffer.end(), Buffer);
@@ -136,10 +137,10 @@ CaptureChannel = nil;
         std::unique_lock lock(fAnalysisBufferLock);
 
         // find maximum volume of first 1024 samples
-        float MaxVolume = 0;
+        double MaxVolume = 0;
         for (size_t SampleIndex = 0; SampleIndex < 1024; ++SampleIndex)
         {
-            float Volume = std::abs<float>(AnalysisBuffer[SampleIndex]) / static_cast<float>(-std::numeric_limits<int16_t>::min());
+            double Volume = std::abs<double>(AnalysisBuffer[SampleIndex]) / static_cast<double>(-std::numeric_limits<int16_t>::min());
             MaxVolume = std::max(Volume, MaxVolume);
         }
         const double Threshold = UIni::IThresholdVals[UIni::Ini.ThresholdIndex];
@@ -157,20 +158,21 @@ CaptureChannel = nil;
         }
     }
 
-    void TCaptureBuffer::SetFrequenciesAndDelays()
+    void TCaptureBuffer::SetDelays()
     {
+        const auto& sampleRate = fAudioFormat.SampleRate();
+        if (sampleRate == prevSampleRate)
+            return;
+
+        prevSampleRate = sampleRate;
         for (size_t ToneIndex = 0; ToneIndex < NumHalftones; ++ToneIndex)
-        {
-            // Freq(ToneIndex) = 440 Hz * 2^((ToneIndex-33)/12) --> Freq(ToneIndex=0) = 65.4064 Hz = C2
-            Frequencies[ToneIndex] = BaseToneFreq * std::pow(2, (ToneIndex - 33) / 12);
-            Delays[ToneIndex] = std::round(fAudioFormat.SampleRate() / Frequencies[ToneIndex]);
-        }
+            Delays[ToneIndex] = std::round<int>(sampleRate / Frequencies[ToneIndex]);
     }
 
     bool TCaptureBuffer::AnalyzePitch(TPDAType PDA)
     {
         // prepare to analyze
-        SetFrequenciesAndDelays();
+        SetDelays();
 
         // analyze halftones
         // Note: at the lowest tone (~65 Hz) and a buffer-size of 4096
@@ -200,24 +202,18 @@ CaptureChannel = nil;
     // where \tau = Delay, n = SampleIndex, N = AnalysisBufferSize, x = AnalysisBuffer
     // See: Equation (1) in http://www.utdallas.edu/~hxb076000/citing_papers/Muhammad%20Extended%20Average%20Magnitude%20Difference.pdf
     TCorrelationArray TCaptureBuffer::AverageMagnitudeDifference()
-        /*var
-            ToneIndex : int;
-    Correlation: TCorrelationArray;
-    SampleIndex: int; // index of sample to analyze*/
     {
+        TCorrelationArray Correlation = { 0 };
         // accumulate the magnitude differences for samples in AnalysisBuffer
         for (size_t ToneIndex = 0; ToneIndex < NumHalftones; ++ToneIndex)
         {
             Correlation[ToneIndex] = 0;
-            for (const auto& sample : AnalysisBuffer)
-                for SampleIndex = 0 to(AnalysisBufferSize - Delays[ToneIndex] - 1) do
-                {
-                    Correlation[ToneIndex] = Correlation[ToneIndex] + std::abs(AnalysisBuffer[SampleIndex] - AnalysisBuffer[SampleIndex + Delays[ToneIndex]]);
-                }
-            Correlation[ToneIndex] = Correlation[ToneIndex] / (AnalysisBufferSize - Delays[ToneIndex] - 1);
+            for (size_t SampleIndex = 0; SampleIndex < AnalysisBuffer.size() - Delays[ToneIndex]; ++SampleIndex)
+                Correlation[ToneIndex] += std::abs(AnalysisBuffer[SampleIndex] - AnalysisBuffer[SampleIndex + Delays[ToneIndex]]);
+            Correlation[ToneIndex] /= (AnalysisBuffer.size() - Delays[ToneIndex]);
         }
         // return average magnitude difference
-        Result = Correlation;
+        return Correlation;
     }
 
 
@@ -226,42 +222,43 @@ CaptureChannel = nil;
     // where \tau = Delay, n = SampleIndex, N = AnalysisBufferSize, x = AnalysisBuffer
     // See: Equation (4) in http://www.utdallas.edu/~hxb076000/citing_papers/Muhammad%20Extended%20Average%20Magnitude%20Difference.pdf
     TCorrelationArray TCaptureBuffer::CircularAverageMagnitudeDifference()
-        /*var
-            ToneIndex : int;
-    Correlation: TCorrelationArray;
-    SampleIndex: int; // index of sample to analyze*/
     {
+        TCorrelationArray Correlation = { 0 };
         // accumulate the magnitude differences for samples in AnalysisBuffer
-        for (ToneIndex = 0 to NumHalftones - 1)
+        for (size_t ToneIndex = 0; ToneIndex < NumHalftones; ++ToneIndex)
         {
             Correlation[ToneIndex] = 0;
-            for (SampleIndex = 0 to(AnalysisBufferSize - 1))
-            {
+            for (size_t SampleIndex = 0; SampleIndex < AnalysisBuffer.size(); ++SampleIndex)
                 // Suggestion for calculation efficiency improvement from deuteragenie:
                 // Replacing "i mod buffersize" by "i & (buffersize-1)" when i is positive and buffersize is a power of two should speed the modulo computation by 5x-10x
                 //Correlation[ToneIndex] += Abs(AnalysisBuffer[(SampleIndex+Delays[ToneIndex]) mod AnalysisBufferSize] - AnalysisBuffer[SampleIndex]);
-                Correlation[ToneIndex] = Correlation[ToneIndex] + Abs(AnalysisBuffer[(SampleIndex + Delays[ToneIndex]) and (AnalysisBufferSize - 1)] - AnalysisBuffer[SampleIndex]);
-            }
-            Correlation[ToneIndex] = Correlation[ToneIndex] / AnalysisBufferSize;
+                Correlation[ToneIndex] += std::abs(AnalysisBuffer[(SampleIndex + Delays[ToneIndex]) & (AnalysisBuffer.size() - 1)] - AnalysisBuffer[SampleIndex]);
+            Correlation[ToneIndex] /= AnalysisBuffer.size();
         }
-
         // return circular average magnitude difference
-        Result = Correlation;
+        return Correlation;
+    }
+
+    TFrequencyArray TCaptureBuffer::generateFrequencies()
+    {
+        TFrequencyArray frequencies;
+        for (size_t ToneIndex = 0; ToneIndex < NumHalftones; ++ToneIndex)
+        {
+            // Freq(ToneIndex) = 440 Hz * 2^((ToneIndex-33)/12) --> Freq(ToneIndex=0) = 65.4064 Hz = C2
+            frequencies[ToneIndex] = BaseToneFreq * std::pow(2, static_cast<float>(ToneIndex - 33) / 12);
+        }
+        return frequencies;
     }
 
     float TCaptureBuffer::MaxSampleVolume()
-        /*var
-            lSampleIndex : int;
-    lMaxVol:      longint;*/
     {
         std::unique_lock lock(fAnalysisBufferLock);
-        lMaxVol = 0;
-        for (lSampleIndex = 0 to High(AnalysisBuffer))
+        uint16_t lMaxVol = 0;
+        for (const auto& sample : AnalysisBuffer)
         {
-            if (Abs(AnalysisBuffer[lSampleIndex]) > lMaxVol)
-                lMaxVol = Abs(AnalysisBuffer[lSampleIndex]);
+            lMaxVol = std::max<uint16_t>(lMaxVol, std::abs(sample));
         }
-        result = lMaxVol / -Low(Smallint);
+        return static_cast<float>(lMaxVol) / -std::numeric_limits<uint16_t>::min();
     }
 
     const auto ToneStrings = std::to_array({
@@ -272,8 +269,7 @@ CaptureChannel = nil;
     {
         if (ToneValid)
             return ToneStrings[Tone] + std::to_string(ToneAbs / 12 + 2);
-        else
-            return "-";
+        return "-";
     }
 
     void TCaptureBuffer::BoostBuffer(std::vector<int16_t>& Buffer)
@@ -327,7 +323,7 @@ CaptureChannel = nil;
         // copy the new input-device audio-format ...
         fAudioFormat = Format.Copy();
         // and adjust it because capture buffers are always mono
-        fAudioFormat.Channels = 1;
+        fAudioFormat.Channels(1);
 
         if (UIni::Ini.VoicePassthrough == 1)
         {
@@ -348,9 +344,10 @@ CaptureChannel = nil;
             i : int;*/
     {
         //inherited;
-        SetLength(Sound, UIni::IMaxPlayerCount);
-        for i = 0 to High(Sound) do
-            Sound[i] = TCaptureBuffer::Create;
+
+        Sound.resize(UIni::IMaxPlayerCount);
+        for (auto& s : Sound)
+            s = TCaptureBuffer();
     }
     /*
     destructor TAudioInputProcessor::Destroy;
@@ -377,166 +374,136 @@ CaptureChannel = nil;
     i:              int;*/
     {
         // Input devices - append detected soundcards
-        for deviceIndex = 0 to High(DeviceList) do
+        for (size_t deviceIndex = 0; deviceIndex < DeviceList.size(); ++deviceIndex)
         {
-            newDevice = true;
+            bool newDevice = true;
             //Search for Card in List
-            for deviceIniIndex = 0 to High(Ini.InputDeviceConfig) do
+            for (size_t deviceIniIndex = 0; deviceIniIndex < UIni::Ini.InputDeviceConfig.size(); ++deviceIniIndex)
             {
-                deviceCfg = @Ini.InputDeviceConfig[deviceIniIndex];
-                device = DeviceList[deviceIndex];
+                auto& deviceCfg = UIni::Ini.InputDeviceConfig[deviceIniIndex];
+                auto& device = DeviceList[deviceIndex];
 
-                if (deviceCfg.Name = Trim(device.Name)) then
-                {
-                newDevice = false;
+                if (deviceCfg.Name != boost::algorithm::trim_copy(device.Name))
+                    continue;
+                
+				newDevice = false;
 
-                // store highest channel index as an offset for the new channels
-            channelIndex = High(deviceCfg.ChannelToPlayerMap);
-            // add missing channels or remove non-existing ones
-            SetLength(deviceCfg.ChannelToPlayerMap, device.AudioFormat.Channels);
-            // assign added channels to no player
-            for i = channelIndex + 1 to High(deviceCfg.ChannelToPlayerMap) do
-                {
-                deviceCfg.ChannelToPlayerMap[i] = CHANNEL_OFF;
-            }
-
-            // associate ini-index with device
-            device.CfgIndex = deviceIniIndex;
-            break;
-                }
+				// store highest channel index as an offset for the new channels
+				size_t channelIndex = deviceCfg.ChannelToPlayerMap.size() - 1;
+				// add missing channels or remove non-existing ones
+				deviceCfg.ChannelToPlayerMap.resize(device.AudioFormat.Channels());
+				// assign added channels to no player
+				for (size_t i = channelIndex + 1; i < deviceCfg.ChannelToPlayerMap.size(); ++i)
+				{
+					deviceCfg.ChannelToPlayerMap[i] = UIni::CHANNEL_OFF;
+				}
+				// associate ini-index with device
+				device.CfgIndex = deviceIniIndex;
+				break;
             }
 
             //If not in List -> Add
-            if newDevice then
+            if (!newDevice)
+                continue;
+
+            // resize list
+            //UIni::Ini.InputDeviceConfig.resize() Length(Ini.InputDeviceConfig) + 1);
+            UIni::Ini.InputDeviceConfig.emplace_back();
+            auto& deviceCfg = UIni::Ini.InputDeviceConfig.back();
+			auto& device = DeviceList[deviceIndex];
+
+			// associate ini-index with device
+			device.CfgIndex = UIni::Ini.InputDeviceConfig.size() - 1;
+
+			deviceCfg.Name = boost::algorithm::trim_copy(device.Name);
+			deviceCfg.Input = 0;
+			deviceCfg.Latency = UIni::LATENCY_AUTODETECT;
+
+			int channelCount = device.AudioFormat.Channels();
+			deviceCfg.ChannelToPlayerMap.resize(channelCount);
+
+            for (size_t channelIndex = 0; channelIndex < channelCount; ++channelIndex)
             {
-                // resize list
-                SetLength(Ini.InputDeviceConfig, Length(Ini.InputDeviceConfig) + 1);
-        deviceCfg = @Ini.InputDeviceConfig[High(Ini.InputDeviceConfig)];
-        device = DeviceList[deviceIndex];
-
-        // associate ini-index with device
-        device.CfgIndex = High(Ini.InputDeviceConfig);
-
-        deviceCfg.Name = Trim(device.Name);
-        deviceCfg.Input = 0;
-        deviceCfg.Latency = LATENCY_AUTODETECT;
-
-    channelCount = device.AudioFormat.Channels;
-        SetLength(deviceCfg.ChannelToPlayerMap, channelCount);
-
-        for channelIndex = 0 to channelCount - 1 do
-            {
-            // Do not set any default on first start of USDX.
-            // Otherwise most probably the wrong device (internal sound card)
-            // will be selected.
-            // It is better to force the user to configure the mics himself.
-            deviceCfg.ChannelToPlayerMap[channelIndex] = CHANNEL_OFF;
-        }
+                // Do not set any default on first start of USDX.
+                // Otherwise most probably the wrong device (internal sound card)
+                // will be selected.
+                // It is better to force the user to configure the mics himself.
+                deviceCfg.ChannelToPlayerMap[channelIndex] = UIni::CHANNEL_OFF;
             }
         }
     }
 
-    function TAudioInputProcessor::ValidateSettings: int;
-    var
-        I, J: int;
-PlayerID: int;
-PlayerMap: array[0 ..UIni.IMaxPlayerCount - 1] of bool;
-InputDevice: TAudioInputDevice;
-InputDeviceCfg: PInputDeviceConfig;
-{
-    // mark all players as unassigned
-    for I = 0 to High(PlayerMap) do
-        PlayerMap[I] = false;
-
-    // iterate over all active devices
-    for I = 0 to High(DeviceList) do
+    int TAudioInputProcessor::ValidateSettings()
     {
-        InputDevice = DeviceList[I];
-        InputDeviceCfg = @Ini.InputDeviceConfig[InputDevice.CfgIndex];
-        // iterate over all channels of the current devices
-        for J = 0 to High(InputDeviceCfg.ChannelToPlayerMap) do
+        // mark all players as unassigned
+        std::bitset<UIni::IMaxPlayerCount> PlayerMap = { 0 };
+
+        // iterate over all active devices
+        for (const auto& InputDevice : DeviceList)
         {
-            // get player that was mapped to the current device channel
-            PlayerID = InputDeviceCfg.ChannelToPlayerMap[J];
-            if (PlayerID <> CHANNEL_OFF) then
+            const auto& InputDeviceCfg = UIni::Ini.InputDeviceConfig[InputDevice.CfgIndex];
+            // iterate over all channels of the current devices
+            for (const auto& PlayerID : InputDeviceCfg.ChannelToPlayerMap)
             {
-                // check if player is already assigned to another device/channel
-                if (PlayerMap[PlayerID - 1]) then
-                    {
-                    Result = PlayerID;
-            Exit;
-            }
+                // get player that was mapped to the current device channel
+                if (PlayerID == UIni::CHANNEL_OFF)
+                    continue;
 
-                    // mark player as assigned to a device
-                    PlayerMap[PlayerID - 1] = true;
+                // check if player is already assigned to another device/channel
+                if (PlayerMap.test(PlayerID - 1))
+                    return PlayerID;
+
+                // mark player as assigned to a device
+                PlayerMap.set(PlayerID - 1);
             }
         }
+        return 0;
     }
-    Result = 0;
-}
 
-function TAudioInputProcessor::CheckPlayersConfig(PlayerCount: cardinal;
-var PlayerState : TBooleanDynArray) : int;
-var
-DeviceIndex : int;
-ChannelIndex: int;
-Device:       TAudioInputDevice;
-DeviceCfg:    PInputDeviceConfig;
-PlayerIndex:  int;
-I: int;
+int TAudioInputProcessor::CheckPlayersConfig(uint32_t PlayerCount, TBooleanDynArray& PlayerState)
 {
-    SetLength(PlayerState, PlayerCount);
     // set all entries to "not configured"
-    for I = 0 to High(PlayerState) do
-    {
-        PlayerState[I] = false;
-    }
+    PlayerState = { PlayerCount, false };
 
     // check each used device
-    for DeviceIndex = 0 to High(AudioInputProcessor.DeviceList) do
+    for (const auto& Device : AudioInputProcessor->DeviceList)
     {
-        Device = AudioInputProcessor.DeviceList[DeviceIndex];
-        if not assigned(Device) then
+        if (!Device)
             continue;
-        DeviceCfg = @Ini.InputDeviceConfig[Device.CfgIndex];
+        const auto& DeviceCfg = UIni::Ini.InputDeviceConfig[Device.CfgIndex];
 
         // check if device is used
-        for ChannelIndex = 0 to High(DeviceCfg.ChannelToPlayerMap) do
+        for (const auto& Player : DeviceCfg.ChannelToPlayerMap)
         {
-            PlayerIndex = DeviceCfg.ChannelToPlayerMap[ChannelIndex] - 1;
-            if (PlayerIndex >= 0) and (PlayerIndex < PlayerCount) then
+            size_t PlayerIndex = Player - 1;
+            if (PlayerIndex >= 0 && PlayerIndex < PlayerCount)
                 PlayerState[PlayerIndex] = true;
         }
     }
-
-    Result = 0;
-    for I = 0 to High(PlayerState) do
+    for (size_t I = 0; I < PlayerState.size(); ++I)
     {
-        if (PlayerState[I] = false) then
-        {
-        Result = I + 1;
-Break;
-        }
+        if (!PlayerState[I])
+			return I + 1;
     }
+    return 0;
 }
 
 int TAudioInputProcessor::CheckPlayersConfig(uint32_t PlayerCount)
-/*var
-PlayerState : TBooleanDynArray;*/
 {
-    return CheckPlayersConfig(PlayerCount, PlayerState);
+    TBooleanDynArray dummy;
+    return CheckPlayersConfig(PlayerCount, dummy);
 }
 
 /*
     *Handles captured microphone input data.
     * Params:
-*Buffer - buffer of signed 16bit interleaved stereo PCM - samples.
+	* Buffer - buffer of signed 16bit interleaved stereo PCM - samples.
     * Interleaved means that a right - channel sample follows a left -
-    *channel sample and vice versa(0:left[0], 1 : right[0], 2 : left[1], ...).
+    * channel sample and vice versa(0:left[0], 1 : right[0], 2 : left[1], ...).
     * Length - number of bytes in Buffer
     * Input - Soundcard - Input used for capture
     */
-void TAudioInputProcessor::HandleMicrophoneData(std::vector<int16_t>& Buffer, TAudioInputDevice::SPtr InputDevice)
+void TAudioInputProcessor::HandleMicrophoneData(std::vector<int16_t>& Buffer, const TAudioInputDevice& InputDevice)
 /*var
 MultiChannelBuffer : PByteArray;  // buffer handled as array of bytes (offset relative to channel)
 SingleChannelBuffer:     PByteArray;  // temporary buffer for new samples per channel
@@ -548,9 +515,9 @@ SampleSize:              int;
 SamplesPerChannel:       int;
 i:                       int;*/
 {
-    AudioFormat = InputDevice.AudioFormat;
-    SampleSize = UMusic::AudioSampleSize[AudioFormat.Format];
-    SamplesPerChannel = Size div AudioFormat.FrameSize;
+    const auto& AudioFormat = InputDevice.AudioFormat;
+    int SampleSize = UMusic::AudioSampleSize[static_cast<size_t>(AudioFormat.Format())];
+    SamplesPerChannel = Buffer.size() / AudioFormat.FrameSize(); //TODO:: not the right way
 
     SingleChannelBufferSize = SamplesPerChannel * SampleSize;
     GetMem(SingleChannelBuffer, SingleChannelBufferSize);
@@ -606,26 +573,26 @@ Player:       int;*/
         CaptureStop();
 
     // reset buffers
-    for (S = 0 to High(AudioInputProcessor.Sound))
-        AudioInputProcessor.Sound[S].Clear;
+    for (auto& processor : AudioInputProcessor->Sound)
+        processor.Clear;
 
     // start capturing on each used device
-    for (DeviceIndex = 0 to High(AudioInputProcessor.DeviceList))
+    for (const auto& Device : AudioInputProcessor.DeviceList)
     {
-        Device = AudioInputProcessor.DeviceList[DeviceIndex];
-        if not assigned(Device) then
+        if (!Device)
             continue;
-        DeviceCfg = @Ini.InputDeviceConfig[Device.CfgIndex];
 
-        DeviceUsed = false;
+        const auto& DeviceCfg = UIni::Ini.InputDeviceConfig[Device.CfgIndex];
+
+        bool DeviceUsed = false;
 
         // check if device is used
-        for (ChannelIndex = 0 to High(DeviceCfg.ChannelToPlayerMap))
+        for (size_t ChannelIndex = 0; ChannelIndex < DeviceCfg.ChannelToPlayerMap.size(); ++ChannelIndex)
         {
-            Player = DeviceCfg.ChannelToPlayerMap[ChannelIndex] - 1;
-            if (Player < 0) or (Player >= PlayersPlay) then
+            int Player = DeviceCfg.ChannelToPlayerMap[ChannelIndex] - 1;
+            if (Player < 0 || Player >= PlayersPlay)
             {
-                Device.LinkCaptureBuffer(ChannelIndex, nil);
+                Device.LinkCaptureBuffer(ChannelIndex, nullptr);
             }
             else
             {
@@ -643,13 +610,12 @@ Player:       int;*/
 			//Log.LogBenchmark("Device.Start", 2) ;
         }
     }
-
     Started = true;
 }
 
 /*
-    *Stop input - capturing on all soundcards.
-    */
+* Stop input - capturing on all soundcards.
+*/
 void TAudioInputBase::CaptureStop()
 /*var
 DeviceIndex : int;
@@ -657,18 +623,17 @@ ChannelIndex: int;
 Device:       TAudioInputDevice;
 DeviceCfg:    PInputDeviceConfig;*/
 {
-    for (DeviceIndex = 0 to High(AudioInputProcessor.DeviceList))
+    for (const auto& Device : AudioInputProcessor.DeviceList)
     {
-        auto Device = AudioInputProcessor.DeviceList[DeviceIndex];
         if (!Device)
             continue;
 
         Device.Stop();
 
         // disconnect capture buffers
-        DeviceCfg = @Ini.InputDeviceConfig[Device.CfgIndex];
-        for (ChannelIndex = 0 to High(DeviceCfg.ChannelToPlayerMap))
-            Device.LinkCaptureBuffer(ChannelIndex, nil);
+        const auto& DeviceCfg = UIni::Ini.InputDeviceConfig[Device.CfgIndex];
+        for (const auto& ChannelIndex : DeviceCfg.ChannelToPlayerMap)
+            Device.LinkCaptureBuffer(ChannelIndex, nullptr);
     }
     Started = false;
 }
