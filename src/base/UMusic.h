@@ -436,10 +436,12 @@ namespace UMusic
         TAudioFormatInfo GetAudioFormatInfo() override;
 
         [[nodiscard]] std::optional<AudioDuration> GetLength() const override;
-        [[nodiscard]] std::optional<double> GetPosition() const override;
-        void SetPosition(double Time) override;
+        [[nodiscard]] std::optional<AudioDuration> GetPosition() const override;
+        void SetPosition(AudioDuration Time) override;
         [[nodiscard]] bool GetLoop() const override;
         void SetLoop(bool Enabled) override;
+
+        typedef std::shared_ptr<TAudioVoiceStream> SPtr;
     };
 
     // soundcard output-devices information

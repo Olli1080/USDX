@@ -559,6 +559,7 @@ namespace UMusic
 
     TAudioVoiceStream::~TAudioVoiceStream()
     {
+        //TODO:: fix virtual method in destructor
         Close();
         inherited;
     }
@@ -583,7 +584,7 @@ namespace UMusic
         return std::nullopt;
     }
 
-    void TAudioVoiceStream::SetPosition(double Time)
+    void TAudioVoiceStream::SetPosition(AudioDuration Time)
     {
     }
 
