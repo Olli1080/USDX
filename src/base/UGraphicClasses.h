@@ -128,7 +128,7 @@ namespace UGraphicClasses
         );
         void SpawnRec();
         std::list<TParticle>::iterator Kill(std::list<TParticle>::iterator index);
-        void KillAll();
+        //void KillAll();
         void SentenceChange(int CP);
         void SaveGoldenStarsRec(double Xtop, double Ytop, double Xbottom, double Ybottom);
         void SavePerfectNotePos(double Xtop, double Ytop);
