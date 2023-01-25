@@ -104,62 +104,63 @@ namespace UScreenPartyTournamentOptions
         //var
           //  I, J : int;
     {
-        Result = true;
-        if (PressedDown)
-        { // Key Down
-          // check normal keys
-            switch (UCS4UpperCase(CharCode))
-            {
-            case Ord("Q"):
-            {
-                return false;
-            }
-            }
-
-            // check special keys
-            switch (PressedKey)
-            {
-            case SDLK_ESCAPE: [[fallthrough]]
-            case SDLK_BACKSPACE:
-            {
-                AudioPlayback.PlaySound(SoundLib.Back);
-                FadeTo(@ScreenPartyTournamentPlayer);
-                break;
-            }
-            case SDLK_TAB:
-            {
-                ScreenPopupHelp.ShowPopup();
-                break;
-            }
-            case SDLK_RETURN:
-            {
-                UpdateTournament;
-                FadeTo(@ScreenPartyTournamentRounds, SoundLib.Start);
-                break;
-            }
-
-            // Up and Down could be done at the same time,
-            // but I don"t want to declare variables inside
-            // functions like this one, called so many times
-            case SDLK_DOWN:
-                InteractNext();
-                break;
-            case SDLK_UP:
-                InteractPrev();
-                break;
-            case SDLK_RIGHT:
-            {
-                AudioPlayback.PlaySound(SoundLib.Option);
-                InteractInc();
-                break;
-            }
-            case SDLK_LEFT:
-            {
-                AudioPlayback.PlaySound(SoundLib.Option);
-                InteractDec();
-            }
-            }
+        if (!PressedDown)
+            return true;
+        // Key Down
+            // check normal keys
+        switch (UCS4UpperCase(CharCode))
+        {
+        case Ord("Q"):
+        {
+            return false;
         }
+        }
+
+        // check special keys
+        switch (PressedKey)
+        {
+        case SDLK_ESCAPE: [[fallthrough]]
+        case SDLK_BACKSPACE:
+        {
+            AudioPlayback.PlaySound(SoundLib.Back);
+            FadeTo(@ScreenPartyTournamentPlayer);
+            break;
+        }
+        case SDLK_TAB:
+        {
+            ScreenPopupHelp.ShowPopup();
+            break;
+        }
+        case SDLK_RETURN:
+        {
+            UpdateTournament;
+            FadeTo(@ScreenPartyTournamentRounds, SoundLib.Start);
+            break;
+        }
+
+        // Up and Down could be done at the same time,
+        // but I don"t want to declare variables inside
+        // functions like this one, called so many times
+        case SDLK_DOWN:
+            InteractNext();
+            break;
+        case SDLK_UP:
+            InteractPrev();
+            break;
+        case SDLK_RIGHT:
+        {
+            AudioPlayback.PlaySound(SoundLib.Option);
+            InteractInc();
+            break;
+        }
+        case SDLK_LEFT:
+        {
+            AudioPlayback.PlaySound(SoundLib.Option);
+            InteractDec();
+            break;
+        }
+        }
+        return true;
     }
 
     TScreenPartyTournamentOptions::TScreenPartyTournamentOptions()
