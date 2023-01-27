@@ -1,4 +1,5 @@
-{* UltraStar Deluxe - Karaoke Game
+#pragma once
+/* UltraStar Deluxe - Karaoke Game
  *
  * UltraStar Deluxe is the legal property of its developers, whose names
  * are too numerous to list here. Please refer to the COPYRIGHT
@@ -21,31 +22,29 @@
  *
  * $URL$
  * $Id$
- *}
+ */
+#include <string>
+#include <array>
+#include <filesystem>
 
-unit UMenuBackgroundVideo;
+#include "UMenuBackground.hpp"
 
-interface
-
-{$IFDEF FPC}
-  {$MODE Delphi}
-{$ENDIF}
-
-{$I switches.inc}
-
+namespace UMenuBackgroundVideo
+{
+/*
 uses
   UThemes,
   UMenuBackground,
   UMusic,
   UVideo,
   UPath;
-
+*/
 //TMenuBackgroundColor - Background Color
 //--------
 
-type
+//type
   //DefaultBGVideoPlayback = TVideoPlayback_FFmpeg;
-
+/*
 {type
   TBGVideoPool = class;
 
@@ -54,7 +53,7 @@ type
     Parent: TBGVideoPool;
     VideoPlayback = IVideoPlayback;
     ReferenceCounter: cardinal; //Number of Creations
-  end;
+  }
 
   TBGVideo = class
     private
@@ -63,10 +62,10 @@ type
       constructor Create(Item: PBGVideoPoolItem); override;
 
       function    GetVideoPlayback: IVideoPlayback;
-      procedure   Draw;
+      void   Draw;
 
       destructor  Destroy;
-  end;
+  }
 
   TBGVideoPool = class
     private
@@ -75,30 +74,35 @@ type
       constructor Create;
 
       function    GetBGVideo(filename: IPath): TBGVideo;
-      procedure   RemoveItem(
-      procedure   FreeAllItems;
+      void   RemoveItem(
+      void   FreeAllItems;
 
       destructor  Destroy;
-  end;
+  }
 
-type }
-  TMenuBackgroundVideo = class (TMenuBackground)
-    private
-      fFilename: IPath;
-      fBgVideo: IVideo;
-    public
-      constructor Create(const ThemedSettings: TThemeBackground); override;
-      procedure   OnShow; override;
-      procedure   Draw; override;
-      procedure   OnFinish; override;
-      destructor  Destroy; override;
-  end;
+type }*/
+  class TMenuBackgroundVideo : public UMenuBackground::TMenuBackground
+  {
+    private:
 
-{var
-  BGVideoPool: TBGVideoPool;  }
-const
-  SUPPORTED_EXTS_BACKGROUNDVIDEO: array[0..6] of string = ('.avi', '.mov', '.divx', '.mpg', '.mp4', '.mpeg', '.m2v');
+      std::filesystem::path fFilename;
+      IVideo fBgVideo;
 
+    public:
+
+      TMenuBackgroundVideo(const TThemeBackground ThemedSettings);
+      ~TMenuBackgroundVideo() override = default;
+
+      void   OnShow() override;
+      void   Draw() override;
+      void   OnFinish() override;
+  };
+
+// var BGVideoPool: TBGVideoPool;
+const std::array<std::string, 7>
+  SUPPORTED_EXTS_BACKGROUNDVIDEO = {".avi", ".mov", ".divx", ".mpg", ".mp4", ".mpeg", ".m2v"};
+
+/*
 implementation
 
 uses
@@ -108,103 +112,98 @@ uses
   USkins,
   UCommon,
   UGraphic;
-
-constructor TMenuBackgroundVideo.Create(const ThemedSettings: TThemeBackground);
-begin
+*/
+TMenuBackgroundVideo::TMenuBackgroundVideo(const TThemeBackground ThemedSettings)
+{
   inherited;
-  if (Length(ThemedSettings.Tex) = 0) then
-    raise EMenuBackgroundError.Create('TMenuBackgroundVideo: No video filename present');
+  if (ThemedSettings.Tex.empty())
+    throw EMenuBackgroundError("TMenuBackgroundVideo: No video filename present");
 
-  fFileName := Skin.GetTextureFileName(ThemedSettings.Tex);
-  if (not fFilename.IsFile) then
-    raise EMenuBackgroundError.Create('TMenuBackgroundVideo: Can''t load background video: ' + fFilename.ToNative);
-end;
+  fFilename = Skin.GetTextureFileName(ThemedSettings.Tex);
+  if (std::filesystem::is_regular_file(fFilename))
+    throw EMenuBackgroundError("TMenuBackgroundVideo: Can't load background video: " + fFilename.string());
+}
 
-destructor  TMenuBackgroundVideo.Destroy;
-begin
-end;
-
-procedure TMenuBackgroundVideo.OnShow;
-begin
-  fBgVideo := VideoPlayback.Open(fFileName);
-  if (fBgVideo <> nil) then
-  begin
+void TMenuBackgroundVideo::OnShow()
+{
+  fBgVideo = VideoPlayback.Open(fFileName);
+  if (fBgVideo)
+  {
     VideoBGTimer.SetTime(0);
     VideoBGTimer.Start();
-    fBgVideo.Loop := true;
+    fBgVideo.Loop = true;
     fBgVideo.Play;
-  end;
-end;
+  }
+}
 
-procedure   TMenuBackgroundVideo.OnFinish;
-begin
+void   TMenuBackgroundVideo::OnFinish()
+{
   // unload video
-  fBgVideo := nil;
-end;
+  fBgVideo.reset();
+}
 
-procedure TMenuBackgroundVideo.Draw;
-begin
+void TMenuBackgroundVideo::Draw()
+{
   // clear just once when in dual screen mode
-  if (ScreenAct = 1) then
-  begin
+  if (ScreenAct == 1)
+  {
     glClear(GL_DEPTH_BUFFER_BIT);
     // video failure -> draw blank background
-    if (fBgVideo = nil) then
+    if (!fBgVideo)
       glClear(GL_COLOR_BUFFER_BIT);
-  end;
+  }
 
-  if (fBgVideo <> nil) then
-  begin
+  if (fBgVideo)
+  {
     fBgVideo.GetFrame(VideoBGTimer.GetTime());
     fBgVideo.SetScreen(ScreenAct);
     fBgVideo.Draw();
-  end;
-end;
+  }
+}
 
 // Implementation of TBGVideo
 //--------
-{constructor TBGVideo.Create(Item: PBGVideoPoolItem);
-begin
-  myItem := PBGVideoPoolItem;
+/*constructor TBGVideo.Create(Item: PBGVideoPoolItem);
+{
+  myItem = PBGVideoPoolItem;
   Inc(myItem.ReferenceCounter);
-end;
+}
 
 destructor  TBGVideo.Destroy;
-begin
+{
   Dec(myItem.ReferenceCounter);
-end;
+}
 
 function    TBGVideo.GetVideoPlayback: IVideoPlayback;
-begin
+{
 
-end;
+}
 
-procedure   TBGVideo.Draw;
-begin
+void   TBGVideo.Draw;
+{
 
-end;
+}
 
 // Implementation of TBGVideoPool
 //--------
 
 constructor TBGVideoPool.Create;
-begin
+{
 
-end;
+}
 
 destructor  TBGVideoPool.Destroy;
-begin
+{
 
-end;
+}
 
 function    TBGVideoPool.GetBGVideo(filename: IPath): TBGVideo;
-begin
+{
 
-end;
+}
 
-procedure   TBGVideoPool.FreeAllItems;
-begin
+void   TBGVideoPool.FreeAllItems;
+{
 
-end;  }
-
-end.
+}  */
+}

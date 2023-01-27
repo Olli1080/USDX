@@ -93,7 +93,7 @@ bool TScreenOptionsInput::ParseInput(uint32_t PressedKey, UCS4Char CharCode, boo
   // check normal keys
   switch (UCS4UpperCase(CharCode))
   {
-    Ord("Q"):
+    case Ord("Q"):
       {
         return false;
       }

@@ -1,4 +1,5 @@
-{* UltraStar Deluxe - Karaoke Game
+#pragma once
+/* UltraStar Deluxe - Karaoke Game
  *
  * UltraStar Deluxe is the legal property of its developers, whose names
  * are too numerous to list here. Please refer to the COPYRIGHT
@@ -21,49 +22,39 @@
  *
  * $URL$
  * $Id$
- *}
+ */
 
-unit UMenuBackgroundNone;
+#include "UMenuBackground.hpp"
 
-interface
-
-{$IFDEF FPC}
-  {$MODE Delphi}
-{$ENDIF}
-
-{$I switches.inc}
-
-uses
+namespace UMenuBackgroundNone
+{
+/*uses
   UThemes,
-  UMenuBackground;
+  UMenuBackground;*/
 
 //TMenuBackgroundNone - Just no Background (e.g. for Overlays)
 //--------
 
-type
-  TMenuBackgroundNone = class (TMenuBackground)
-    private
+  class TMenuBackgroundNone : public UMenuBackground::TMenuBackground
+  {
+    public:
 
-    public
-      constructor Create(const ThemedSettings: TThemeBackground); override;
-      procedure   Draw; override;
-  end;
+      TMenuBackgroundNone(const TThemeBackground ThemedSettings) = default;
+      ~TMenuBackgroundNone() override;
 
+      void Draw() override;
+  };
+/*
 implementation
 uses
   dglOpenGL,
   UGraphic;
+*/
 
-constructor TMenuBackgroundNone.Create(const ThemedSettings: TThemeBackground);
-begin
-  inherited;
-end;
-
-procedure   TMenuBackgroundNone.Draw;
-begin
+void TMenuBackgroundNone::Draw()
+{
   //Do just nothing in here!
-  If (ScreenAct = 1) then //Clear just once when in dual screen mode
+  if (ScreenAct == 1) //Clear just once when in dual screen mode
     glClear(GL_DEPTH_BUFFER_BIT);
-end;
-
-end.
+}
+}

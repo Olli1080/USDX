@@ -105,8 +105,8 @@ public:
     double MedleyStart, MedleyEnd;
 
     TLyricEngine Lyrics;
-	TLyricEngine LyricsDuetP1;
-	TLyricEngine LyricsDuetP2;
+	  TLyricEngine LyricsDuetP1;
+	  TLyricEngine LyricsDuetP2;
 
     // score manager:
     TSingScores Scores;
@@ -186,8 +186,7 @@ public:
 var screenSingViewRef: TScreenSingView;
     TotalTime:              double;
 
-const
-  ID='ID_022';   //for help system
+const std::string ID = "ID_022";   //for help system
 
 implementation
 

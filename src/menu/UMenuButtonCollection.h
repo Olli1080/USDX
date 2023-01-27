@@ -1,4 +1,5 @@
-{* UltraStar Deluxe - Karaoke Game
+#pragma once
+/* UltraStar Deluxe - Karaoke Game
  *
  * UltraStar Deluxe is the legal property of its developers, whose names
  * are too numerous to list here. Please refer to the COPYRIGHT
@@ -21,81 +22,73 @@
  *
  * $URL: svn://basisbit@svn.code.sf.net/p/ultrastardx/svn/trunk/src/menu/UMenuButtonCollection.pas $
  * $Id: UMenuButtonCollection.pas 1692 2009-04-24 18:43:12Z k-m_schindler $
- *}
+ */
+#include <vector>
 
-unit UMenuButtonCollection;
+#include "UMenuButton.h"
 
-interface
+namespace UMenuButtonCollection
+{
+/*uses
+  UMenuButton;*/
 
-{$IFDEF FPC}
-  {$MODE Delphi}
-{$ENDIF}
-
-{$I switches.inc}
-
-uses
-  UMenuButton;
-
-type
+//type
   //----------------
   //TButtonCollection
   //No Extra Attributes or Functions ATM
   //----------------
-  AButton = array of TButton;
-  PAButton = ^AButton;
-  TButtonCollection = class(TButton)
+  typedef std::vector<UMenuButton::TButton> AButton;
+  typedef std::shared_ptr<AButton> PAButton;
+  class TButtonCollection : public UMenuButton::TButton
+  {
+    public:
     //num of the First Button, that can be Selected
-    FirstChild: byte;
-    CountChilds: byte;
+    uint8_t FirstChild;
+    uint8_t CountChilds;
     
-    ScreenButton: PAButton;
+    PAButton ScreenButton;
 
-    procedure SetSelect(Value : boolean); override;
-    procedure Draw; override;
-  end;
+    void SetSelect(bool Value) override;
+    void Draw() override;
+  };
 
-implementation
-
-procedure TButtonCollection.SetSelect(Value : boolean);
-var
-  Index: integer;
-begin
+void TButtonCollection::SetSelect(bool Value)
+{
   inherited;
 
   //Set Visible for Every Button that is a Child of this ButtonCollection
-  if (not Fade) then
-    for Index := 0 to High(ScreenButton^) do
-      if (ScreenButton^[Index].Parent = Parent) then
-        ScreenButton^[Index].Visible := Value;
-end;
+  if (!Fade)
+    for (Index = 0 to High(ScreenButton^))
+      if (ScreenButton^[Index].Parent == Parent)
+        ScreenButton^[Index].Visible = Value;
+}
 
-procedure TButtonCollection.Draw;
-var
-  I, J: integer;
-begin
+void TButtonCollection::Draw()
+//var
+  //I, J: integer;
+{
   inherited;
   //If fading is activated, Fade Child Buttons
-  if (Fade) then
-  begin
-    for I := 0 to High(ScreenButton^) do
-      if (ScreenButton^[I].Parent = Parent) then
-      begin
-        if (FadeProgress < 0.5) then
-        begin
-          ScreenButton^[I].Visible := SelectBool;
+  if (!Fade)
+    return;
+  
+  for (I = 0 to High(ScreenButton^))
+    if (ScreenButton^[I].Parent == Parent)
+    {
+      if (FadeProgress < 0.5)
+      {
+        ScreenButton^[I].Visible = SelectBool;
 
-          for J := 0 to High(ScreenButton^[I].Text) do
-            ScreenButton^[I].Text[J].Visible := SelectBool;
-        end
-        else
-        begin
-          ScreenButton^[I].Texture.Alpha := (FadeProgress-0.666)*3;
-          
-          for J := 0 to High(ScreenButton^[I].Text) do
-            ScreenButton^[I].Text[J].Alpha := (FadeProgress-0.666)*3;
-        end;
-      end;
-  end;
-end;
-
-end.
+        for (J = 0 to High(ScreenButton^[I].Text))
+          ScreenButton^[I].Text[J].Visible = SelectBool;
+      }
+      else
+      {
+        ScreenButton^[I].Texture.Alpha = (FadeProgress-0.666)*3;
+        
+        for (J = 0 to High(ScreenButton^[I].Text))
+          ScreenButton^[I].Text[J].Alpha = (FadeProgress-0.666)*3;
+      }
+    }
+}
+}

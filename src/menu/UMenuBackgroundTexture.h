@@ -1,4 +1,5 @@
-{* UltraStar Deluxe - Karaoke Game
+#pragma once
+/* UltraStar Deluxe - Karaoke Game
  *
  * UltraStar Deluxe is the legal property of its developers, whose names
  * are too numerous to list here. Please refer to the COPYRIGHT
@@ -21,79 +22,71 @@
  *
  * $URL$
  * $Id$
- *}
+ */
+#include <string>
+#include <array>
 
-unit UMenuBackgroundTexture;
+#include "UMenuBackground.hpp"
 
-interface
-
-{$IFDEF FPC}
-  {$MODE Delphi}
-{$ENDIF}
-
-{$I switches.inc}
-
-uses
+namespace UMenuBackgroundTexture
+{
+/*uses
   UCommon,
   UThemes,
   UTexture,
   UMenuBackground,
-  UPath;
+  UPath;*/
 
 //TMenuBackgroundColor - Background Color
 //--------
 
-type
-  TMenuBackgroundTexture = class (TMenuBackground)
-    private
+class TMenuBackgroundTexture : public UMenuBackground::TMenuBackground
+{
+    private:
+
       Tex: TTexture;
       Color: TRGB;
-    public
-      constructor Create(const ThemedSettings: TThemeBackground); override;
-      procedure   Draw; override;
-      destructor  Destroy; override;
-  end;
 
-const
-  SUPPORTED_EXTS_BACKGROUNDTEXTURE: array[0..13] of string = ('.png', '.bmp', '.jpg', '.jpeg', '.gif', '.pnm', '.ppm', '.pgm', '.pbm', '.xpm', '.lbm', '.pcx', '.tga', '.tiff');
+    public:
 
+      TMenuBackgroundTexture(const TThemeBackground ThemedSettings);
+      void Draw() override;
+      ~TMenuBackgroundTexture() override;
+};
+
+const std::array<std::string, 14> SUPPORTED_EXTS_BACKGROUNDTEXTURE = {".png", ".bmp", ".jpg", ".jpeg", ".gif", ".pnm", ".ppm", ".pgm", ".pbm", ".xpm", ".lbm", ".pcx", ".tga", ".tiff"};
+/*
 implementation
 uses
   USkins,
   SysUtils,
   dglOpenGL,
   UGraphic;
-
-constructor TMenuBackgroundTexture.Create(const ThemedSettings: TThemeBackground);
-var
-  texFilename: IPath;
-begin
+*/
+TMenuBackgroundTexture::TMenuBackgroundTexture(const TThemeBackground ThemedSettings)
+//var
+  //texFilename: IPath;
+{
   inherited;
 
-  if (Length(ThemedSettings.Tex) = 0) then
-    raise EMenuBackgroundError.Create('TMenuBackgroundTexture: No texture filename present');
+  if (ThemedSettings.Tex.empty()) 
+    throw EMenuBackgroundError("TMenuBackgroundTexture: No texture filename present");
 
-  Color       := ThemedSettings.Color;
+  Color       = ThemedSettings.Color;
 
-  texFilename := Skin.GetTextureFileName(ThemedSettings.Tex);
-  Tex         := Texture.GetTexture(texFilename, TEXTURE_TYPE_PLAIN);
+  texFilename = Skin.GetTextureFileName(ThemedSettings.Tex);
+  Tex         = Texture.GetTexture(texFilename, TEXTURE_TYPE_PLAIN);
 
-  if (Tex.TexNum = 0) then
-  begin
+  if (Tex.TexNum == 0) 
+  {
     freeandnil(Tex);
-    raise EMenuBackgroundError.Create('TMenuBackgroundTexture: Can''t load texture');
-  end;
-end;
+    throw EMenuBackgroundError("TMenuBackgroundTexture: Can't load texture");
+  }
+}
 
-destructor  TMenuBackgroundTexture.Destroy;
-begin
-  //freeandnil(Tex); <- this causes an Access Violation o0
-  inherited;
-end;
-
-procedure   TMenuBackgroundTexture.Draw;
-begin
-  If (ScreenAct = 1) then //Clear just once when in dual screen mode
+void   TMenuBackgroundTexture::Draw()
+{
+  If (ScreenAct == 1)  //Clear just once when in dual screen mode
     glClear(GL_DEPTH_BUFFER_BIT);
     
   glColorRGB(Color);
@@ -116,10 +109,9 @@ begin
 
     glTexCoord2f(Tex.TexX2*Tex.TexW, Tex.TexY1*Tex.TexH);
     glVertex2f(800, 0);
-  glEnd;
+  glEnd();
 
   glDisable(GL_BLEND);
   glDisable(GL_TEXTURE_2D);
-end;
-
-end.
+}
+}
