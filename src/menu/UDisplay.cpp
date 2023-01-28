@@ -1,5 +1,7 @@
 #include "UDisplay.h"
 
+#include <chrono>
+
 #include "../base/UIni.h"
 
 namespace UDisplay
@@ -345,7 +347,7 @@ glError:         glEnum;
         }
     }
 
-    // called by MoveCursorand OnMouseButton to update last move and start fade in
+    // called by MoveCursor and OnMouseButton to update last move and start fade in
     void TDisplay::UpdateCursorFade()
     {
         auto Ticks = std::chrono::system_clock::now();
@@ -353,11 +355,12 @@ glError:         glEnum;
         // fade in on movement(or button press) if not first movement
         if (!Cursor_Visible && Cursor_LastMove != std::chrono::system_clock::time_point{})
         {
+            Cursor_LastMove = Ticks;
             if (Cursor_Fade) // we use a trick here to consider progress of fade out
-                Cursor_LastMove = Ticks - std::round(CURSOR_FADE_IN_TIME * (1.0 - (Ticks - Cursor_LastMove) / CURSOR_FADE_OUT_TIME));
-            else
-                Cursor_LastMove = Ticks;
-
+            {
+                auto progress = 1.0 - std::chrono::duration<double>(Ticks - Cursor_LastMove) / std::chrono::duration<double>(CURSOR_FADE_OUT_TIME);
+                Cursor_LastMove -= std::chrono::duration_cast<std::chrono::system_clock::duration>(CURSOR_FADE_IN_TIME * progress);
+            }
             Cursor_Visible = true;
             Cursor_Fade = true;
         }
@@ -370,7 +373,10 @@ glError:         glEnum;
     // called when cursor moves, positioning of software cursor
     void TDisplay::MoveCursor(double X, double Y)
     {
-        if (UIni::Ini.Mouse == UIni::MouseMode::GAME && (X != Cursor_X || Y != Cursor_Y))
+        if (UIni::Ini.Mouse != UIni::MouseMode::GAME)
+            return;
+
+        if (X != Cursor_X || Y != Cursor_Y)
         {
             Cursor_X = X;
             Cursor_Y = Y;
@@ -382,11 +388,11 @@ glError:         glEnum;
     // called when left or right mousebutton is pressed or released
     void TDisplay::OnMouseButton(bool Pressed)
     {
-        if (UIni::Ini.Mouse == UIni::MouseMode::GAME)
-        {
-            Cursor_Pressed = Pressed;
-            UpdateCursorFade();
-        }
+        if (UIni::Ini.Mouse != UIni::MouseMode::GAME)
+            return;
+        
+        Cursor_Pressed = Pressed;
+        UpdateCursorFade();
     }
 
     // draws software cursor
@@ -591,6 +597,7 @@ glError:         glEnum;
         if (ScreenshotsPath.IsUnset)
             return;
 
+        //TODO:: use datetime instead ^^
         for (Num = 1 to 9999)
         {
             // fill prefix to 4 digits with leading "0", e.g. "0001"
@@ -617,7 +624,9 @@ glError:         glEnum;
         //  Success := WriteBMPImage(FileName, Surface);
         // Success := WritePNGImage(FileName, Surface);
         if (Success)
-            ScreenPopupInfo.ShowPopup(Format(Language.Translate("SCREENSHOT_SAVED"), [FileName.GetName.ToUTF8()])) else ScreenPopupError.ShowPopup(Language.Translate("SCREENSHOT_FAILED"));
+            ScreenPopupInfo.ShowPopup(Format(Language.Translate("SCREENSHOT_SAVED"), [FileName.GetName.ToUTF8()])); 
+        else 
+            ScreenPopupError.ShowPopup(Language.Translate("SCREENSHOT_FAILED"));
 
         SDL_FreeSurface(Surface);
         FreeMem(ScreenData);
