@@ -1488,13 +1488,13 @@ void TIni::SaveSingTimebarMode()
 
 void TIni::SaveJukeboxTimebarMode()
 {
-    if (UPathUtils::IsWritable(Filename))
-    {
-        auto IniFile = TIniFile(Filename);
+  if (UPathUtils::IsWritable(Filename))
+  {
+      auto IniFile = TIniFile(Filename);
 
-        // Players
-        IniFile.WriteString("Advanced", "JukeboxTimebarMode", IJukeboxTimebarMode[JukeboxTimebarMode]);
-    }
+      // Players
+      IniFile.WriteString("Advanced", "JukeboxTimebarMode", IJukeboxTimebarMode[JukeboxTimebarMode]);
+  }
 }
 
 bool TIni::SetResolution(std::string ResolutionString, bool RemoveCurrent = false, bool NoSave = false)
@@ -1612,42 +1612,41 @@ std::string TIni::GetResolutionFullscreen()
 
 std::string TIni::GetResolutionFullscreen(int& w, int& h)
 {
-    auto Result = GetResolutionFullscreen();
-    UCommon::ParseResolutionString(Result, w, h);
+  auto Result = GetResolutionFullscreen();
+  UCommon::ParseResolutionString(Result, w, h);
 
-    return Result;
+  return Result;
 }
 
 bool TIni::GetResolutionFullscreen(int index, std::string& ResolutionString)
 {
-    bool Result = false;
-    if ((index >= 0) && (index < IResolutionFullScreen.size()))
-    {
-        ResolutionString = IResolutionFullScreen[index];
-        Result = true;
-    }
-    return Result;
+  if (index >= 0 && index < IResolutionFullScreen.size())
+  {
+    ResolutionString = IResolutionFullScreen[index];
+    return true;
+  }
+  return false;
 }
 
 void TIni::ClearCustomResolutions()
 {
-    if (Resolution < 0)
-        return;
+  if (Resolution < 0)
+      return;
 
-    // check if current resolution is a custom one
-    std::string ResString = IResolution[Resolution];
-    int Index = UCommon::GetArrayIndex(IResolutionCustom, ResString);
+  // check if current resolution is a custom one
+  std::string ResString = IResolution[Resolution];
+  int Index = UCommon::GetArrayIndex(IResolutionCustom, ResString);
 
-    for (int i = IResolutionCustom.size() - 1; i >= 0; --i)
-    {
-        int custom = UCommon::GetArrayIndex(IResolution, IResolutionCustom[i]);
-        if ((custom >= 0) && (Index != i))
-        {
-            IResolution.erase(IResolution.begin() + custom);
-            IResolutionCustom.erase(IResolutionCustom.begin() + i);
-        }
-    }
-    // update index
-    Resolution = UCommon::GetArrayIndex(IResolution, ResString);
+  for (int i = IResolutionCustom.size() - 1; i >= 0; --i)
+  {
+      int custom = UCommon::GetArrayIndex(IResolution, IResolutionCustom[i]);
+      if ((custom >= 0) && (Index != i))
+      {
+          IResolution.erase(IResolution.begin() + custom);
+          IResolutionCustom.erase(IResolutionCustom.begin() + i);
+      }
+  }
+  // update index
+  Resolution = UCommon::GetArrayIndex(IResolution, ResString);
 }
 }

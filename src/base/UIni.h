@@ -188,6 +188,13 @@ struct ScreenInfo
     FullScreenMode FullScreen;
 };
 
+enum class MouseMode
+{
+    OFF,
+    SYSTEM,
+    GAME
+};
+
 class TIni
 {
 private:
@@ -311,7 +318,7 @@ public:
 
   // Controller
   int Joypad;
-  int Mouse;
+  MouseMode Mouse;
 
   Webcam webcam;
 

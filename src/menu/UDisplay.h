@@ -72,7 +72,7 @@ namespace UDisplay
 
         // used for cursor fade out when there is no movement
         bool Cursor_Visible;
-        uint32_t Cursor_LastMove;
+        std::chrono::system_clock::time_point Cursor_LastMove;
         bool Cursor_Fade;
 
         bool Cursor_Update;
@@ -89,6 +89,8 @@ namespace UDisplay
 
         // called by MoveCursor and OnMouseButton to update last move and start fade in
         void UpdateCursorFade();
+
+        static inline double CURSOR_ALPHA_VISIBLE = 0.7;
 
     public:
 
@@ -134,7 +136,7 @@ namespace UDisplay
         // called when left or right mousebutton is pressed or released 
         void OnMouseButton(bool Pressed);
         // fades to specific screen (playing specified sound)
-        PMenu FadeTo(PMenu Screen, const TAudioPlaybackStream aSound = nil);
+        PMenu FadeTo(PMenu Screen, const TAudioPlaybackStream aSound = nullptr);
 
         // abort fading to the current screen, may be used in OnShow, or during fade process
         void AbortScreenChange();

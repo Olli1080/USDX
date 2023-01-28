@@ -284,11 +284,11 @@ namespace UMenuButton
 
             if (FadeText)
             {
-for (T = 0 to high(Text))
-  {
-    Text[T].MoveX = (SelectW - DeSelectW) * FadeProgress;
-    Text[T].MoveY = (SelectH - DeSelectH) * FadeProgress;
-  }
+              for (T = 0 to high(Text))
+              {
+                Text[T].MoveX = (SelectW - DeSelectW) * FadeProgress;
+                Text[T].MoveY = (SelectH - DeSelectH) * FadeProgress;
+              }
             }
           }
         }
