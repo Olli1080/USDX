@@ -23,8 +23,11 @@
  * $URL: svn://basisbit@svn.code.sf.net/p/ultrastardx/svn/trunk/src/menu/UMenu.pas $
  * $Id: UMenu.pas 3103 2014-11-22 23:21:19Z k-m_schindler $
  */
-
 #include "../switches.h"
+
+#include "../base/UCommon.h"
+#include "../base/types.hpp"
+#include <filesystem>
 
 namespace UMenu
 {
@@ -47,14 +50,13 @@ namespace UMenu
       UThemes;
     */
 
-    //type
+    // type
     //{  Int16 = SmallInt;}
 
     //  PMenu = ^TMenu;
     class TMenu
     {
     protected:
-
         std::vector<TInteract> Interactions;
         int SelInteraction;
 
@@ -65,7 +67,6 @@ namespace UMenu
         std::vector<TButtonCollection> ButtonCollection;
 
     public:
-
         TMenuBackground Background;
         std::vector<TText> Text;
         std::vector<TStatic> Statics;
@@ -73,112 +74,119 @@ namespace UMenu
         int mX; // mouse X
         int mY; // mouse Y
 
-        int Fade; // fade type
-		bool ShowFinish; // true if there is no fade
-		bool RightMbESC; // true to simulate ESC keypress when RMB is pressed
+        int Fade;        // fade type
+        bool ShowFinish; // true if there is no fade
+        bool RightMbESC; // true to simulate ESC keypress when RMB is pressed
 
         TMenu();
         virtual ~TMenu();
-        //constructor Create(Back: string);  virtual; // Back is a JPG resource name for background
-        //constructor Create(Back: string; W, H: int);  virtual; // W and H are the number of overlaps
+        // constructor Create(Back: string);  virtual; // Back is a JPG resource name for background
+        // constructor Create(Back: string; W, H: int);  virtual; // W and H are the number of overlaps
 
         // interaction
         void AddInteraction(int Typ, int Num);
         virtual void SetInteraction(int Num);
 
-        //property Interaction: int read SelInteraction write SetInteraction;
+        // property Interaction: int read SelInteraction write SetInteraction;
 
         // void load bg, texts, statics and button collections from themebasic
         void LoadFromTheme(const TThemeBasic ThemeBasic);
 
-        void PrepareButtonCollections(const Collections : AThemeButtonCollection);
-        void AddButtonCollection(const ThemeCollection : TThemeButtonCollection; const Num : byte);
+        void PrepareButtonCollections(const AThemeButtonCollection Collections);
+        void AddButtonCollection(const TThemeButtonCollection ThemeCollection, const uint8_t Num);
 
         // background
         void AddBackground(TThemeBackground ThemedSettings);
 
         // static
-        int AddStatic(ThemeStatic: TThemeStatic);
-        int AddStatic(X, Y, W, H: real; const TexName : IPath);
-        int AddStatic(X, Y, W, H: real; const TexName : IPath; Typ: TTextureType);
-        int AddStatic(X, Y, W, H: real; ColR, ColG, ColB: real; const TexName : IPath; Typ: TTextureType);
-        int AddStatic(X, Y, W, H, Z: real; ColR, ColG, ColB: real; const TexName : IPath; Typ: TTextureType);
-        int AddStatic(X, Y, W, H: real; ColR, ColG, ColB: real; const TexName : IPath; Typ: TTextureType; Color: int); 
-        int AddStatic(X, Y, W, H, Z: real; ColR, ColG, ColB: real; const TexName : IPath; Typ: TTextureType; Color: int); 
-        int AddStatic(X, Y, W, H, Z: real; ColR, ColG, ColB: real; TexX1, TexY1, TexX2, TexY2: real; Alpha: real; const TexName : IPath; Typ: TTextureType; Color: int; Reflection: bool; ReflectionSpacing: real); 
+        int AddStatic(TThemeStatic ThemeStatic);
+        int AddStatic(Rect<double> rect, const std::filesystem::path TexName);
+        int AddStatic(Rect<double> rect, const std::filesystem::path TexName, TTextureType Typ);
+        int AddStatic(Rect<double> rect, UCommon::TRGB<double> Col, const std::filesystem::path TexName, TTextureType Typ);
+        int AddStatic(Rect<double> rect, double Z, UCommon::TRGB<double> Col, const std::filesystem::path TexName, TTextureType Typ);
+        int AddStatic(Rect<double> rect, UCommon::TRGB<double> Col, const std::filesystem::path TexName, TTextureType Typ, int Color);
+        int AddStatic(Rect<double> rect, double Z, UCommon::TRGB<double> Col, const std::filesystem::path TexName, TTextureType Typ, int Color);
+        int AddStatic(Rect<double> rect, double Z, UCommon::TRGB<double> Col, UCommon::TTexCoords Tex, double Alpha, const std::filesystem::path TexName, TTextureType Typ, int Color, bool Reflection, double ReflectionSpacing);
 
         // list
-        function AddListItem(X, Y, W, H, Z: real; ColR, ColG, ColB: real; DColR, DColG, DColB: real; const TexName : IPath; const DTexName : IPath; Typ: TTextureType; Reflection: bool; ReflectionSpacing: real) : int;
+        int AddListItem(Rect<double> rect, double Z, UCommon::TRGB<double> Col, UCommon::TRGB<double> DCol, const std::filesystem::path TexName, const std::filesystem::path DTexName, TTextureType Typ, bool Reflection, double ReflectionSpacing);
 
         // text
-        function AddText(ThemeText: TThemeText) : int; 
-        function AddText(X, Y: real; const Text_ : UTF8String) : int; 
-        function AddText(X, Y: real; Font, Style: int; Size, ColR, ColG, ColB: real; const Text : UTF8String) : int; 
-        function AddText(X, Y, W, H: real; Font, Style: int; Size, ColR, ColG, ColB: real; Align: int; const Text_ : UTF8String; Reflection_: bool; ReflectionSpacing_: real; Z: real; Writable: bool) : int; 
+        int AddText(TThemeText ThemeText);
+        int AddText(Position2D<double> Pos, const std::string Text_);
+        int AddText(Position2D<double> Pos, int Font, int Style, double Size, UCommon::TRGB<double> Col, const std::string Text);
+        int AddText(Rect<double> rect, int Font, int Style, double Size, UCommon::TRGB<double> Col, int Align, const std::string Text_, bool Reflection_, double ReflectionSpacing_, double Z, bool Writable);
 
         // button
-        void SetButtonLength(Length: cardinal); //Function that Set Length of Button Array in one Step instead of register new Memory for every Button
-        function AddButton(ThemeButton: TThemeButton) : int; 
-        function AddButton(X, Y, W, H: real; const TexName : IPath) : int; 
-        function AddButton(X, Y, W, H: real; const TexName : IPath; Typ: TTextureType; Reflection: bool) : int; 
-        function AddButton(X, Y, W, H, ColR, ColG, ColB, Int, DColR, DColG, DColB, DInt: real; const TexName : IPath; Typ: TTextureType; Reflection: bool; ReflectionSpacing, DeSelectReflectionSpacing: real) : int; 
+        void SetButtonLength(uint32_t Length); // Function that Set Length of Button Array in one Step instead of register new Memory for every Button
+        int AddButton(TThemeButton ThemeButton);
+        int AddButton(Rect<double> rect, const std::filesystem::path TexName);
+        int AddButton(Rect<double> rect, const std::filesystem::path TexName, TTextureType Typ, bool Reflection);
+        int AddButton(Rect<double> rect, UCommon::TRGB<double> Col, double Int, UCommon::TRGB<double> DCol, double DInt, const std::filesystem::path TexName, TTextureType Typ, bool Reflection, double ReflectionSpacing, double DeSelectReflectionSpacing);
         void ClearButtons();
-        void AddButtonText(AddX, AddY: real; const AddText : UTF8String); 
-        void AddButtonText(AddX, AddY: real; ColR, ColG, ColB: real; const AddText : UTF8String); 
-        void AddButtonText(AddX, AddY: real; ColR, ColG, ColB: real; Font, Style: int; Size: int; Align: int; const AddText : UTF8String); 
-        void AddButtonText(CustomButton: TButton; AddX, AddY: real; ColR, ColG, ColB: real; Font, Style: int; Size: int; Align: int; const AddText : UTF8String); 
+        void AddButtonText(Position2D<double> AddPos, const std::string AddText);
+        void AddButtonText(Position2D<double> AddPos, UCommon::TRGB<double> Col, const std::string AddText);
+        void AddButtonText(Position2D<double> AddPos, UCommon::TRGB<double> Col, int Font, int Style, int Size, int Align, const std::string AddText);
+        void AddButtonText(TButton CustomButton, Position2D<double> AddPos, UCommon::TRGB<double> Col, int Font, int Style, int Size, int Align, const std::string AddText);
 
         // select slide
-        function AddSelectSlide(ThemeSelectS: TThemeSelectSlide; var Data : int; const Values : array of UTF8String) : int; 
-        function AddSelectSlide(X, Y, W, H, SkipX, SBGW, ColR, ColG, ColB, Int, DColR, DColG, DColB, DInt,
-            TColR, TColG, TColB, TInt, TDColR, TDColG, TDColB, TDInt,
-            SBGColR, SBGColG, SBGColB, SBGInt, SBGDColR, SBGDColG, SBGDColB, SBGDInt,
-            STColR, STColG, STColB, STInt, STDColR, STDColG, STDColB, STDInt: real;
-        const TexName : IPath; Typ: TTextureType; const SBGName : IPath; SBGTyp: TTextureType;
-        const Caption : UTF8String; var Data : int) : int; 
-        void AddSelectSlideOption(const AddText : UTF8String); 
-        void AddSelectSlideOption(SelectNo: cardinal; const AddText : UTF8String); 
-        void UpdateSelectSlideOptions(ThemeSelectSlide: TThemeSelectSlide; SelectNum: int; const Values : array of UTF8String; var Data : int);
+        int AddSelectSlide(TThemeSelectSlide ThemeSelectS, int &Data, const std::vector<std::string> Values);
+        int AddSelectSlide(Rect<double> rect, double SkipX, double SBGW,
+                           UCommon::TRGB<double> Col, double Int,
+                           UCommon::TRGB<double> DCol, double DInt,
+                           UCommon::TRGB<double> TCol, double TInt,
+                           UCommon::TRGB<double> TDCol, double TDInt,
+                           UCommon::TRGB<double> SBGCol, double SBGInt,
+                           UCommon::TRGB<double> SBGDCol, double SBGDInt,
+                           UCommon::TRGB<double> STCol, double STInt,
+                           UCommon::TRGB<double> STDCol, double STDInt,
+                           const std::filesystem::path TexName, TTextureType Typ,
+                           const std::filesystem::path SBGName, TTextureType SBGTyp,
+                           const std::string Caption, int &Data);
+
+        void AddSelectSlideOption(const std::string AddText);
+        void AddSelectSlideOption(uint32_t SelectNo, const std::string AddText);
+        void UpdateSelectSlideOptions(TThemeSelectSlide ThemeSelectSlide, int SelectNum, const std::vector<std::string> Values, int &Data);
 
         //      function AddWidget(X, Y : UInt16; WidgetSrc : PSDL_Surface): Int16;
         //      void ClearWidgets(MinNumber : Int16);
-        void FadeTo(Screen: PMenu); 
-        void FadeTo(Screen: PMenu; aSound: TAudioPlaybackStream); 
-        //popup hack
-        void CheckFadeTo(Screen: PMenu; Msg: UTF8String);
+        void FadeTo(PMenu Screen);
+        void FadeTo(PMenu Screen, TAudioPlaybackStream aSound);
+        // popup hack
+        void CheckFadeTo(PMenu Screen, std::string Msg);
 
-        function DrawBG : bool; virtual;
-        function DrawFG : bool; virtual;
-        function Draw : bool; virtual;
-        function ShouldHandleInput(PressedKey: cardinal; CharCode: UCS4Char; PressedDown: bool; out SuppressKey : bool) : bool; virtual;
-        function ParseInput(PressedKey: cardinal; CharCode: UCS4Char; PressedDown: bool) : bool; virtual;
-        function ParseMouse(MouseButton: int; BtnDown: bool; X, Y: int) : bool; virtual;
-        function InRegion(X, Y: real; A: TMouseOverRect) : bool;
-        function InRegionX(X: real; A: TMouseOverRect) : bool;
-        function InRegionY(Y: real; A: TMouseOverRect) : bool;
-        function InteractAt(X, Y: real) : int;
-        function CollectionAt(X, Y: real) : int;
+        virtual bool DrawBG();
+        virtual bool DrawFG();
+        virtual bool Draw();
+        virtual bool ShouldHandleInput(uint32_t PressedKey, char32_t CharCode, bool PressedDown, bool &SuppressKey);
+        virtual bool ParseInput(uint32_t PressedKey, char32_t CharCode, bool PressedDown);
+        virtual bool ParseMouse(int MouseButton, bool BtnDown, int X, int Y);
+        bool InRegion(double X, double Y, TMouseOverRect A);
+        bool InRegionX(double X, TMouseOverRect A);
+        bool InRegionY(double Y, TMouseOverRect A);
+        int InteractAt(double X, double Y);
+        int CollectionAt(double X, double Y);
         virtual void OnShow();
         virtual void OnShowFinish();
         virtual void OnHide();
 
-        void OnWindowResized(); virtual;
+        virtual void OnWindowResized();
 
-        void SetAnimationProgress(Progress: real); virtual;
+        virtual void SetAnimationProgress(double Progress);
 
-        function IsSelectable(Int: cardinal) : bool;
+        bool IsSelectable(uint32_t Int);
 
         virtual void InteractNext();
-        void InteractCustom(CustomSwitch: int); virtual;
+        virtual void InteractCustom(int CustomSwitch);
         virtual void InteractPrev();
         virtual void InteractInc();
         virtual void InteractDec();
         virtual void InteractNextRow(); // this is for the options screen, so button down makes sense
         virtual void InteractPrevRow(); // this is for the options screen, so button up makes sense
-        void AddBox(X, Y, W, H: real);
+        void AddBox(Rect<double> rect);
     };
 
-    function RGBFloatToInt(R, G, B: double) : cardinal;
+    uint32_t RGBFloatToInt(UCommon::TRGB<double> Col);
 
     constexpr int MENU_MDOWN = 8;
     constexpr int MENU_MUP = 0;
