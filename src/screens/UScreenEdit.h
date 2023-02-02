@@ -23,7 +23,11 @@
  * $URL: svn://basisbit@svn.code.sf.net/p/ultrastardx/svn/trunk/src/screens/UScreenEdit.pas $
  * $Id: UScreenEdit.pas 2246 2010-04-18 13:43:36Z tobigun $
  */
+#include <SDL2/SDL_keyboard.h>
+
 #include "../switches.h"
+
+#include "../menu/UMenu.h"
 
 namespace UScreenEdit
 {
@@ -32,17 +36,19 @@ namespace UScreenEdit
       UThemes,
       sdl2;*/
 
-    class TScreenEdit : public TMenu
+    class TScreenEdit : public UMenu::TMenu
     {
     public:
         int TextDescription;
-    TextDescriptionLong: int;
+        int TextDescriptionLong;
 
-        constructor Create; override;
-        procedure OnShow; override;
-        function ParseInput(PressedKey: cardinal; CharCode: UCS4Char; PressedDown: boolean) : boolean; override;
-        procedure SetInteraction(Num: int); override;
-        procedure SetAnimationProgress(Progress: real); override;
+        TScreenEdit();
+        ~TScreenEdit() override = default;
+
+        void OnShow() override;
+        bool ParseInput(uint32_t PressedKey, char32_t CharCode, bool PressedDown) override;
+        void SetInteraction(int Num) override;
+        void SetAnimationProgress(double Progress) override;
     };
 
     const std::string ID = "ID_060";   //for help system
@@ -58,102 +64,112 @@ namespace UScreenEdit
         UUnicodeUtils,
         SysUtils;*/
 
-    function TScreenEdit.ParseInput(PressedKey: cardinal; CharCode: UCS4Char; PressedDown: boolean) : boolean;
-    var
-        SDL_ModState : word;
-    begin
-        Result : = true;
+    bool TScreenEdit::ParseInput(uint32_t PressedKey, char32_t CharCode, bool PressedDown)
+        //var
+          //  SDL_ModState : word;
+    {
+    Result: = true;
 
-SDL_ModState: = SDL_GetModState and (KMOD_LSHIFT + KMOD_RSHIFT +
-    KMOD_LCTRL + KMOD_RCTRL + KMOD_LALT + KMOD_RALT);
+        int SDL_ModState = SDL_GetModState() & (KMOD_LSHIFT | KMOD_RSHIFT | KMOD_LCTRL | KMOD_RCTRL | KMOD_LALT | KMOD_RALT);
 
-if (PressedDown) then
-begin // Key Down
-      // check normal keys
-    case UCS4UpperCase(CharCode) of
-    Ord('Q'):
-        begin
-            Result : = false;
-        Exit;
-        end;
-        end;
-
-        // check special keys
-        case PressedKey of
-            SDLK_ESCAPE,
-        SDLK_BACKSPACE:
-            begin
-                AudioPlayback.PlaySound(SoundLib.Back);
-            FadeTo(@ScreenMain);
-            end;
-        SDLK_TAB:
-            begin
-                ScreenPopupHelp.ShowPopup();
-            end;
-        SDLK_RETURN:
-            begin
-                if Interaction = 0 then
-                    begin
-                    AudioPlayback.PlaySound(SoundLib.Start);
-            FadeTo(@ScreenEditConvert);
-            end;
-
-            if Interaction = 1 then
-                begin
-                AudioPlayback.PlaySound(SoundLib.Back);
-            FadeTo(@ScreenMain);
-            end;
-            end;
-
-        SDLK_DOWN:  InteractInc;
-        SDLK_UP:    InteractDec;
-        SDLK_RIGHT: InteractNext;
-        SDLK_LEFT:  InteractPrev;
-            end;
-            end;
-            end;
-
-            constructor TScreenEdit.Create;
-            begin
-                inherited Create;
-
-        TextDescription: = AddText(Theme.Edit.TextDescription);
-
-            LoadFromTheme(Theme.Edit);
-
-            AddButton(Theme.Edit.ButtonConvert);
-            { Some ideas for more:
-            AddButton(Theme.Edit.ButtonEditHeaders);
-            AddButton(Theme.Edit.ButtonAdjustGap);
+        if (PressedDown)
+        { // Key Down
+              // check normal keys
+            switch (UCS4UpperCase(CharCode))
+            {
+            case Ord('Q'):
+            {
+                return false;
             }
-            AddButton(Theme.Edit.ButtonExit);
+            }
 
-        Interaction: = 0;
-            end;
+            // check special keys
+            switch (PressedKey)
+            {
+            case SDLK_ESCAPE: [[fallthrough]]
+            case SDLK_BACKSPACE:
+            {
+                AudioPlayback.PlaySound(SoundLib.Back);
+                FadeTo(@ScreenMain);
+                break;
+            }
+            case SDLK_TAB:
+            {
+                ScreenPopupHelp.ShowPopup();
+                break;
+            }
+            case SDLK_RETURN:
+            {
+                if (Interaction == 0)
+                {
+                    AudioPlayback.PlaySound(SoundLib.Start);
+                    FadeTo(@ScreenEditConvert);
+                }
 
-            procedure TScreenEdit.OnShow;
-            begin
-                inherited;
+                if (Interaction == 1)
+                {
+                    AudioPlayback.PlaySound(SoundLib.Back);
+                    FadeTo(@ScreenMain);
+                }
+                break;
+            }
+            case SDLK_DOWN:
+                InteractInc();
+                break;
+            case SDLK_UP:
+                InteractDec();
+                break;
+            case SDLK_RIGHT:
+                InteractNext();
+                break;
+            case SDLK_LEFT:
+                InteractPrev();
+                break;
+            }
+        }
+    }
 
-            if not Help.SetHelpID(ID) then
-                Log.LogWarn('No Entry for Help-ID ' + ID, 'ScreenEdit');
+    TScreenEdit::TScreenEdit()
+    {
+        inherited Create;
 
-            // continue possibly stopped bg-music (stopped in midi import screen)
-            SoundLib.StartBgMusic;
-            end;
+        TextDescription = AddText(Theme.Edit.TextDescription);
 
-            procedure TScreenEdit.SetInteraction(Num: int);
-            begin
-                inherited SetInteraction(Num);
-            Text[TextDescription].Text     : = Theme.Edit.Description[Interaction];
+        LoadFromTheme(Theme.Edit);
 
-            // long description not used atm // IMPROVE: Theme
-            //Text[TextDescriptionLong].Text := Theme.Edit.DescriptionLong[Interaction];
-            end;
+        AddButton(Theme.Edit.ButtonConvert);
+        /*TODO:? Some ideas for more:
+        AddButton(Theme.Edit.ButtonEditHeaders);
+        AddButton(Theme.Edit.ButtonAdjustGap);
+        */
+        AddButton(Theme.Edit.ButtonExit);
 
-            procedure TScreenEdit.SetAnimationProgress(Progress: real);
-            begin
-                Statics[0].Texture.ScaleW : = Progress;
-            Statics[0].Texture.ScaleH : = Progress;
-            end;
+        Interaction = 0;
+    }
+
+    void TScreenEdit::OnShow()
+    {
+        inherited;
+
+        if (!Help.SetHelpID(ID))
+            ULog::Log.LogWarn('No Entry for Help-ID ' + ID, 'ScreenEdit');
+
+        // continue possibly stopped bg-music (stopped in midi import screen)
+        SoundLib.StartBgMusic;
+    }
+
+    void TScreenEdit::SetInteraction(int Num)
+    {
+        inherited SetInteraction(Num);
+        Text[TextDescription].Text = Theme.Edit.Description[Interaction];
+
+        // long description not used atm // IMPROVE: Theme
+        //Text[TextDescriptionLong].Text := Theme.Edit.DescriptionLong[Interaction];
+    }
+
+    void TScreenEdit::SetAnimationProgress(double Progress)
+    {
+        Statics[0].Texture.ScaleW = Progress;
+        Statics[0].Texture.ScaleH = Progress;
+    }
 }

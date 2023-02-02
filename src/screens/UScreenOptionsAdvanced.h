@@ -29,9 +29,23 @@
 
 #include "../base/ULog.h"
 #include "../menu/UMenu.h"
+#include "../base/UIni.h"
 
 namespace UScreenOptionsAdvanced
 {
+    enum class Interaction
+    {
+        select_screen_fade,
+        select_effect_sing,
+        select_line_bonus,
+        select_on_song_click,
+        select_ask_before_del,
+        select_party_popup,
+        select_sing_scores,
+        select_top_scores,
+        button_exit
+    };
+
     /*
 uses
   UDisplay,
@@ -47,7 +61,7 @@ uses
     public:
 
         TScreenOptionsAdvanced();
-        bool ParseInput(uint32_t PressedKey, UCS4Char CharCode, bool PressedDown) override;
+        bool ParseInput(uint32_t PressedKey, char32_t CharCode, bool PressedDown) override;
         void OnShow() override;
     };
 
@@ -62,7 +76,7 @@ uses
         UUnicodeUtils,
         SysUtils;
         */
-    bool TScreenOptionsAdvanced::ParseInput(uint32_t PressedKey, UCS4Char CharCode, bool PressedDown)
+    bool TScreenOptionsAdvanced::ParseInput(uint32_t PressedKey, char32_t CharCode, bool PressedDown)
     {
         if (!PressedDown)
             return true;
@@ -82,7 +96,7 @@ uses
         case SDLK_ESCAPE: [[fallthrough]]
         case SDLK_BACKSPACE:
         {
-            Ini.Save;
+	        UIni::Ini.Save();
             AudioPlayback.PlaySound(SoundLib.Back);
             FadeTo(@ScreenOptions);
             break;
@@ -94,9 +108,9 @@ uses
         }
         case SDLK_RETURN:
         {
-            if (SelInteraction == 8)
+            if (SelInteraction == static_cast<int>(Interaction::button_exit))
             {
-                Ini.Save;
+	            UIni::Ini.Save();
                 AudioPlayback.PlaySound(SoundLib.Back);
                 FadeTo(@ScreenOptions);
                 break;
@@ -170,7 +184,7 @@ uses
         AddSelectSlide(Theme.OptionsAdvanced.SelectTopScores, Ini.TopScores, ITopScoresTranslated);
 
         AddButton(Theme.OptionsAdvanced.ButtonExit);
-        if (Length(Button[0].Text) = 0) then
+        if (Button[0].Text.empty())
             AddButtonText(20, 5, Theme.Options.Description[OPTIONS_DESC_INDEX_BACK]);
 
         Interaction = 0;

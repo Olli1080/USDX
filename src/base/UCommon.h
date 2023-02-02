@@ -280,13 +280,14 @@ begin
     AddSplit(Start+1, Length(Str)+1);
 end;
 */
+    /*
 const std::array<std::string, 43> Accents = { "ç", "á", "é", "í", "ó", "ú", "ý", "à", "è", "ì", "ò", "ù", "ã", "õ", "ñ", "ä", "ë", "ï", "ö", "ü", "ÿ", "â", "ê", "î", "ô", "û", "ą", "ć", "ł", "ś", "ź", "!", "¡", "\"", "&", "(", ")", "?", "¿", ",", ".", ":", ";" };
 const std::array<std::string, 43> NoAccents = { "c", "a", "e", "i", "o", "u", "y", "a", "e", "i", "o", "u", "a", "o", "n", "a", "e", "i", "o", "u", "y", "a", "e", "i", "o", "u", "a", "c", "l", "s", "z", "", "", "", "", "", "", "", "", "", "", "", "" };
 
 std::string GetStringWithNoAccents(std::string str)
-/*var
-  i: int;
-  tmp: string;*/
+//var
+  //i: int;
+  //tmp: string;
 {
 	std::string tmp = str;//Utf8ToAnsi(str);
     for i : = 0 to High(Accents) do
@@ -311,7 +312,7 @@ const
 function setlocale(category: int; locale: pchar): pchar; cdecl; external "c" name "setlocale";
 
 {$IFEND}
-
+*/
 // In Linux and maybe MacOSX some units (like cwstring) call setlocale(LC_ALL, "")
 // to set the language/country specific locale (e.g. charset) for this application.
 // Unfortunately, LC_NUMERIC is set by this call too.
@@ -328,7 +329,8 @@ function setlocale(category: int; locale: pchar): pchar; cdecl; external "c" nam
 // - Find out which libs are concerned by this problem.
 //   If only projectM is concerned by this problem set and restore the numeric locale
 //   for each call to projectM instead of changing it globally.
-void SetDefaultNumericLocale();
+
+/*void SetDefaultNumericLocale();
 begin
   {$IF Defined(LINUX) or Defined(FreeBSD)}
   PrevNumLocale := setlocale(LC_NUMERIC, nil);
@@ -341,7 +343,7 @@ begin
   {$IF Defined(LINUX) or Defined(FreeBSD)}
   setlocale(LC_NUMERIC, PChar(PrevNumLocale));
   {$IFEND}
-end;
+end;*/
 
 /*
  * If an invalid floating point operation was performed the Floating-point unit (FPU)
@@ -398,8 +400,8 @@ end;
  * Call this function on initialization to make sure FPEs are turned off.
  * It will solve a lot of errors with FPEs in external libs.
  */
-void DisableFloatingPointExceptions();
-begin
+//void DisableFloatingPointExceptions();
+//begin
   /*
   // We will use SetExceptionMask() instead of Set8087CW()/SetSSECSR().
   // Note: Leave these lines for documentation purposes just in case
@@ -415,7 +417,7 @@ begin
 
   // disable all of the six FPEs (x87 and SSE) to be compatible with C/C++ and
   // other libs which rely on the standard FPU behaviour (no div-by-zero FPE anymore).
-  SetExceptionMask([exInvalidOp, exDenormalized, exZeroDivide,
+ /* SetExceptionMask([exInvalidOp, exDenormalized, exZeroDivide,
                     exOverflow, exUnderflow, exPrecision]);
 end;
 
@@ -449,11 +451,12 @@ var
   ConsoleEvent: PRTLEvent;
   ConsoleQuit: bool;
 {$ENDIF}
-
+*/
 /*
  * The console-handlers main-function.
  * TODO: create a quit-event on closing.
  */
+    /*
 function ConsoleHandlerFunc(param: pointer): PtrInt;
 var
   i: int;
@@ -516,7 +519,7 @@ begin
   {$ENDIF}
   Log.Free;
 end;
-
+*/
 /*
  * FPC uses threadvars (TLS) managed by FPC for console output locking.
  * Using WriteLn() from external threads (like in SDL callbacks)
@@ -524,6 +527,7 @@ end;
  * The solution is to create an FPC-managed thread which has the TLS data
  * and use it to handle the console-output (hence it is called Console-Handler)
  */
+    /*
 void ConsoleWriteLn(const msg: string);
 begin
 {$IFDEF CONSOLE}
@@ -556,199 +560,8 @@ begin
   ConsoleWriteln(msg);
 {$IFEND}
 end;
-
+*/
 /*
- * Recursive part of the MergeSort algorithm.
- * OutList will be either InList or TempList and will be swapped in each
- * depth-level of recursion. By doing this it we can directly merge into the
- * output-list. If we only had In- and OutList parameters we had to merge into
- * InList after the recursive calls and copy the data to the OutList afterwards.
- */
-void _MergeSort(InList, TempList, OutList: TList; StartPos, BlockSize: int;
-                    CompareFunc: TListSortCompare);
-var
-  LeftSize, RightSize: int; // number of elements in left/right block
-  LeftEnd,  RightEnd:  int; // Index after last element in left/right block
-  MidPos: int; // index of first element in right block
-  Pos: int;    // position in output list
-begin
-  LeftSize := BlockSize div 2;
-  RightSize := BlockSize - LeftSize;
-  MidPos := StartPos + LeftSize;
-
-  // sort left and right halves of this block by recursive calls of this function
-  if (LeftSize >= 2) then
-    _MergeSort(InList, OutList, TempList, StartPos, LeftSize, CompareFunc)
-  else
-    TempList[StartPos] := InList[StartPos];
-  if (RightSize >= 2) then
-    _MergeSort(InList, OutList, TempList, MidPos, RightSize, CompareFunc)
-  else
-    TempList[MidPos] := InList[MidPos];
-
-  // merge sorted left and right sub-lists into output-list
-  LeftEnd := MidPos;
-  RightEnd := StartPos + BlockSize;
-  Pos := StartPos;
-  while ((StartPos < LeftEnd) and (MidPos < RightEnd)) do
-  begin
-    if (CompareFunc(TempList[StartPos], TempList[MidPos]) <= 0) then
-    begin
-      OutList[Pos] := TempList[StartPos];
-      Inc(StartPos);
-    end
-    else
-    begin
-      OutList[Pos] := TempList[MidPos];
-      Inc(MidPos);
-    end;
-    Inc(Pos);
-  end;
-
-  // copy remaining elements to output-list
-  while (StartPos < LeftEnd) do
-  begin
-    OutList[Pos] := TempList[StartPos];
-    Inc(StartPos);
-    Inc(Pos);
-  end;
-  while (MidPos < RightEnd) do
-  begin
-    OutList[Pos] := TempList[MidPos];
-    Inc(MidPos);
-    Inc(Pos);
-  end;
-end;
-
-/*
- * Stable alternative to the instable TList.Sort() (uses QuickSort) implementation.
- * A stable sorting algorithm preserves preordered items. E.g. if sorting by
- * songs by title first and artist afterwards, the songs of each artist will
- * be ordered by title. In contrast to this an unstable algorithm (like QuickSort)
- * may destroy an existing order, so the songs of an artist will not be ordered
- * by title anymore after sorting by artist in the previous example.
- * If you do not need a stable algorithm, use TList.Sort() instead.
- */
-void MergeSort(List: TList; CompareFunc: TListSortCompare);
-var
-  TempList: TList;
-begin
-  TempList := TList.Create();
-  TempList.Count := List.Count;
-  if (List.Count >= 2) then
-    _MergeSort(List, TempList, List, 0, List.Count, CompareFunc);
-  TempList.Free;
-end;
-
-function Equals(A,B: string; CaseSensitive: bool = false): bool;
-begin
-  if CaseSensitive then Result := A = B
-  else Result := (CompareText(A, B) = 0);
-end;
-
-/**
- * Returns the index of Value in SearchArray
- * or -1 if Value is not in SearchArray.
- */
-function GetArrayIndex(const SearchArray: array of UTF8String; Value: string;
-    CaseInsensitiv: bool = false): int;
-var
-  i: int;
-begin
-  Result := -1;
-
-  for i := 0 to High(SearchArray) do
-  begin
-    if (SearchArray[i] = Value) or
-       (CaseInsensitiv and (CompareText(SearchArray[i], Value) = 0)) then
-    begin
-      Result := i;
-      Break;
-    end;
-  end;
-end;
-
-/**
- * Returns the index of Value in SearchArray
- * or -1 if Value is not in SearchArray.
- */
-function GetArrayIndex(const SearchArray: array of int; Value: int): int;
-var
-  i: int;
-begin
-  Result := -1;
-
-  for i := 0 to High(SearchArray) do
-  begin
-    if (SearchArray[i] = Value) then
-    begin
-      Result := i;
-      Break;
-    end;
-  end;
-end;
-
-type
-  // stores the unaligned pointer of data allocated by GetAlignedMem()
-  PMemAlignHeader = ^TMemAlignHeader;
-  TMemAlignHeader = pointer;
-
-/**
- * Use this function to assure that allocated memory is aligned on a specific
- * byte boundary.
- * Alignment must be a power of 2.
- *
- * Important: Memory allocated with GetAlignedMem() MUST be freed with
- * FreeAlignedMem(), FreeMem() will cause a segmentation fault.
- *
- * Hint: If you do not need dynamic memory, consider to allocate memory
- * statically and use the {$ALIGN x} compiler directive. Note that delphi
- * supports an alignment "x" of up to 8 bytes only whereas FPC supports
- * alignments on 16 and 32 byte boundaries too.
- */
-  /*
-{$WARNINGS OFF}
-function GetAlignedMem(Size: uint32_t; Alignment: int): pointer;
-var
-  OrigPtr: pointer;
-const
-  MIN_ALIGNMENT = 16;
-begin
-  // Delphi and FPC (tested with 2.2.0) align memory blocks allocated with
-  // GetMem() at least on 8 byte boundaries. Delphi uses a minimal alignment
-  // of either 8 or 16 bytes depending on the size of the requested block
-  // (see System.GetMinimumBlockAlignment). As we do not want to change the
-  // boundary for the worse, we align at least on MIN_ALIGN.
-  if (Alignment < MIN_ALIGNMENT) then
-    Alignment := MIN_ALIGNMENT;
-
-  // allocate unaligned memory
-  GetMem(OrigPtr, SizeOf(TMemAlignHeader) + Size + Alignment);
-  if (OrigPtr = nil) then
-  begin
-    Result := nil;
-    Exit;
-  end;
-
-  // reserve space for the header
-  Result := pointer(PtrUInt(OrigPtr) + SizeOf(TMemAlignHeader));
-  // align memory
-  Result := pointer(PtrUInt(Result) + Alignment - PtrUInt(Result) mod Alignment);
-
-  // set header with info on old pointer for FreeMem
-  PMemAlignHeader(PtrUInt(Result) - SizeOf(TMemAlignHeader))^ := OrigPtr;
-end;
-{$WARNINGS ON}
-
-{$WARNINGS OFF}
-void FreeAlignedMem(P: pointer);
-begin
-  if (P != nil) then
-    FreeMem(PMemAlignHeader(PtrUInt(P) - SizeOf(TMemAlignHeader))^);
-end;
-{$WARNINGS ON}
-
-
 initialization
   InitConsoleOutput();
 
